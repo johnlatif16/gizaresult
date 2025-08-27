@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<header class="bg-blue-600 text-white p-6 shadow">
+  <h1 class="text-3xl font-bold">لوحة تحكم الادمن</h1>
+</header>
+
+<main class="p-8">
+  <h2 class="text-2xl font-semibold mb-4">النتائج</h2>
+  <table class="min-w-full bg-white rounded-lg shadow">
+    <thead class="bg-blue-600 text-white">
+      <tr>
+        <th class="py-2 px-4">رقم الجلوس</th>
+        <th class="py-2 px-4">الاسم</th>
+        <th class="py-2 px-4">الصف</th>
+        <th class="py-2 px-4">المدرسة</th>
+        <th class="py-2 px-4">النسبة %</th>
+        <th class="py-2 px-4">الملاحظات</th>
+        <th class="py-2 px-4">فتح النتيجة</th>
+        <th class="py-2 px-4">إرسال البريد</th>
+      </tr>
+    </thead>
+    <tbody id="resultsTable" class="text-center"></tbody>
+  </table>
+</main>
+
+<script>
+async function loadResults() {
+    const res = await fetch('/api/results');
+    const data = await res.json();
+    const tbody = document.getElementById('resultsTable');
+    tbody.innerHTML = '';
+
+    data.results.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+
+        tr.innerHTML = `
+            <td class="py-2 px-4">${student.seatNumber}</td>
+            <td class="py-2 px-4">${student.name}</td>
+            <td class="py-2 px-4">${student.gradeLevel}</td>
+            <td class="py-2 px-4">${student.schoolName}</td>
+            <td class="py-2 px-4">${student.percentage}</td>
+            <td class="py-2 px-4">${student.notes}</td>
+            <td class="py-2 px-4">
+                <button class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  onclick="openResult('${student.seatNumber}')">فتح</button>
+            </td>
+            <td class="py-2 px-4">
+                <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onclick="sendEmail('${student.seatNumber}')">إرسال</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function openResult(seatNumber) {
+    await fetch('/api/open-result', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ seatNumber })
+    });
+    alert('تم فتح النتيجة');
+    loadResults();
+}
+
+async function sendEmail(seatNumber) {
+    const email = prompt('اكتب البريد الإلكتروني للطالب:');
+    const message = prompt('اكتب نص الرسالة:');
+    if (!email) return alert('البريد الإلكتروني مطلوب');
+
+    const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ seatNumber, email, message })
+    });
+
+    const data = await res.json();
+    alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+}
+
+loadResults();
+</script>
+
+<footer class="mt-8 text-gray-500 text-center">
+  <p>هذا الموقع غير مرتبط بالحكومة بأي شكل من الأشكال.</p>
+  <p>©جميع الحقوق محفوظة.</p>
+</footer>
+
+</body>
+</html>

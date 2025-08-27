@@ -1,0 +1,17 @@
+{
+  "name": "result",
+  "version": "1.0.0",
+  "description": "موقع لإدارة الاستعلام عن النتائج والدفع عن طريق المحفظة",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "John Latif",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "nodemailer": "^6.9.3",
+    "dotenv": "^16.3.1"
+  }
+}

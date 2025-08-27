@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>الصفحة الرئيسية</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+<h1 class="text-4xl font-bold mb-10 text-gray-800">مرحبا بك في موقع الاستعلام عن النتائج</h1>
+
+<div class="space-y-5">
+  <button onclick="showPayment()" class="px-8 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">إتمام الدفع للاستعلام عن النتيجة</button>
+  <button onclick="showCheck()" class="px-8 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">استعلام عن النتيجة بعد الدفع</button>
+</div>
+
+<div id="payment" class="mt-10 p-6 bg-white rounded-lg shadow max-w-md w-full hidden">
+  <h2 class="text-2xl font-semibold mb-4">الدفع عن طريق تحويل محفظة</h2>
+  <p class="mb-4">رقم التحويل: <strong>0123456789</strong></p>
+  <form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
+    <input name="seatNumber" placeholder="رقم الجلوس" required class="w-full p-2 border rounded">
+    <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+    <input type="file" name="screenshot" required class="w-full">
+    <input name="email" placeholder="البريد الإلكتروني" required class="w-full p-2 border rounded">
+    <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">تأكيد الدفع</button>
+  </form>
+</div>
+
+<div id="check" class="mt-10 p-6 bg-white rounded-lg shadow max-w-md w-full hidden">
+  <h2 class="text-2xl font-semibold mb-4">استعلام عن النتيجة</h2>
+  <form action="/check-result" method="post" class="space-y-4">
+    <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+    <button type="submit" class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">استعلام</button>
+  </form>
+</div>
+
+<script>
+function showPayment() { document.getElementById('payment').classList.remove('hidden'); document.getElementById('check').classList.add('hidden'); }
+function showCheck() { document.getElementById('check').classList.remove('hidden'); document.getElementById('payment').classList.add('hidden'); }
+</script>
+
+<footer class="mt-16 text-gray-500">
+  <p>هذا الموقع غير مرتبط بالحكومة بأي شكل من الأشكال.</p>
+  <p>©جميع الحقوق محفوظة.</p>
+</footer>
+</body>
+</html>
