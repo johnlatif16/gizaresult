@@ -4,19 +4,55 @@
 <meta charset="UTF-8">
 <title>الصفحة الرئيسية</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #3b82f6; color: white; }
+    .disclaimer {
+      text-align: center;
+      font-size: 14px;
+      color: #dc3545;
+      background: #fff0f0;
+      padding: 10px;
+      border: 1px solid #f5c2c7;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+</style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-6">
+
+<div class="disclaimer">
+  النتيجة مظهرتش
+  <br>
+  <div class="disclaimer" style="background: #01f7ff00; border-color: #c3e6cb;">
+    <span style="color: green;">"إِلهُ السَّلاَمِ مَعَكُمْ أَجْمَعِينَ. آمِينَ." (رو 15: 33).</span>
+  </div>
+</div>
+
+
+  <div class="disclaimer" style="color: #00008B; background: #01f7ff00; border-color: #c3e6cb;">
+  ممنوع منعاً باتاً تفتح اي حاجة او تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وانا مش مسؤول
+</div>
+  <div class="disclaimer">
+    هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط.
+  البيانات سرية تامة ثم تتحذف بعد الاستطلاع على النتيجة
+  </div>
+  <p style="color: #6f42c1; font-weight: bold;">
+"ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."
+</p>
 
 <h1 class="text-4xl font-bold mb-10 text-gray-800">مرحبا بك في موقع الاستعلام عن النتائج</h1>
 
-<div class="space-y-5">
+<div class="space-y-5 mb-6">
   <button onclick="showPayment()" class="px-8 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">إتمام الدفع للاستعلام عن النتيجة</button>
   <button onclick="showCheck()" class="px-8 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">استعلام عن النتيجة بعد الدفع</button>
 </div>
 
-<div id="payment" class="mt-10 p-6 bg-white rounded-lg shadow max-w-md w-full hidden">
+<!-- الدفع -->
+<div class="mt-6 p-6 bg-white rounded-lg shadow max-w-md w-full hidden" id="payment">
   <h2 class="text-2xl font-semibold mb-4">الدفع عن طريق تحويل محفظة</h2>
-  <p class="mb-4">رقم التحويل: <strong>0123456789</strong></p>
+  <p class="mb-4">رقم التحويل: <strong>01274445091</strong></p>
   <form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
     <input name="seatNumber" placeholder="رقم الجلوس" required class="w-full p-2 border rounded">
     <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
@@ -26,22 +62,109 @@
   </form>
 </div>
 
-<div id="check" class="mt-10 p-6 bg-white rounded-lg shadow max-w-md w-full hidden">
+<!-- استعلام النتيجة -->
+<div class="mt-6 p-6 bg-white rounded-lg shadow max-w-3xl w-full hidden" id="check">
   <h2 class="text-2xl font-semibold mb-4">استعلام عن النتيجة</h2>
-  <form action="/check-result" method="post" class="space-y-4">
-    <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+  <form id="checkForm" class="space-y-4">
+    <input name="phone" id="phoneInput" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
     <button type="submit" class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">استعلام</button>
   </form>
+
+  <!-- هنا سيظهر الجدول -->
+  <div id="resultContainer" class="mt-6 hidden">
+    <h3 class="text-xl font-semibold mb-2">بيانات الطالب</h3>
+    <p id="studentInfo"></p>
+
+    <h3 class="text-lg font-semibold mt-4">المواد الأساسية</h3>
+    <table id="mainSubjectsTable">
+      <thead><tr><th>المادة</th><th>الدرجة</th><th>من</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <h3 class="text-lg font-semibold mt-4">المواد الإضافية</h3>
+    <table id="additionalSubjectsTable">
+      <thead><tr><th>المادة</th><th>الدرجة</th><th>من</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <h3 class="text-lg font-semibold mt-4">الإجمالي والنسبة</h3>
+    <table>
+      <tr><th>المجموع الكلي</th><td id="totalScore"></td></tr>
+      <tr><th>المجموع الكلي الممكن</th><td id="totalOutOf"></td></tr>
+      <tr><th>النسبة المئوية</th><td id="percentage"></td></tr>
+    </table>
+  </div>
 </div>
 
+<p>هذا الموقع غير تابع لأي جهة حكومية</p>
+
 <script>
-function showPayment() { document.getElementById('payment').classList.remove('hidden'); document.getElementById('check').classList.add('hidden'); }
-function showCheck() { document.getElementById('check').classList.remove('hidden'); document.getElementById('payment').classList.add('hidden'); }
+function showPayment() {
+  document.getElementById('payment').classList.remove('hidden');
+  document.getElementById('check').classList.add('hidden');
+}
+function showCheck() {
+  document.getElementById('check').classList.remove('hidden');
+  document.getElementById('payment').classList.add('hidden');
+}
+
+// معالجة استعلام النتيجة
+document.getElementById('checkForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const phone = document.getElementById('phoneInput').value;
+
+  const res = await fetch('/check-result', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({phone})
+  });
+
+  const resultText = await res.text();
+
+  try {
+    const result = JSON.parse(resultText);
+
+    // بيانات الطالب
+    const infoDiv = document.getElementById('studentInfo');
+infoDiv.innerHTML = `
+  <p><strong>اسم الطالب:</strong> ${result.name}</p>
+  <p><strong>رقم الجلوس:</strong> ${result.seatNumber}</p>
+  <p><strong>المرحلة:</strong> ${result.stage}</p>
+  <p><strong>الصف:</strong> ${result.gradeLevel}</p>
+  <p><strong>المدرسة:</strong> ${result.schoolName}</p>
+  <p><strong>ملاحظات:</strong> ${result.notes}</p>
+`;
+
+
+    // المواد الأساسية
+    const mainTbody = document.querySelector('#mainSubjectsTable tbody');
+    mainTbody.innerHTML = '';
+    result.mainSubjects.forEach(sub => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
+      mainTbody.appendChild(tr);
+    });
+
+    // المواد الإضافية
+    const addTbody = document.querySelector('#additionalSubjectsTable tbody');
+    addTbody.innerHTML = '';
+    result.additionalSubjects.forEach(sub => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
+      addTbody.appendChild(tr);
+    });
+
+    // الإجمالي والنسبة
+    document.getElementById('totalScore').textContent = result.totalScore;
+    document.getElementById('totalOutOf').textContent = result.totalOutOf;
+    document.getElementById('percentage').textContent = result.percentage + '%';
+
+    document.getElementById('resultContainer').classList.remove('hidden');
+  } catch(err) {
+    alert(resultText); // لو لم يتم الدفع أو الطلب غير موجود
+  }
+});
 </script>
 
-<footer class="mt-16 text-gray-500">
-  <p>هذا الموقع غير مرتبط بالحكومة بأي شكل من الأشكال.</p>
-  <p>©جميع الحقوق محفوظة.</p>
-</footer>
 </body>
 </html>

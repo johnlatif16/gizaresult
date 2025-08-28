@@ -1,0 +1,61 @@
+{
+  "requests": [],
+  "results": [
+    {
+      "seatNumber": "229244",
+      "name": "أحمد محمد",
+      "stage": "الثالث الاعدادي",
+      "gradeLevel": "3",
+      "educationDept": "القاهرة",
+      "schoolName": "مدرسة النموذجية",
+      "notes": "ناجح",
+      "mainSubjects": [
+        {"name": "اللغة العربية", "score": 54.7, "outOf": 80},
+        {"name": "لغة أجنبية أولي", "score": 49.9, "outOf": 60},
+        {"name": "رياضيات", "score": 31.6, "outOf": 60},
+        {"name": "تاريخ", "score": 44, "outOf": 60},
+        {"name": "علوم متكاملة", "score": 32.8, "outOf": 60},
+        {"name": "فلسفة ومنطق", "score": 45, "outOf": 60}
+      ],
+      "additionalSubjects": [
+        {"name": "تربية دينية", "score": 33.5, "outOf": 40},
+        {"name": "لغة أجنبية ثانية", "score": 24, "outOf": 40},
+        {"name": "تربية رياضية", "score": 9, "outOf": 10},
+        {"name": "التربية الوطنية", "score": 9, "outOf": 10},
+        {"name": "نشاط تربوي", "score": 9, "outOf": 10},
+        {"name": "تربية مهنية", "score": 17, "outOf": 20}
+      ],
+      "totalScore": 258,
+      "totalOutOf": 380,
+      "percentage": 67.9
+    },
+    {
+      "seatNumber": "29706012345678",
+      "name": "احمد محسن",
+      "stage": "الأولى إعدادي",
+      "gradeLevel": "1",
+      "educationDept": "القاهرة",
+      "schoolName": "مدرسة المستقبل",
+      "notes": "ناجح",
+      "mainSubjects": [
+        {"name": "اللغة العربية", "score": 60, "outOf": 80},
+        {"name": "لغة أجنبية أولي", "score": 50, "outOf": 60},
+        {"name": "رياضيات", "score": 35, "outOf": 60},
+        {"name": "تاريخ", "score": 45, "outOf": 60},
+        {"name": "علوم متكاملة", "score": 33, "outOf": 60},
+        {"name": "فلسفة ومنطق", "score": 47, "outOf": 60}
+      ],
+      "additionalSubjects": [
+        {"name": "تربية دينية", "score": 36, "outOf": 40},
+        {"name": "لغة أجنبية ثانية", "score": 30, "outOf": 40},
+        {"name": "تربية رياضية", "score": 10, "outOf": 10},
+        {"name": "التربية الوطنية", "score": 10, "outOf": 10},
+        {"name": "نشاط تربوي", "score": 10, "outOf": 10},
+        {"name": "تربية مهنية", "score": 18, "outOf": 20}
+      ],
+      "totalScore": 280,
+      "totalOutOf": 380,
+      "percentage": 73.7
+    }
+  ]
+}

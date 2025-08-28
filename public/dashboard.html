@@ -2,97 +2,160 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>لوحة التحكم</title>
+<title>لوحة تحكم الادمن</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { display: flex; min-height: 100vh; font-family: sans-serif; }
+.sidebar { width: 220px; background-color: #1e40af; color: white; padding: 20px; display: flex; flex-direction: column; }
+.sidebar button { margin-bottom: 10px; text-align: left; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+.sidebar button:hover { background-color: #3b82f6; }
+.content { flex-grow: 1; padding: 20px; overflow-x: auto; }
+.hidden { display: none; }
+table th, table td { text-align: center; padding: 8px; }
+table th { background-color: #1e40af; color: white; }
+button.action-btn { padding: 5px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+button.open-btn { background-color: #16a34a; color: white; }
+button.open-btn:hover { background-color: #15803d; }
+button.send-btn { background-color: #2563eb; color: white; }
+button.send-btn:hover { background-color: #1d4ed8; }
+img.screenshot { width: 100px; border: 1px solid #ddd; border-radius: 5px; }
+</style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body>
 
-<header class="bg-blue-600 text-white p-6 shadow">
-  <h1 class="text-3xl font-bold">لوحة تحكم الادمن</h1>
-</header>
+<div class="sidebar">
+  <button onclick="showSection('requests')">الطلبات</button>
+  <button onclick="showSection('results')">النتائج</button>
+  <button onclick="showSection('send')">إرسال النتيجة عبر البريد</button>
+  <button onclick="logout()">تسجيل الخروج</button>
+</div>
 
-<main class="p-8">
-  <h2 class="text-2xl font-semibold mb-4">النتائج</h2>
-  <table class="min-w-full bg-white rounded-lg shadow">
-    <thead class="bg-blue-600 text-white">
-      <tr>
-        <th class="py-2 px-4">رقم الجلوس</th>
-        <th class="py-2 px-4">الاسم</th>
-        <th class="py-2 px-4">الصف</th>
-        <th class="py-2 px-4">المدرسة</th>
-        <th class="py-2 px-4">النسبة %</th>
-        <th class="py-2 px-4">الملاحظات</th>
-        <th class="py-2 px-4">فتح النتيجة</th>
-        <th class="py-2 px-4">إرسال البريد</th>
-      </tr>
-    </thead>
-    <tbody id="resultsTable" class="text-center"></tbody>
-  </table>
-</main>
+<div class="content">
+  <!-- طلبات الدفع -->
+  <div id="requests" class="hidden">
+    <h2 class="text-2xl font-semibold mb-4">طلبات الدفع</h2>
+    <table class="min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th>رقم الجلوس</th><th>رقم الهاتف</th><th>البريد الإلكتروني</th><th>سكرين التحويل</th><th>تاريخ الطلب</th>
+        </tr>
+      </thead>
+      <tbody id="requestsTable"></tbody>
+    </table>
+  </div>
+
+  <!-- النتائج المفتوحة -->
+  <div id="results" class="hidden">
+    <h2 class="text-2xl font-semibold mb-4">النتائج المفتوحة</h2>
+    <table class="min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th>رقم الجلوس</th><th>الاسم</th><th>الصف</th><th>المدرسة</th><th>النسبة %</th><th>الملاحظات</th><th>فتح النتيجة</th><th>إرسال البريد</th>
+        </tr>
+      </thead>
+      <tbody id="resultsTable"></tbody>
+    </table>
+  </div>
+
+  <!-- إرسال البريد -->
+  <div id="send" class="hidden max-w-md">
+    <h2 class="text-2xl font-semibold mb-4">إرسال النتيجة عبر البريد</h2>
+    <form id="sendForm" class="space-y-4">
+      <input id="sendSeat" placeholder="رقم الجلوس" required class="w-full p-2 border rounded">
+      <input id="sendEmail" placeholder="البريد الإلكتروني" required class="w-full p-2 border rounded">
+      <textarea id="sendMessage" placeholder="نص الرسالة" class="w-full p-2 border rounded"></textarea>
+      <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">إرسال</button>
+    </form>
+  </div>
+</div>
 
 <script>
-async function loadResults() {
-    const res = await fetch('/api/results');
-    const data = await res.json();
-    const tbody = document.getElementById('resultsTable');
-    tbody.innerHTML = '';
-
-    data.results.forEach(student => {
-        const tr = document.createElement('tr');
-        tr.className = 'border-b';
-
-        tr.innerHTML = `
-            <td class="py-2 px-4">${student.seatNumber}</td>
-            <td class="py-2 px-4">${student.name}</td>
-            <td class="py-2 px-4">${student.gradeLevel}</td>
-            <td class="py-2 px-4">${student.schoolName}</td>
-            <td class="py-2 px-4">${student.percentage}</td>
-            <td class="py-2 px-4">${student.notes}</td>
-            <td class="py-2 px-4">
-                <button class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  onclick="openResult('${student.seatNumber}')">فتح</button>
-            </td>
-            <td class="py-2 px-4">
-                <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  onclick="sendEmail('${student.seatNumber}')">إرسال</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+function showSection(id){
+  ['requests','results','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
 }
 
-async function openResult(seatNumber) {
-    await fetch('/api/open-result', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ seatNumber })
-    });
-    alert('تم فتح النتيجة');
-    loadResults();
+function logout(){ window.location.href = '/login.html'; }
+
+// تحميل الطلبات مع الصور
+async function loadRequests(){
+  const res = await fetch('/api/results');
+  const data = await res.json();
+  const tbody = document.getElementById('requestsTable');
+  tbody.innerHTML = '';
+  data.requests.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.seatNumber}</td>
+      <td>${r.phone}</td>
+      <td>${r.email}</td>
+      <td>${r.screenshot ? `<img class="screenshot" src="/uploads/${r.screenshot}" />` : ''}</td>
+      <td>${new Date(r.created_at).toLocaleString()}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-async function sendEmail(seatNumber) {
-    const email = prompt('اكتب البريد الإلكتروني للطالب:');
-    const message = prompt('اكتب نص الرسالة:');
-    if (!email) return alert('البريد الإلكتروني مطلوب');
+// تحميل النتائج
+async function loadResults(){
+  const res = await fetch('/api/results');
+  const data = await res.json();
+  const tbody = document.getElementById('resultsTable');
+  tbody.innerHTML = '';
+  data.results.forEach(student => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${student.seatNumber}</td>
+      <td>${student.name}</td>
+      <td>${student.gradeLevel}</td>
+      <td>${student.schoolName}</td>
+      <td>${student.percentage}</td>
+      <td>${student.notes || ''}</td>
+      <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
+      <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-    const res = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ seatNumber, email, message })
-    });
+// فتح نتيجة مباشرة
+async function openResult(seatNumber){
+  const res = await fetch('/api/open-result', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({seatNumber})
+  });
+  const data = await res.json();
+  alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
+  loadRequests();
+  loadResults();
+}
 
-    const data = await res.json();
+// إرسال البريد مباشرة
+function sendEmailPrompt(seatNumber){
+  const email = prompt('البريد الإلكتروني:');
+  if(!email) return alert('البريد الإلكتروني مطلوب');
+  const message = prompt('نص الرسالة:');
+
+  fetch('/api/send-email-dashboard',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({seatNumber,email,message})
+  }).then(res=>res.json()).then(data=>{
     alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+  });
 }
 
+// فور تحميل الصفحة
+loadRequests();
 loadResults();
-</script>
 
-<footer class="mt-8 text-gray-500 text-center">
-  <p>هذا الموقع غير مرتبط بالحكومة بأي شكل من الأشكال.</p>
-  <p>©جميع الحقوق محفوظة.</p>
-</footer>
+// تحديث دوري كل 10 ثواني
+setInterval(()=>{
+  loadRequests();
+  loadResults();
+}, 10000);
+</script>
 
 </body>
 </html>
