@@ -32,7 +32,7 @@ function saveData() {
 
 // استقبال الدفع
 app.post('/pay', (req, res) => {
-    const { seatNumber, phone, email } = req.body;
+    const { nationalId, seatNumber, phone, email } = req.body;
     if (!req.files || !req.files.screenshot) return res.status(400).send('يجب رفع سكرين التحويل');
 
     const screenshot = req.files.screenshot;
@@ -41,6 +41,7 @@ app.post('/pay', (req, res) => {
     screenshot.mv(uploadPath, err => {
         if (err) return res.status(500).send(err);
         data.requests.push({
+            nationalId,   // ✅ الرقم القومي
             seatNumber,
             phone,
             email,
@@ -52,6 +53,7 @@ app.post('/pay', (req, res) => {
         res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
     });
 });
+
 
 // تسجيل دخول الادمن
 app.post('/login', (req, res) => {

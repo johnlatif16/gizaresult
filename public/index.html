@@ -8,7 +8,16 @@
   table { width: 100%; border-collapse: collapse; margin-top: 20px; }
   th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
   th { background-color: #3b82f6; color: white; }
-  .disclaimer { text-align: center; font-size: 14px; color: #dc3545; background: #fff0f0; padding: 10px; border: 1px solid #f5c2c7; border-radius: 8px; margin-bottom: 20px; }
+    .disclaimer {
+      text-align: center;
+      font-size: 14px;
+      color: #dc3545;
+      background: #fff0f0;
+      padding: 10px;
+      border: 1px solid #f5c2c7;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
 </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-6">
@@ -21,14 +30,15 @@
   </div>
 </div>
 
-<div class="disclaimer" style="color: #00008B; background: #01f7ff00; border-color: #c3e6cb;">
+
+  <div class="disclaimer" style="color: #00008B; background: #01f7ff00; border-color: #c3e6cb;">
   ممنوع منعاً باتاً تفتح اي حاجة او تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وانا مش مسؤول
 </div>
-<div class="disclaimer">
-  هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط.
+  <div class="disclaimer">
+    هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط.
   البيانات سرية تامة ثم تتحذف بعد الاستطلاع على النتيجة
-</div>
-<p style="color: #6f42c1; font-weight: bold;">
+  </div>
+  <p style="color: #6f42c1; font-weight: bold;">
 "ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."
 </p>
 
@@ -43,30 +53,14 @@
 <div class="mt-6 p-6 bg-white rounded-lg shadow max-w-md w-full hidden" id="payment">
   <h2 class="text-2xl font-semibold mb-4">الدفع عن طريق تحويل محفظة</h2>
   <p class="mb-4">رقم التحويل: <strong>01274445091</strong></p>
-  <form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
-    
-    <select name="gradeLevel" id="gradeLevel" required class="w-full p-2 border rounded">
-      <option value="">اختر الصف</option>
-      <option value="الصف الاول الابتدائي">الصف الاول الابتدائي</option>
-      <option value="الصف الثاني الابتدائي">الصف الثاني الابتدائي</option>
-      <option value="الصف الثالث الابتدائي">الصف الثالث الابتدائي</option>
-      <option value="الصف الرابع الابتدائي">الصف الرابع الابتدائي</option>
-      <option value="الصف الخامس الابتدائي">الصف الخامس الابتدائي</option>
-      <option value="الصف السادس الابتدائي">الصف السادس الابتدائي</option>
-      <option value="الصف الاول الاعدادي">الصف الاول الاعدادي</option>
-      <option value="الصف الثاني الاعدادي">الصف الثاني الاعدادي</option>
-      <option value="الصف الثالث الاعدادي">الصف الثالث الاعدادي</option>
-      <option value="الصف الاول الثانوي">الصف الاول الثانوي</option>
-      <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
-    </select>
-
-    <input type="text" name="studentNumber" id="studentNumber" placeholder="" class="w-full p-2 border rounded hidden" required>
-
-    <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
-    <input type="file" name="screenshot" required class="w-full">
-    <input name="email" placeholder="البريد الإلكتروني" required class="w-full p-2 border rounded">
-    <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">تأكيد الدفع</button>
-  </form>
+<form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
+  <input name="nationalId" placeholder="الرقم القومي" required class="w-full p-2 border rounded">
+  <input name="seatNumber" placeholder="رقم الجلوس" required class="w-full p-2 border rounded">
+  <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+  <input type="file" name="screenshot" required class="w-full">
+  <input name="email" placeholder="البريد الإلكتروني" required class="w-full p-2 border rounded">
+  <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">تأكيد الدفع</button>
+</form>
 </div>
 
 <!-- استعلام النتيجة -->
@@ -77,6 +71,7 @@
     <button type="submit" class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">استعلام</button>
   </form>
 
+  <!-- هنا سيظهر الجدول -->
   <div id="resultContainer" class="mt-6 hidden">
     <h3 class="text-xl font-semibold mb-2">بيانات الطالب</h3>
     <p id="studentInfo"></p>
@@ -114,52 +109,35 @@ function showCheck() {
   document.getElementById('payment').classList.add('hidden');
 }
 
-// تغيير ظهور حقل الرقم حسب الصف
-const gradeSelect = document.getElementById('gradeLevel');
-const studentNumber = document.getElementById('studentNumber');
-
-gradeSelect.addEventListener('change', () => {
-  const grade = gradeSelect.value;
-  if(!grade) {
-    studentNumber.classList.add('hidden');
-    studentNumber.value = '';
-    return;
-  }
-  studentNumber.classList.remove('hidden');
-  if(grade.includes('الصف الاول الابتدائي') || grade.includes('الصف الثاني الابتدائي') || grade.includes('الصف الثالث الابتدائي') ||grade.includes('الصف الرابع الابتدائي') ||grade.includes('الصف الخامس الابتدائي') ||grade.includes('الصف السادس الابتدائي') ||
-     grade.includes('الصف الاول الاعدادي') || grade.includes('الصف الثاني الاعدادي') ||
-     grade.includes('الصف الاول الثانوي') || grade.includes('الصف الثاني الثانوي')) {
-    studentNumber.placeholder = "الرقم القومي";
-  } else if(grade.includes('الصف الثالث الاعدادي')) {
-    studentNumber.placeholder = "رقم الجلوس";
-  } else {
-    studentNumber.placeholder = "";
-  }
-});
-
-// استعلام النتيجة
+// معالجة استعلام النتيجة
 document.getElementById('checkForm').addEventListener('submit', async e => {
   e.preventDefault();
   const phone = document.getElementById('phoneInput').value;
+
   const res = await fetch('/check-result', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({phone})
   });
+
   const resultText = await res.text();
+
   try {
     const result = JSON.parse(resultText);
+
+    // بيانات الطالب
     const infoDiv = document.getElementById('studentInfo');
 infoDiv.innerHTML = `
   <p><strong>اسم الطالب:</strong> ${result.name}</p>
-  ${result.seatNumber ? `<p><strong>رقم الجلوس:</strong> ${result.seatNumber}</p>` : ''}
-  ${result.nationalID ? `<p><strong>الرقم القومي:</strong> ${result.nationalID}</p>` : ''}
+  <p><strong>رقم الجلوس:</strong> ${result.seatNumber}</p>
   <p><strong>المرحلة:</strong> ${result.stage}</p>
   <p><strong>الصف:</strong> ${result.gradeLevel}</p>
   <p><strong>المدرسة:</strong> ${result.schoolName}</p>
   <p><strong>ملاحظات:</strong> ${result.notes}</p>
 `;
 
+
+    // المواد الأساسية
     const mainTbody = document.querySelector('#mainSubjectsTable tbody');
     mainTbody.innerHTML = '';
     result.mainSubjects.forEach(sub => {
@@ -167,6 +145,8 @@ infoDiv.innerHTML = `
       tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
       mainTbody.appendChild(tr);
     });
+
+    // المواد الإضافية
     const addTbody = document.querySelector('#additionalSubjectsTable tbody');
     addTbody.innerHTML = '';
     result.additionalSubjects.forEach(sub => {
@@ -174,12 +154,15 @@ infoDiv.innerHTML = `
       tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
       addTbody.appendChild(tr);
     });
+
+    // الإجمالي والنسبة
     document.getElementById('totalScore').textContent = result.totalScore;
     document.getElementById('totalOutOf').textContent = result.totalOutOf;
     document.getElementById('percentage').textContent = result.percentage + '%';
+
     document.getElementById('resultContainer').classList.remove('hidden');
   } catch(err) {
-    alert(resultText);
+    alert(resultText); // لو لم يتم الدفع أو الطلب غير موجود
   }
 });
 </script>

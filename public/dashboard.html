@@ -36,11 +36,17 @@ img.screenshot { width: 100px; border: 1px solid #ddd; border-radius: 5px; }
     <h2 class="text-2xl font-semibold mb-4">طلبات الدفع</h2>
     <table class="min-w-full bg-white rounded-lg shadow">
       <thead>
-        <tr>
-          <th>رقم الجلوس</th><th>رقم الهاتف</th><th>البريد الإلكتروني</th><th>سكرين التحويل</th><th>تاريخ الطلب</th>
-        </tr>
-      </thead>
-      <tbody id="requestsTable"></tbody>
+  <tr>
+    <th>الرقم القومي</th>
+    <th>رقم الجلوس</th>
+    <th>رقم الهاتف</th>
+    <th>البريد الإلكتروني</th>
+    <th>سكرين التحويل</th>
+    <th>تاريخ الطلب</th>
+  </tr>
+</thead>
+<tbody id="requestsTable"></tbody>
+
     </table>
   </div>
 
@@ -83,17 +89,19 @@ async function loadRequests(){
   const data = await res.json();
   const tbody = document.getElementById('requestsTable');
   tbody.innerHTML = '';
-  data.requests.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.seatNumber}</td>
-      <td>${r.phone}</td>
-      <td>${r.email}</td>
-      <td>${r.screenshot ? `<img class="screenshot" src="/uploads/${r.screenshot}" />` : ''}</td>
-      <td>${new Date(r.created_at).toLocaleString()}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+data.requests.forEach(r => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${r.nationalId || ''}</td>
+    <td>${r.seatNumber}</td>
+    <td>${r.phone}</td>
+    <td>${r.email}</td>
+    <td>${r.screenshot ? `<img class="screenshot" src="/uploads/${r.screenshot}" />` : ''}</td>
+    <td>${new Date(r.created_at).toLocaleString()}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
 }
 
 // تحميل النتائج

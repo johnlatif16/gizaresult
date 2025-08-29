@@ -29,6 +29,34 @@
       "totalOutOf": 380,
       "percentage": 67.9
     },
+        {
+      "seatNumber": "312654",
+      "name": "مهند اسامة",
+      "stage": "ثالث  اعدادي",
+      "gradeLevel": "3",
+      "educationDept": "القاهرة",
+      "schoolName": "معرفش",
+      "notes": "ناجح",
+      "mainSubjects": [
+        {"name": "اللغة العربية", "score": 60, "outOf": 80},
+        {"name": "لغة أجنبية أولي", "score": 50, "outOf": 60},
+        {"name": "رياضيات", "score": 35, "outOf": 60},
+        {"name": "تاريخ", "score": 45, "outOf": 60},
+        {"name": "علوم متكاملة", "score": 33, "outOf": 60},
+        {"name": "فلسفة ومنطق", "score": 47, "outOf": 60}
+      ],
+      "additionalSubjects": [
+        {"name": "تربية دينية", "score": 36, "outOf": 40},
+        {"name": "لغة أجنبية ثانية", "score": 30, "outOf": 40},
+        {"name": "تربية رياضية", "score": 10, "outOf": 10},
+        {"name": "التربية الوطنية", "score": 10, "outOf": 10},
+        {"name": "نشاط تربوي", "score": 10, "outOf": 10},
+        {"name": "تربية مهنية", "score": 18, "outOf": 20}
+      ],
+      "totalScore": 280,
+      "totalOutOf": 380,
+      "percentage": 73.7
+    },
     {
       "seatNumber": "29244",
       "name": "مازن هاني",
