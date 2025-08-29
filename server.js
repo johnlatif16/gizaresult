@@ -3,9 +3,14 @@ const fileUpload = require('express-fileupload');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
+
+// استخدام cookie-parser middleware
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
@@ -28,20 +33,98 @@ function saveData() {
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
 
+// Middleware للتحقق من تسجيل الدخول
+function requireAuth(req, res, next) {
+    if (req.cookies.loggedIn === 'true') {
+        next();
+    } else {
+        res.redirect('/login.html');
+    }
+}
+
+// دالة لإرسال رسالة إلى التيليجرام
+async function sendTelegramMessage(message) {
+    if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+        console.log('إعدادات التيليجرام غير مكتملة');
+        return;
+    }
+
+    try {
+        const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+        await axios.post(url, {
+            chat_id: process.env.TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'HTML'
+        });
+        console.log('تم إرسال الرسالة إلى التيليجرام');
+    } catch (error) {
+        console.error('خطأ في إرسال الرسالة إلى التيليجرام:', error.message);
+    }
+}
+
+// دالة لإرسال بريد إلكتروني
+async function sendEmail(to, subject, text) {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.log('إعدادات البريد الإلكتروني غير مكتملة');
+        return false;
+    }
+
+    try {
+        let transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            }
+        });
+
+        await transporter.sendMail({
+            from: process.env.SMTP_USER,
+            to: to,
+            subject: subject,
+            text: text
+        });
+
+        console.log('تم إرسال البريد الإلكتروني إلى:', to);
+        return true;
+    } catch (err) {
+        console.error('خطأ في إرسال البريد الإلكتروني:', err.message);
+        return false;
+    }
+}
+
 // ----------------- Routes -----------------
 
+// تسجيل دخول الادمن
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+        res.cookie('loggedIn', 'true', { maxAge: 24 * 60 * 60 * 1000 });
+        return res.redirect('/dashboard.html');
+    }
+    res.send('خطأ في تسجيل الدخول');
+});
+
+// حماية dashboard
+app.get('/dashboard.html', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
 // استقبال الدفع
-app.post('/pay', (req, res) => {
+app.post('/pay', async (req, res) => {
     const { nationalId, seatNumber, phone, email } = req.body;
     if (!req.files || !req.files.screenshot) return res.status(400).send('يجب رفع سكرين التحويل');
 
     const screenshot = req.files.screenshot;
     const filename = Date.now() + path.extname(screenshot.name);
     const uploadPath = path.join(uploadsDir, filename);
-    screenshot.mv(uploadPath, err => {
+    
+    screenshot.mv(uploadPath, async err => {
         if (err) return res.status(500).send(err);
+        
+        // حفظ الطلب في البيانات
         data.requests.push({
-            nationalId,   // ✅ الرقم القومي
+            nationalId,
             seatNumber,
             phone,
             email,
@@ -50,22 +133,34 @@ app.post('/pay', (req, res) => {
             created_at: new Date().toISOString()
         });
         saveData();
+        
+        // إرسال إشعارات
+        const message = `طلب جديد للنتيجة:
+- الرقم القومي: ${nationalId}
+- رقم الجلوس: ${seatNumber}
+- الهاتف: ${phone}
+- البريد: ${email}`;
+        
+        // إرسال إلى التيليجرام
+        await sendTelegramMessage(message);
+        
+        // إرسال إلى الجيميل (NOTIFICATION_EMAIL)
+        if (process.env.NOTIFICATION_EMAIL) {
+            await sendEmail(
+                process.env.NOTIFICATION_EMAIL,
+                'طلب جديد للنتيجة',
+                message
+            );
+        } else {
+            console.log('لم يتم تحديد بريد الإشعارات (NOTIFICATION_EMAIL)');
+        }
+        
         res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
     });
 });
 
-
-// تسجيل دخول الادمن
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-        return res.redirect('/dashboard.html');
-    }
-    res.send('خطأ في تسجيل الدخول');
-});
-
 // فتح نتيجة لطلب محدد
-app.post('/api/open-result', (req, res) => {
+app.post('/api/open-result', requireAuth, (req, res) => {
     const { seatNumber } = req.body;
     const request = data.requests.find(r => r.seatNumber === seatNumber);
     const student = data.results.find(r => r.seatNumber === seatNumber);
@@ -86,38 +181,45 @@ app.post('/check-result', (req, res) => {
 });
 
 // إرسال النتيجة عبر البريد من dashboard
-app.post('/api/send-email-dashboard', async (req, res) => {
+app.post('/api/send-email-dashboard', requireAuth, async (req, res) => {
     const { seatNumber, email, message } = req.body;
     const student = data.results.find(r => r.seatNumber === seatNumber);
     if (!student) return res.json({ success: false, message: 'لا يوجد نتيجة' });
 
     try {
-        // ⚠️ حل مشكلة Gmail SMTP: استخدم App Password وليس كلمة السر العادية
-        let transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS  // App Password
-            }
-        });
+        const emailText = `النتيجة:
+اسم الطالب: ${student.name}
+رقم الجلوس: ${student.seatNumber}
+الصف: ${student.gradeLevel}
+المدرسة: ${student.schoolName}
+النسبة: ${student.percentage}%
+الملاحظات: ${student.notes || 'لا توجد'}
 
-        await transporter.sendMail({
-            from: process.env.SMTP_USER,
-            to: email,
-            subject: 'نتيجتك',
-            text: `النتيجة:\nاسم الطالب: ${student.name}\nالصف: ${student.gradeLevel}\nالنسبة: ${student.percentage}%\n\n${message || ''}`
-        });
+${message || ''}`;
 
-        res.json({ success: true });
+        const success = await sendEmail(email, 'نتيجتك', emailText);
+        
+        if (success) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: 'فشل في إرسال البريد' });
+        }
     } catch (err) {
         res.json({ success: false, message: err.message });
     }
 });
 
 // API للـ Dashboard
-app.get('/api/results', (req, res) => {
+app.get('/api/results', requireAuth, (req, res) => {
     res.json(data);
 });
 
+// تسجيل الخروج
+app.post('/logout', (req, res) => {
+    res.clearCookie('loggedIn');
+    res.redirect('/login.html');
+});
+
 // --------------------------------------------
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
