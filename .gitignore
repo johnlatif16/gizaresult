@@ -1,6 +1,0 @@
-node_modules/
-uploads/
-.env
-data.json
-.DS_Store
-*.log
