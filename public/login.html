@@ -1,129 +1,25 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل دخول الأدمن</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
-        
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .login-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            width: 100%;
-            max-width: 420px;
-            transition: transform 0.3s ease;
-        }
-        
-        .login-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .login-header {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-        }
-        
-        .login-body {
-            padding: 25px;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .input-icon {
-            position: absolute;
-            right: 15px;
-            top: 14px;
-            color: #6b7280;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 12px 45px 12px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            outline: none;
-        }
-        
-        .btn-login {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 14px;
-            width: 100%;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-login:hover {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-        
-        .admin-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>تسجيل دخول الادمن</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="login-card">
-        <div class="login-header">
-            <h1 class="text-2xl font-bold">نظام إدارة النتائج</h1>
-            <div class="admin-badge">لوحة تحكم الأدمن</div>
-        </div>
-        
-        <div class="login-body">
-            <form action="/login" method="post" class="space-y-5">
-                <div class="input-group">
-                    <i class="input-icon fas fa-user"></i>
-                    <input name="username" placeholder="اسم المستخدم" required class="input-field">
-                </div>
-                
-                <div class="input-group">
-                    <i class="input-icon fas fa-lock"></i>
-                    <input name="password" placeholder="كلمة المرور" type="password" required class="input-field">
-                </div>
-                
-                <button type="submit" class="btn-login">
-                    <i class="fas fa-sign-in-alt ml-2"></i>
-                    تسجيل الدخول
-                </button>
-            </form>
-        </div>
-    </div>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+<div class="bg-white p-10 rounded-lg shadow max-w-sm w-full">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">تسجيل دخول الادمن</h1>
+  <form action="/login" method="post" class="space-y-4">
+    <input name="username" placeholder="اسم المستخدم" required class="w-full p-2 border rounded">
+    <input name="password" placeholder="كلمة المرور" type="password" required class="w-full p-2 border rounded">
+    <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">دخول</button>
+  </form>
+</div>
+
+<footer class="mt-10 text-gray-500 text-center">
+  <p>هذا الموقع غير مرتبط بالحكومة بأي شكل من الأشكال.</p>
+  <p>©جميع الحقوق محفوظة.</p>
+</footer>
+
 </body>
 </html>

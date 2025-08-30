@@ -1,463 +1,104 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>موقع الاستعلام عن النتائج</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
-        
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-        
-        .card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn {
-            transition: all 0.3s ease;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #3b82f6, #2563eb);
-        }
-        
-        .btn-success {
-            background: linear-gradient(45deg, #10b981, #059669);
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .disclaimer-box {
-            border-right: 4px solid;
-            border-radius: 8px;
-        }
-        
-        .verse-box {
-            background: linear-gradient(45deg, #dbeafe, #eff6ff);
-            border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            font-size: 18px;
-            color: #1e40af;
-            margin: 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .info-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .info-table th {
-            background: linear-gradient(45deg, #3b82f6, #2563eb);
-            color: white;
-            padding: 12px;
-            text-align: right;
-        }
-        
-        .info-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .info-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .info-table tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        
-        .info-table tr:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .step-indicator::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background-color: #e5e7eb;
-            z-index: 1;
-        }
-        
-        .step {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .step.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .step.completed {
-            background-color: #10b981;
-            color: white;
-        }
-        
-        .input-field {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 12px 15px;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            width: 100%;
-        }
-        
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            outline: none;
-        }
-        
-        .file-upload {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-        }
-        
-        .file-upload:hover {
-            border-color: #3b82f6;
-        }
-        
-        .result-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 500;
-            margin: 5px;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease forwards;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>الصفحة الرئيسية</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #3b82f6; color: white; }
+    .disclaimer {
+      text-align: center;
+      font-size: 14px;
+      color: #dc3545;
+      background: #fff0f0;
+      padding: 10px;
+      border: 1px solid #f5c2c7;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+</style>
 </head>
-<body class="flex flex-col items-center justify-start min-h-screen p-4 py-8">
-    <div class="container max-w-4xl mx-auto">
-        <!-- العنوان الرئيسي -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">موقع الاستعلام عن النتائج</h1>
-            <p class="text-gray-600">خدمة إلكترونية لاستعلام عن نتائج الطلاب</p>
-        </div>
+<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-6">
 
-        <!-- آية الكتاب المقدس -->
-        <div class="verse-box fade-in">
-            <i class="fas fa-quote-left text-blue-500 mb-2"></i>
-            <p class="font-medium">"إِلهُ السَّلاَمِ مَعَكُمْ أَجْمَعِينَ. آمِينَ." (رو 15: 33)</p>
-        </div>
+<div class="disclaimer">
+  النتيجة مظهرتش
+  <br>
+  <div class="disclaimer" style="background: #01f7ff00; border-color: #c3e6cb;">
+    <span style="color: green;">"إِلهُ السَّلاَمِ مَعَكُمْ أَجْمَعِينَ. آمِينَ." (رو 15: 33).</span>
+  </div>
+</div>
 
-        <!-- صناديق التنبيه -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="disclaimer-box bg-red-50 border-red-500 p-4">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle text-red-500 text-xl mt-1 mr-2"></i>
-                    <div>
-                        <h3 class="font-bold text-red-800 mb-1">تنبيه هام</h3>
-                        <p class="text-red-700 text-sm">ممنوع منعاً باتاً تفتح أي حاجة أو تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وأنا مش مسؤول</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="disclaimer-box bg-blue-50 border-blue-500 p-4">
-                <div class="flex items-start">
-                    <i class="fas fa-info-circle text-blue-500 text-xl mt-1 mr-2"></i>
-                    <div>
-                        <h3 class="font-bold text-blue-800 mb-1">معلومات عن الخدمة</h3>
-                        <p class="text-blue-700 text-sm">هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- معلومات النتيجة -->
-        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center">
-                <i class="fas fa-envelope text-indigo-600 text-xl ml-2"></i>
-                <p class="text-indigo-800 font-medium">
-                    "ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."
-                </p>
-            </div>
-        </div>
+  <div class="disclaimer" style="color: #00008B; background: #01f7ff00; border-color: #c3e6cb;">
+  ممنوع منعاً باتاً تفتح اي حاجة او تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وانا مش مسؤول
+</div>
+  <div class="disclaimer">
+    هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط.
+  البيانات سرية تامة ثم تتحذف بعد الاستطلاع على النتيجة
+  </div>
+  <p style="color: #6f42c1; font-weight: bold;">
+"ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."
+</p>
 
-        <!-- أزرار الاختيار -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <button onclick="showPayment()" class="btn btn-primary py-3 px-6 flex items-center justify-center">
-                <i class="fas fa-money-bill-wave ml-2"></i>
-                <span>إتمام الدفع للاستعلام عن النتيجة</span>
-            </button>
-            
-            <button onclick="showCheck()" class="btn btn-success py-3 px-6 flex items-center justify-center">
-                <i class="fas fa-search ml-2"></i>
-                <span>استعلام عن النتيجة بعد الدفع</span>
-            </button>
-        </div>
+<h1 class="text-4xl font-bold mb-10 text-gray-800">مرحبا بك في موقع الاستعلام عن النتائج</h1>
 
-        <!-- قسم الدفع -->
-        <div id="payment" class="card bg-white rounded-lg shadow-md p-6 mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">إتمام عملية الدفع</h2>
-            
-            <div class="step-indicator mb-8">
-                <div class="step completed"><i class="fas fa-check"></i></div>
-                <div class="step active">2</div>
-                <div class="step">3</div>
-            </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div class="flex items-center">
-                    <i class="fas fa-wallet text-blue-600 text-xl ml-2"></i>
-                    <div>
-                        <p class="text-blue-800 font-medium">الدفع عن طريق تحويل محفظة</p>
-                        <p class="text-blue-600">رقم التحويل: <strong class="text-lg">01274445091</strong></p>
-                    </div>
-                </div>
-            </div>
-            
-            <form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
-                <div>
-                    <label class="block text-gray-700 mb-2">الرقم القومي</label>
-                    <input name="nationalId" placeholder="أدخل الرقم القومي" required class="input-field">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 mb-2">رقم الجلوس</label>
-                    <input name="seatNumber" placeholder="أدخل رقم الجلوس" required class="input-field">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 mb-2">رقم الهاتف</label>
-                    <input name="phone" placeholder="أدخل رقم الهاتف" required class="input-field">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="input-field">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 mb-2">صورة إثبات الدفع</label>
-                    <div class="file-upload">
-                        <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-2"></i>
-                        <p class="text-gray-600">اسحب وأسقط الصورة هنا أو <span class="text-blue-600">اختر من الجهاز</span></p>
-                        <input type="file" name="screenshot" required class="hidden">
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-full py-3 mt-2">
-                    <i class="fas fa-paper-plane ml-2"></i>
-                    تأكيد الدفع
-                </button>
-            </form>
-        </div>
+<div class="space-y-5 mb-6">
+  <button onclick="showPayment()" class="px-8 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">إتمام الدفع للاستعلام عن النتيجة</button>
+  <button onclick="showCheck()" class="px-8 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">استعلام عن النتيجة بعد الدفع</button>
+</div>
 
-        <!-- قسم الاستعلام -->
-        <div id="check" class="card bg-white rounded-lg shadow-md p-6 hidden">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">استعلام عن النتيجة</h2>
-            
-            <form id="checkForm" class="space-y-4 mb-6">
-                <div>
-                    <label class="block text-gray-700 mb-2">رقم الهاتف</label>
-                    <input name="phone" id="phoneInput" placeholder="أدخل رقم الهاتف المسجل" required class="input-field">
-                </div>
-                
-                <button type="submit" class="btn btn-success w-full py-3">
-                    <i class="fas fa-search ml-2"></i>
-                    استعلام
-                </button>
-            </form>
+<!-- الدفع -->
+<div class="mt-6 p-6 bg-white rounded-lg shadow max-w-md w-full hidden" id="payment">
+  <h2 class="text-2xl font-semibold mb-4">الدفع عن طريق تحويل محفظة</h2>
+  <p class="mb-4">رقم التحويل: <strong>01274445091</strong></p>
+<form action="/pay" method="post" enctype="multipart/form-data" class="space-y-4">
+  <input name="nationalId" placeholder="الرقم القومي" required class="w-full p-2 border rounded">
+  <input name="seatNumber" placeholder="رقم الجلوس" required class="w-full p-2 border rounded">
+  <input name="phone" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+  <input type="file" name="screenshot" required class="w-full">
+  <input name="email" placeholder="البريد الإلكتروني" required class="w-full p-2 border rounded">
+  <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">تأكيد الدفع</button>
+</form>
 
-            <!-- نتائج الاستعلام -->
-            <div id="resultContainer" class="hidden">
-                <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">بيانات الطالب</h3>
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                    <div id="studentInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
+</div>
 
-                <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">المواد الأساسية</h3>
-                <table class="info-table mb-6">
-                    <thead>
-                        <tr>
-                            <th>المادة</th>
-                            <th>الدرجة</th>
-                            <th>من</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mainSubjectsTable"></tbody>
-                </table>
+<!-- استعلام النتيجة -->
+<div class="mt-6 p-6 bg-white rounded-lg shadow max-w-3xl w-full hidden" id="check">
+  <h2 class="text-2xl font-semibold mb-4">استعلام عن النتيجة</h2>
+  <form id="checkForm" class="space-y-4">
+    <input name="phone" id="phoneInput" placeholder="رقم الهاتف" required class="w-full p-2 border rounded">
+    <button type="submit" class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">استعلام</button>
+  </form>
 
-                <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">المواد الإضافية</h3>
-                <table class="info-table mb-6">
-                    <thead>
-                        <tr>
-                            <th>المادة</th>
-                            <th>الدرجة</th>
-                            <th>من</th>
-                        </tr>
-                    </thead>
-                    <tbody id="additionalSubjectsTable"></tbody>
-                </table>
+  <!-- هنا سيظهر الجدول -->
+  <div id="resultContainer" class="mt-6 hidden">
+    <h3 class="text-xl font-semibold mb-2">بيانات الطالب</h3>
+    <p id="studentInfo"></p>
 
-                <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">الإجمالي والنسبة</h3>
-                <table class="info-table">
-                    <tr>
-                        <th>المجموع الكلي</th>
-                        <td id="totalScore" class="font-semibold"></td>
-                    </tr>
-                    <tr>
-                        <th>المجموع الكلي الممكن</th>
-                        <td id="totalOutOf"></td>
-                    </tr>
-                    <tr>
-                        <th>النسبة المئوية</th>
-                        <td id="percentage" class="font-semibold text-green-600"></td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+    <h3 class="text-lg font-semibold mt-4">المواد الأساسية</h3>
+    <table id="mainSubjectsTable">
+      <thead><tr><th>المادة</th><th>الدرجة</th><th>من</th></tr></thead>
+      <tbody></tbody>
+    </table>
 
-        <!-- تذييل الصفحة -->
-        <footer class="text-center mt-10 text-gray-600 text-sm">
-            <p>هذا الموقع غير تابع لأي جهة حكومية أو وزارة</p>
-            <p class="mt-2">جميع الحقوق محفوظة © 2023</p>
-        </footer>
-    </div>
+    <h3 class="text-lg font-semibold mt-4">المواد الإضافية</h3>
+    <table id="additionalSubjectsTable">
+      <thead><tr><th>المادة</th><th>الدرجة</th><th>من</th></tr></thead>
+      <tbody></tbody>
+    </table>
 
-    <script>
-        function showPayment() {
-            document.getElementById('payment').classList.remove('hidden');
-            document.getElementById('check').classList.add('hidden');
-            document.querySelector('[onclick="showPayment()"]').classList.add('bg-blue-700');
-            document.querySelector('[onclick="showCheck()"]').classList.remove('bg-green-700');
-        }
-        
-        function showCheck() {
-            document.getElementById('check').classList.remove('hidden');
-            document.getElementById('payment').classList.add('hidden');
-            document.querySelector('[onclick="showCheck()"]').classList.add('bg-green-700');
-            document.querySelector('[onclick="showPayment()"]').classList.remove('bg-blue-700');
-        }
+    <h3 class="text-lg font-semibold mt-4">الإجمالي والنسبة</h3>
+    <table>
+      <tr><th>المجموع الكلي</th><td id="totalScore"></td></tr>
+      <tr><th>المجموع الكلي الممكن</th><td id="totalOutOf"></td></tr>
+      <tr><th>النسبة المئوية</th><td id="percentage"></td></tr>
+    </table>
+  </div>
+</div>
 
-        // معالجة استعلام النتيجة
-        document.getElementById('checkForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const phone = document.getElementById('phoneInput').value;
-
-            const res = await fetch('/check-result', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({phone})
-            });
-
-            const resultText = await res.text();
-
-            try {
-                const result = JSON.parse(resultText);
-
-                // بيانات الطالب
-                const infoDiv = document.getElementById('studentInfo');
-                infoDiv.innerHTML = `
-                    <div><strong>اسم الطالب:</strong> ${result.name}</div>
-                    <div><strong>رقم الجلوس:</strong> ${result.seatNumber}</div>
-                    <div><strong>المرحلة:</strong> ${result.stage}</div>
-                    <div><strong>الصف:</strong> ${result.gradeLevel}</div>
-                    <div><strong>المدرسة:</strong> ${result.schoolName}</div>
-                    <div><strong>ملاحظات:</strong> <span class="result-badge bg-green-100 text-green-800">${result.notes}</span></div>
-                `;
-
-                // المواد الأساسية
-                const mainTbody = document.querySelector('#mainSubjectsTable');
-                mainTbody.innerHTML = '';
-                result.mainSubjects.forEach(sub => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
-                    mainTbody.appendChild(tr);
-                });
-
-                // المواد الإضافية
-                const addTbody = document.querySelector('#additionalSubjectsTable');
-                addTbody.innerHTML = '';
-                result.additionalSubjects.forEach(sub => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td>`;
-                    addTbody.appendChild(tr);
-                });
-
-                // الإجمالي والنسبة
-                document.getElementById('totalScore').textContent = result.totalScore;
-                document.getElementById('totalOutOf').textContent = result.totalOutOf;
-                document.getElementById('percentage').textContent = result.percentage + '%';
-
-                document.getElementById('resultContainer').classList.remove('hidden');
-            } catch(err) {
-                alert(resultText); // لو لم يتم الدفع أو الطلب غير موجود
-            }
-        });
-
-        // إضافة تأثيرات عند التمرير
-        document.addEventListener('DOMContentLoaded', function() {
-            const fadeElems = document.querySelectorAll('.fade-in');
-            fadeElems.forEach(elem => {
-                elem.style.opacity = '0';
-            });
-            
-            setTimeout(() => {
-                fadeElems.forEach(elem => {
-                    elem.style.transition = 'opacity 0.5s ease';
-                    elem.style.opacity = '1';
-                });
-            }, 100);
-        });
-    </script>
-</body>
-</html>
+<p>هذا الموقع غير تابع لأي جهة حكومية</p>
 
 <script>
 function showPayment() {

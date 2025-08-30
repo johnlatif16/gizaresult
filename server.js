@@ -28,32 +28,7 @@ function saveData() {
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
 
-// Middleware للتحقق من المصادقة
-const requireAuth = (req, res, next) => {
-    // هنا يمكنك إضافة منطق التحقق من الجلسات أو التوكن
-    // للتبسيط، سنستخدم تحقق أساسي من خلال query parameter أو header
-    const authToken = req.query.auth || req.headers.authorization;
-    
-    // هذا مثال بسيط، في التطبيق الحقيقي استخدم جلسات أو JWT
-    if (req.path.includes('/dashboard') && !authToken) {
-        return res.redirect('/login.html');
-    }
-    next();
-};
-
-app.use(requireAuth);
-
 // ----------------- Routes -----------------
-
-// الصفحة الرئيسية
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// منع الوصول المباشر إلى dashboard
-app.get('/dashboard.html', (req, res) => {
-    res.redirect('/login.html');
-});
 
 // استقبال الدفع
 app.post('/pay', (req, res) => {
@@ -66,7 +41,7 @@ app.post('/pay', (req, res) => {
     screenshot.mv(uploadPath, err => {
         if (err) return res.status(500).send(err);
         data.requests.push({
-            nationalId,
+            nationalId,   // ✅ الرقم القومي
             seatNumber,
             phone,
             email,
@@ -79,37 +54,14 @@ app.post('/pay', (req, res) => {
     });
 });
 
+
 // تسجيل دخول الادمن
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-        // إنشاء توكن بسيط (في التطبيق الحقيقي استخدم JWT)
-        const authToken = Buffer.from(`${username}:${password}`).toString('base64');
-        return res.redirect(`/admin-dashboard.html?auth=${authToken}`);
+        return res.redirect('/dashboard.html');
     }
     res.send('خطأ في تسجيل الدخول');
-});
-
-// لوحة التحكم الآمنة
-app.get('/admin-dashboard.html', (req, res) => {
-    const authToken = req.query.auth;
-    if (!authToken) {
-        return res.redirect('/login.html');
-    }
-    
-    // التحقق من التوكن (تبسيطي)
-    try {
-        const decoded = Buffer.from(authToken, 'base64').toString('utf-8');
-        const [username, password] = decoded.split(':');
-        
-        if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-            return res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
-        }
-    } catch (error) {
-        // في حالة خطأ في التوكن
-    }
-    
-    res.redirect('/login.html');
 });
 
 // فتح نتيجة لطلب محدد
@@ -140,65 +92,25 @@ app.post('/api/send-email-dashboard', async (req, res) => {
     if (!student) return res.json({ success: false, message: 'لا يوجد نتيجة' });
 
     try {
-        // إعدادات SMTP مع خيارات أكثر مرونة
+        // ⚠️ حل مشكلة Gmail SMTP: استخدم App Password وليس كلمة السر العادية
         let transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: process.env.SMTP_PORT || 587,
-            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+            service: "gmail",
             auth: {
                 user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            },
-            tls: {
-                // لا تفشل على شهادات SSL غير صالحة
-                rejectUnauthorized: false
+                pass: process.env.SMTP_PASS  // App Password
             }
         });
 
-        // التحقق من اتصال SMTP
-        await transporter.verify();
-
-        const emailText = `
-        نتيجتك:
-        اسم الطالب: ${student.name}
-        رقم الجلوس: ${student.seatNumber}
-        الصف: ${student.gradeLevel}
-        المدرسة: ${student.schoolName}
-        النسبة: ${student.percentage}%
-        الملاحظات: ${student.notes || 'لا يوجد'}
-        
-        ${message || 'شكراً لاستخدامك خدمتنا'}
-        `;
-
-        const emailHtml = `
-        <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <h2 style="color: #1e40af;">نتيجتك</h2>
-            <p><strong>اسم الطالب:</strong> ${student.name}</p>
-            <p><strong>رقم الجلوس:</strong> ${student.seatNumber}</p>
-            <p><strong>الصف:</strong> ${student.gradeLevel}</p>
-            <p><strong>المدرسة:</strong> ${student.schoolName}</p>
-            <p><strong>النسبة:</strong> ${student.percentage}%</p>
-            <p><strong>الملاحظات:</strong> ${student.notes || 'لا يوجد'}</p>
-            <hr>
-            <p>${message || 'شكراً لاستخدامك خدمتنا'}</p>
-        </div>
-        `;
-
         await transporter.sendMail({
-            from: process.env.SMTP_FROM || process.env.SMTP_USER,
+            from: process.env.SMTP_USER,
             to: email,
-            subject: 'نتيجتك - نظام إدارة النتائج',
-            text: emailText,
-            html: emailHtml
+            subject: 'نتيجتك',
+            text: `النتيجة:\nاسم الطالب: ${student.name}\nالصف: ${student.gradeLevel}\nالنسبة: ${student.percentage}%\n\n${message || ''}`
         });
 
-        res.json({ success: true, message: 'تم إرسال البريد بنجاح' });
+        res.json({ success: true });
     } catch (err) {
-        console.error('Error sending email:', err);
-        res.json({ 
-            success: false, 
-            message: `فشل في إرسال البريد: ${err.message}` 
-        });
+        res.json({ success: false, message: err.message });
     }
 });
 
@@ -208,5 +120,4 @@ app.get('/api/results', (req, res) => {
 });
 
 // --------------------------------------------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
