@@ -68,8 +68,6 @@ async function sendTelegramNotification(message) {
   }
 }
 
-
-
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
@@ -182,67 +180,33 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب - الإصدار المصحح
+// التحقق من النتيجة للطالب
 app.post('/api/check-result', async (req, res) => {
-  const { phone } = req.body;
+  const { phone } = req.body;  // <-- بدل seatNumber
 
   try {
     const requestsRef = db.collection('requests');
-    const snap = await requestsRef.where('phone', '==', phone).get();
+    const snap = await requestsRef.where('phone', '==', phone).get();  // <-- ابحث برقم الهاتف
 
     if (snap.empty) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
-      });
+      return res.json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
     }
 
-    const requestDoc = snap.docs[0];
-    const requestData = requestDoc.data();
+    const requestDoc = snap.docs[0].data();
 
-    // التحقق إذا تم الدفع
-    if (!requestData.paid) {
-      return res.status(402).json({ 
-        success: false, 
-        message: 'لم يتم الدفع بعد' 
-      });
+    if (!requestDoc.paid || !requestDoc.result) {
+      return res.json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
     }
 
-    // إذا كانت النتيجة مخزنة في حقل result
-    if (requestData.result) {
-      return res.json({
-        success: true,
-        result: requestData.result
-      });
-    }
-    
-    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
-    // إرجاع بيانات النتيجة مباشرة من الطلب
-    res.json({
-      success: true,
-      result: {
-        name: requestData.name || "غير متوفر",
-        seatNumber: requestData.seatNumber || "غير متوفر",
-        stage: requestData.stage || "غير متوفر",
-        gradeLevel: requestData.gradeLevel || "غير متوفر",
-        schoolName: requestData.schoolName || "غير متوفر",
-        notes: requestData.notes || "لا توجد",
-        mainSubjects: requestData.mainSubjects || [],
-        additionalSubjects: requestData.additionalSubjects || [],
-        totalScore: requestData.totalScore || 0,
-        totalOutOf: requestData.totalOutOf || 0,
-        percentage: requestData.percentage || 0
-      }
-    });
+    res.json({ success: true, result: requestDoc.result });
 
   } catch (error) {
-    console.error('Error in /api/check-result:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'حدث خطأ في الخادم: ' + error.message 
-    });
+    console.error(error);
+    res.json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
   }
 });
+
+
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -269,22 +233,6 @@ app.post('/api/open-result', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
-  }
-});
-
-// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
-app.get('/api/debug-requests', async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      return { id: doc.id, ...doc.data() };
-    });
-    
-    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
-    res.json({ requests });
-  } catch (error) {
-    console.error('Error in /api/debug-requests:', error);
-    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -334,4 +282,4 @@ app.delete('/api/requests/:id', async (req, res) => {
 // ==============================================
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));كده؟
