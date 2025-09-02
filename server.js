@@ -5,7 +5,6 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const admin = require('firebase-admin');
-const session = require('express-session');
 require('dotenv').config();
 
 // ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
@@ -20,28 +19,9 @@ const db = admin.firestore();
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public', {
-  index: false, // يمنع فتح index.html تلقائياً
-  extensions: ['html']
-}));
+app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(fileUpload());
-
-// ✅ إضافة السيشن
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersecretkey',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // خليها true لو عندك https
-}));
-
-// ميدل وير للتحقق من تسجيل الدخول
-function isAuthenticated(req, res, next) {
-  if (req.session && req.session.loggedIn) {
-    return next();
-  }
-  res.redirect('/login.html');
-}
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
@@ -98,6 +78,7 @@ app.get('/api/requests', async (req, res) => {
     const snap = await db.collection('requests').get();
     const requests = snap.docs.map(doc => {
       const data = doc.data();
+      // إذا فيه سكرين تحويل، حوّله لرابط كامل
       if (data.screenshot && data.screenshot !== '') {
         data.screenshot = `/uploads/${data.screenshot}`;
       } else {
@@ -111,6 +92,8 @@ app.get('/api/requests', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+
 
 // صفحة الدفع
 app.get('/pay', (req, res) => {
@@ -194,30 +177,12 @@ app.post('/reserve', async (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    req.session.loggedIn = true;
     return res.redirect('/dashboard.html');
   }
   res.send('خطأ في تسجيل الدخول');
 });
 
-// حماية صفحة الداشبورد
-app.get('/dashboard.html', isAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
-});
-
-// تسجيل الخروج
-app.get('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      console.error('خطأ أثناء تسجيل الخروج:', err);
-      return res.status(500).send('حدث خطأ أثناء تسجيل الخروج');
-    }
-    res.clearCookie('connect.sid');
-    res.redirect('/login.html');
-  });
-});
-
-// التحقق من النتيجة للطالب
+// التحقق من النتيجة للطالب - الإصدار المصحح
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
@@ -235,6 +200,7 @@ app.post('/api/check-result', async (req, res) => {
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
+    // التحقق إذا تم الدفع
     if (!requestData.paid) {
       return res.status(402).json({ 
         success: false, 
@@ -242,6 +208,7 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
+    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
       return res.json({
         success: true,
@@ -249,6 +216,8 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
     
+    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
+    // إرجاع بيانات النتيجة مباشرة من الطلب
     res.json({
       success: true,
       result: {
@@ -274,7 +243,6 @@ app.post('/api/check-result', async (req, res) => {
     });
   }
 });
-
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -304,7 +272,7 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// فحص البيانات (Debug)
+// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
 app.get('/api/debug-requests', async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
