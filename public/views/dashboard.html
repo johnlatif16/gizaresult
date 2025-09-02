@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة تحكم الادمن</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+  
+  :root {
+    --primary: #3b82f6;
+    --secondary: #10b981;
+    --accent: #8b5cf6;
+    --light: #f8fafc;
+    --dark: #1e293b;
+  }
+  
+  body {
+    font-family: 'Tajawal', sans-serif;
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+  }
+  
+  .sidebar {
+    width: 250px;
+    background: linear-gradient(to bottom, var(--primary), #2563eb);
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar button {
+    margin-bottom: 12px;
+    text-align: right;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sidebar button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-5px);
+  }
+  
+  .sidebar button i {
+    margin-left: 10px;
+    font-size: 1.2rem;
+  }
+  
+  .content {
+    flex-grow: 1;
+    padding: 25px;
+    overflow-x: auto;
+    background-color: #f1f5f9;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  th {
+    background: linear-gradient(to right, var(--primary), #2563eb);
+    color: white;
+    padding: 14px;
+    font-weight: 600;
+  }
+  
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: center;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+  
+  .action-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .open-btn {
+    background: linear-gradient(to right, #16a34a, #15803d);
+    color: white;
+  }
+  
+  .open-btn:hover {
+    background: linear-gradient(to right, #15803d, #166534);
+    transform: translateY(-2px);
+  }
+  
+  .send-btn {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    color: white;
+  }
+  
+  .send-btn:hover {
+    background: linear-gradient(to right, #1d4ed8, #1e40af);
+    transform: translateY(-2px);
+  }
+  
+  .delete-btn {
+    background: linear-gradient(to right, #dc2626, #b91c1c);
+    color: white;
+  }
+  
+  .delete-btn:hover {
+    background: linear-gradient(to right, #b91c1c, #991b1b);
+    transform: translateY(-2px);
+  }
+  
+  img.screenshot {
+    width: 100px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+  
+  img.screenshot:hover {
+    transform: scale(1.8);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  input, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s;
+    background: #f9fafb;
+  }
+  
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background: white;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--primary);
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="text-center mb-8">
+    <i class="fas fa-user-shield fa-2x mb-2"></i>
+    <h2 class="text-xl font-bold">لوحة التحكم</h2>
+  </div>
+  
+  <button onclick="showSection('requests')">
+    <i class="fas fa-money-bill-wave"></i>
+    الطلبات
+  </button>
+  
+  <button onclick="showSection('results')">
+    <i class="fas fa-chart-line"></i>
+    النتائج
+  </button>
+  
+  <button onclick="showSection('reservations')">
+    <i class="fas fa-calendar-check"></i>
+    الحجوزات
+  </button>
+  
+  <button onclick="showSection('send')">
+    <i class="fas fa-envelope"></i>
+    إرسال النتيجة
+  </button>
+  
+  <div class="mt-auto">
+<button onclick="window.location.href='/logout'">
+  تسجيل الخروج
+</button>
+
+  </div>
+</div>
+
+<div class="content">
+  <!-- طلبات الدفع -->
+  <div id="requests" class="hidden">
+    <h2 class="section-title">طلبات الدفع</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم القومي</th>
+            <th>رقم الجلوس</th>
+            <th>رقم الهاتف</th>
+            <th>البريد الإلكتروني</th>
+            <th>سكرين التحويل</th>
+            <th>تاريخ الطلب</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="requestsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- النتائج المفتوحة -->
+  <div id="results" class="hidden">
+    <h2 class="section-title">النتائج المفتوحة</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الجلوس</th>
+            <th>الاسم</th>
+            <th>الصف</th>
+            <th>المدرسة</th>
+            <th>النسبة %</th>
+            <th>الملاحظات</th>
+            <th>فتح النتيجة</th>
+            <th>إرسال البريد</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- قسم الحجوزات -->
+  <div id="reservations" class="hidden">
+    <h2 class="section-title">قسم الحجوزات</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم القومي</th>
+            <th>رقم الهاتف</th>
+            <th>البريد الإلكتروني</th>
+            <th>تاريخ الحجز</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="reservationsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- إرسال البريد -->
+  <div id="send" class="hidden">
+    <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
+    <div class="card max-w-md mx-auto">
+      <form id="sendForm" class="space-y-4">
+        <div>
+          <label class="block text-gray-700 mb-2">رقم الجلوس</label>
+          <input id="sendSeat" placeholder="أدخل رقم الجلوس" required>
+        </div>
+        
+        <div>
+          <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+          <input id="sendEmail" placeholder="أدخل البريد الإلكتروني" required>
+        </div>
+        
+        <div>
+          <label class="block text-gray-700 mb-2">نص الرسالة</label>
+          <textarea id="sendMessage" placeholder="أدخل نص الرسالة (اختياري)" rows="4"></textarea>
+        </div>
+        
+        <button type="submit" class="action-btn send-btn w-full py-3">
+          <i class="fas fa-paper-plane"></i>
+          إرسال
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function showSection(id){
+  ['requests','results','reservations','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function logout(){ window.location.href = '/login.html'; }
+
+// تحميل الطلبات
+async function loadRequests(){
+  const res = await fetch('/api/requests');
+  const data = await res.json();
+  const tbody = document.getElementById('requestsTable');
+  tbody.innerHTML = '';
+data.requests.forEach(r => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${r.nationalId || 'N/A'}</td>
+    <td>${r.seatNumber}</td>
+    <td>${r.phone}</td>
+    <td>${r.email}</td>
+    <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
+    <td>${new Date(r.created_at).toLocaleString()}</td>
+    <td>
+      <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+        <i class="fas fa-trash"></i> حذف
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+}
+
+// تحميل النتائج
+async function loadResults(){
+  const res = await fetch('/api/results');
+  const data = await res.json();
+  const tbody = document.getElementById('resultsTable');
+  tbody.innerHTML = '';
+  data.results.forEach(student => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${student.seatNumber}</td>
+      <td>${student.name}</td>
+      <td>${student.gradeLevel}</td>
+      <td>${student.schoolName}</td>
+      <td>${student.percentage}%</td>
+      <td>${student.notes || ''}</td>
+      <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
+      <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// تحميل الحجوزات
+async function loadReservations(){
+  const res = await fetch('/api/reservations');
+  const data = await res.json();
+  const tbody = document.getElementById('reservationsTable');
+  tbody.innerHTML = '';
+  data.reservations.forEach(reservation => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${reservation.nationalId}</td>
+      <td>${reservation.phone}</td>
+      <td>${reservation.email}</td>
+      <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
+      <td>
+        <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// حذف حجز
+async function deleteReservation(id) {
+  if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
+    const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      alert('تم حذف الحجز بنجاح');
+      loadReservations();
+    } else {
+      alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+    }
+  }
+}
+
+async function deleteRequest(id) {
+  if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+    const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      alert('تم حذف الطلب بنجاح');
+      loadRequests();
+    } else {
+      alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+    }
+  }
+}
+
+// فتح نتيجة مباشرة
+async function openResult(seatNumber){
+  const res = await fetch('/api/open-result', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({seatNumber})
+  });
+  const data = await res.json();
+  alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
+  loadRequests();
+  loadResults();
+}
+
+// إرسال البريد مباشرة
+function sendEmailPrompt(seatNumber){
+  const email = prompt('البريد الإلكتروني:');
+  if(!email) return alert('البريد الإلكتروني مطلوب');
+  const message = prompt('نص الرسالة:');
+  fetch('/api/send-email-dashboard',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({seatNumber,email,message})
+  }).then(res=>res.json()).then(data=>{
+    alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+  });
+}
+
+// عند تحميل الصفحة
+loadRequests();
+loadResults();
+loadReservations();
+
+// تحديث دوري
+setInterval(()=>{
+  loadRequests();
+  loadResults();
+  loadReservations();
+}, 10000);
+</script>
+
+</body>
+</html>
