@@ -68,6 +68,8 @@ async function sendTelegramNotification(message) {
   }
 }
 
+
+
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
@@ -142,15 +144,28 @@ app.post('/pay', async (req, res) => {
 // الحجز
 app.post('/reserve', async (req, res) => {
   try {
-    const { nationalId, phone, email } = req.body;
-    if (!nationalId || !phone || !email) {
+    const { nationalId, phone, email, senderPhone } = req.body;
+    if (!nationalId || !phone || !email || !senderPhone) {
       return res.status(400).send('البيانات غير مكتملة');
     }
+
+    // التحقق من وجود ملف سكرين شوت
+    if (!req.files || !req.files.screenshot) {
+      return res.status(400).send('يجب رفع سكرين التحويل');
+    }
+
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    const uploadPath = path.join(uploadsDir, filename);
+
+    await screenshot.mv(uploadPath);
 
     const newReservation = {
       nationalId,
       phone,
       email,
+      senderPhone, // إضافة الرقم المحول
+      screenshot: filename, // إضافة صورة التحويل
       reserved_at: new Date().toISOString()
     };
 
@@ -161,7 +176,7 @@ app.post('/reserve', async (req, res) => {
       `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}`
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
     );
 
     res.send('تم تسجيل الحجز بنجاح.');
@@ -180,33 +195,67 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب
+// التحقق من النتيجة للطالب - الإصدار المصحح
 app.post('/api/check-result', async (req, res) => {
-  const { phone } = req.body;  // <-- بدل seatNumber
+  const { phone } = req.body;
 
   try {
     const requestsRef = db.collection('requests');
-    const snap = await requestsRef.where('phone', '==', phone).get();  // <-- ابحث برقم الهاتف
+    const snap = await requestsRef.where('phone', '==', phone).get();
 
     if (snap.empty) {
-      return res.json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
+      });
     }
 
-    const requestDoc = snap.docs[0].data();
+    const requestDoc = snap.docs[0];
+    const requestData = requestDoc.data();
 
-    if (!requestDoc.paid || !requestDoc.result) {
-      return res.json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
+    // التحقق إذا تم الدفع
+    if (!requestData.paid) {
+      return res.status(402).json({ 
+        success: false, 
+        message: 'لم يتم الدفع بعد' 
+      });
     }
 
-    res.json({ success: true, result: requestDoc.result });
+    // إذا كانت النتيجة مخزنة في حقل result
+    if (requestData.result) {
+      return res.json({
+        success: true,
+        result: requestData.result
+      });
+    }
+    
+    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
+    // إرجاع بيانات النتيجة مباشرة من الطلب
+    res.json({
+      success: true,
+      result: {
+        name: requestData.name || "غير متوفر",
+        seatNumber: requestData.seatNumber || "غير متوفر",
+        stage: requestData.stage || "غير متوفر",
+        gradeLevel: requestData.gradeLevel || "غير متوفر",
+        schoolName: requestData.schoolName || "غير متوفر",
+        notes: requestData.notes || "لا توجد",
+        mainSubjects: requestData.mainSubjects || [],
+        additionalSubjects: requestData.additionalSubjects || [],
+        totalScore: requestData.totalScore || 0,
+        totalOutOf: requestData.totalOutOf || 0,
+        percentage: requestData.percentage || 0
+      }
+    });
 
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
+    console.error('Error in /api/check-result:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'حدث خطأ في الخادم: ' + error.message 
+    });
   }
 });
-
-
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -233,6 +282,22 @@ app.post('/api/open-result', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
+  }
+});
+
+// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
+app.get('/api/debug-requests', async (req, res) => {
+  try {
+    const snap = await db.collection('requests').get();
+    const requests = snap.docs.map(doc => {
+      return { id: doc.id, ...doc.data() };
+    });
+    
+    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
+    res.json({ requests });
+  } catch (error) {
+    console.error('Error in /api/debug-requests:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
