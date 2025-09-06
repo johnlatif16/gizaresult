@@ -28,15 +28,14 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 // إعداد SMTP جديد
 let transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // مثال: smtp.gmail.com
-  port: process.env.SMTP_PORT || 587,
-  secure: process.env.SMTP_PORT == 465, // ✅ مظبوط حسب البورت
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 465,
+  secure: true, // لازم true مع 465
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   }
 });
-
 
 // دوال إشعارات
 async function sendEmailNotification(subject, text) {
