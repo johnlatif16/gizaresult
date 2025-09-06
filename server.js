@@ -30,7 +30,7 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 let transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST, // مثال: smtp.gmail.com
   port: process.env.SMTP_PORT || 587,
-  secure: false, // true لو بتستخدم 465
+  secure: process.env.SMTP_PORT == 465, // ✅ مظبوط حسب البورت
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
@@ -364,7 +364,6 @@ app.post('/admin/send-message', async (req, res) => {
           </div>
           <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
             هذه الرسالة مرسلة من نظام gizaresult(John) - لا ترد على هذا البريد
-            اذا احتجت الرد ابعت رسالتك هنا ${process.env.FRONTEND_URL || '#'}
           </p>
         </div>
       `
@@ -373,7 +372,12 @@ app.post('/admin/send-message', async (req, res) => {
     res.json({ success: true, message: 'تم إرسال الرسالة بنجاح' });
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(500).json({ success: false, message: 'فشل إرسال الرسالة' });
+    // ✅ إرجاع السبب الحقيقي
+    res.status(500).json({ 
+      success: false, 
+      message: 'فشل إرسال الرسالة', 
+      error: error.message 
+    });
   }
 });
 
