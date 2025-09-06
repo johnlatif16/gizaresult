@@ -26,11 +26,11 @@ app.use(fileUpload());
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// إعداد SMTP جديد
-let transporter = nodemailer.createTransport({
+// تكوين إرسال البريد
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // مع 587 لازم false
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
