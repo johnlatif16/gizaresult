@@ -389,15 +389,6 @@ app.get('/test-smtp', async (req, res) => {
   }
 });
 
-app.get('/test-smtp', async (req, res) => {
-  try {
-    await transporter.verify();
-    res.send('✅ SMTP شغال تمام');
-  } catch (err) {
-    res.status(500).send('❌ مشكلة في SMTP: ' + err.message);
-  }
-});
-
 // ==============================================
 
 const PORT = process.env.PORT || 3000;
