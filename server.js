@@ -29,7 +29,7 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 // إعداد SMTP جديد
 let transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 465,
+  port: Number(process.env.SMTP_PORT),
   secure: true, // لازم true مع 465
   auth: {
     user: process.env.SMTP_USER,
@@ -380,6 +380,23 @@ app.post('/admin/send-message', async (req, res) => {
   }
 });
 
+app.get('/test-smtp', async (req, res) => {
+  try {
+    await transporter.verify();
+    res.send('✅ SMTP شغال تمام');
+  } catch (err) {
+    res.status(500).send('❌ مشكلة في SMTP: ' + err.message);
+  }
+});
+
+app.get('/test-smtp', async (req, res) => {
+  try {
+    await transporter.verify();
+    res.send('✅ SMTP شغال تمام');
+  } catch (err) {
+    res.status(500).send('❌ مشكلة في SMTP: ' + err.message);
+  }
+});
 
 // ==============================================
 
