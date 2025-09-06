@@ -26,14 +26,17 @@ app.use(fileUpload());
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// إعداد البريد
+// إعداد SMTP جديد
 let transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST, // مثال: smtp.gmail.com
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true لو بتستخدم 465
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   }
 });
+
 
 // دوال إشعارات
 async function sendEmailNotification(subject, text) {
@@ -343,6 +346,37 @@ app.delete('/api/requests/:id', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// إرسال رسالة من لوحة التحكم
+app.post('/admin/send-message', async (req, res) => {
+  try {
+    const { email, message, senderName = "gizaresult(John)" } = req.body;
+
+    await transporter.sendMail({
+      from: `"${senderName}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'رسالة من gizaresult(John)',
+      html: `
+        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4f46e5;">رسالة من gizaresult(John)</h2>
+          <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 20px;">
+            ${message.replace(/\n/g, '<br>')}
+          </div>
+          <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+            هذه الرسالة مرسلة من نظام gizaresult(John) - لا ترد على هذا البريد
+            اذا احتجت الرد ابعت رسالتك هنا ${process.env.FRONTEND_URL || '#'}
+          </p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, message: 'تم إرسال الرسالة بنجاح' });
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ success: false, message: 'فشل إرسال الرسالة' });
+  }
+});
+
 
 // ==============================================
 
