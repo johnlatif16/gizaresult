@@ -428,7 +428,7 @@ async function openResult(seatNumber){
   loadResults();
 }
 
-// إرسال البريد مباشرة
+// إرسال البريد مباشرة من الجدول
 function sendEmailPrompt(seatNumber){
   const email = prompt('البريد الإلكتروني:');
   if(!email) return alert('البريد الإلكتروني مطلوب');
@@ -438,7 +438,11 @@ function sendEmailPrompt(seatNumber){
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email,message})
   }).then(res=>res.json()).then(data=>{
-    alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+    if(data.success){
+      alert('✅ تم الإرسال');
+    } else {
+      alert(`❌ خطأ: ${data.message}\n📌 السبب: ${data.error || 'غير معروف'}`);
+    }
   });
 }
 
@@ -461,12 +465,15 @@ document.getElementById('sendForm').addEventListener('submit', async (e) => {
     });
 
     const data = await res.json();
-    alert(data.success ? '✅ تم إرسال الرسالة بنجاح' : '❌ خطأ: ' + data.message);
+    if (data.success) {
+      alert('✅ تم إرسال الرسالة بنجاح');
+    } else {
+      alert(`❌ خطأ: ${data.message}\n📌 السبب: ${data.error || 'غير معروف'}`);
+    }
   } catch (err) {
     alert('❌ فشل إرسال الرسالة: ' + err.message);
   }
 });
-
 
 // عند تحميل الصفحة
 loadRequests();
