@@ -263,24 +263,26 @@
     </div>
   </div>
 
-  <!-- قسم الحجوزات -->
-  <div id="reservations" class="hidden">
-    <h2 class="section-title">قسم الحجوزات</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الرقم القومي</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>تاريخ الحجز</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="reservationsTable"></tbody>
-      </table>
-    </div>
+<!-- قسم الحجوزات -->
+<div id="reservations" class="hidden">
+  <h2 class="section-title">قسم الحجوزات</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>الرقم القومي</th>
+          <th>رقم الهاتف</th>
+          <th>البريد الإلكتروني</th>
+          <th>رقم المحول</th>
+          <th>صورة التحويل</th>
+          <th>تاريخ الحجز</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="reservationsTable"></tbody>
+    </table>
   </div>
+</div>
 
   <!-- إرسال البريد -->
   <div id="send" class="hidden">
@@ -378,6 +380,8 @@ async function loadReservations(){
       <td>${reservation.nationalId}</td>
       <td>${reservation.phone}</td>
       <td>${reservation.email}</td>
+      <td>${reservation.senderPhone || 'غير متوفر'}</td>
+      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
       <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
       <td>
         <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">

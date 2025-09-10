@@ -4,17 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
-const admin = require('firebase-admin');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
-
-// ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
-const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-const db = admin.firestore();
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -23,10 +14,23 @@ app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(fileUpload());
 
+// 📂 uploads dir
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// إعداد البريد
+// 🔹 MySQL Connection
+let db;
+(async () => {
+  db = await mysql.createPool({
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
+  });
+})();
+
+// 🔹 Email setup
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -35,7 +39,6 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-// دوال إشعارات
 async function sendEmailNotification(subject, text) {
   try {
     await transporter.sendMail({
@@ -68,39 +71,25 @@ async function sendTelegramNotification(message) {
   }
 }
 
-
-
 // ----------------- Routes -----------------
 
-// ----------------- API الطلبات -----------------
+// ✅ GET Requests
 app.get('/api/requests', async (req, res) => {
   try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      const data = doc.data();
-      // إذا فيه سكرين تحويل، حوّله لرابط كامل
-      if (data.screenshot && data.screenshot !== '') {
-        data.screenshot = `/uploads/${data.screenshot}`;
-      } else {
-        data.screenshot = null;
-      }
-      return { id: doc.id, ...data };
-    });
-    res.json({ requests });
+    const [rows] = await db.query("SELECT * FROM requests");
+    res.json({ requests: rows });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-
-
-// صفحة الدفع
+// ✅ Pay Page
 app.get('/pay', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pay.html'));
 });
 
-// رفع طلب الدفع
+// ✅ Pay Upload
 app.post('/pay', async (req, res) => {
   try {
     const { nationalId, seatNumber, phone, email } = req.body;
@@ -120,11 +109,13 @@ app.post('/pay', async (req, res) => {
       phone,
       email,
       screenshot: filename,
-      paid: false,
-      created_at: new Date().toISOString()
+      paid: false
     };
 
-    await db.collection('requests').add(newRequest);
+    await db.query(
+      "INSERT INTO requests (nationalId, seatNumber, phone, email, screenshot, paid) VALUES (?, ?, ?, ?, ?, ?)",
+      [nationalId, seatNumber, phone, email, filename, false]
+    );
 
     await sendEmailNotification(
       'طلب دفع جديد',
@@ -141,29 +132,34 @@ app.post('/pay', async (req, res) => {
   }
 });
 
-// الحجز
+// ✅ Reservation
 app.post('/reserve', async (req, res) => {
   try {
-    const { nationalId, phone, email } = req.body;
-    if (!nationalId || !phone || !email) {
+    const { nationalId, phone, email, senderPhone } = req.body;
+    if (!nationalId || !phone || !email || !senderPhone) {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
-    const newReservation = {
-      nationalId,
-      phone,
-      email,
-      reserved_at: new Date().toISOString()
-    };
+    if (!req.files || !req.files.screenshot) {
+      return res.status(400).send('يجب رفع سكرين التحويل');
+    }
 
-    await db.collection('reservations').add(newReservation);
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    const uploadPath = path.join(uploadsDir, filename);
+    await screenshot.mv(uploadPath);
+
+    await db.query(
+      "INSERT INTO reservations (nationalId, phone, email, senderPhone, screenshot) VALUES (?, ?, ?, ?, ?)",
+      [nationalId, phone, email, senderPhone, filename]
+    );
 
     await sendEmailNotification(
       'طلب حجز جديد',
-      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
+      `طلب حجز جديد:\n${JSON.stringify({ nationalId, phone, email, senderPhone }, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}`
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
     );
 
     res.send('تم تسجيل الحجز بنجاح.');
@@ -173,7 +169,7 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
-// تسجيل الدخول للادمن
+// ✅ Login
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
@@ -182,42 +178,26 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب - الإصدار المصحح
+// ✅ Check Result
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
   try {
-    const requestsRef = db.collection('requests');
-    const snap = await requestsRef.where('phone', '==', phone).get();
-
-    if (snap.empty) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
-      });
+    const [rows] = await db.query("SELECT * FROM requests WHERE phone = ?", [phone]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
     }
 
-    const requestDoc = snap.docs[0];
-    const requestData = requestDoc.data();
+    const requestData = rows[0];
 
-    // التحقق إذا تم الدفع
     if (!requestData.paid) {
-      return res.status(402).json({ 
-        success: false, 
-        message: 'لم يتم الدفع بعد' 
-      });
+      return res.status(402).json({ success: false, message: 'لم يتم الدفع بعد' });
     }
 
-    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
-      return res.json({
-        success: true,
-        result: requestData.result
-      });
+      return res.json({ success: true, result: JSON.parse(requestData.result) });
     }
-    
-    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
-    // إرجاع بيانات النتيجة مباشرة من الطلب
+
     res.json({
       success: true,
       result: {
@@ -227,43 +207,35 @@ app.post('/api/check-result', async (req, res) => {
         gradeLevel: requestData.gradeLevel || "غير متوفر",
         schoolName: requestData.schoolName || "غير متوفر",
         notes: requestData.notes || "لا توجد",
-        mainSubjects: requestData.mainSubjects || [],
-        additionalSubjects: requestData.additionalSubjects || [],
+        mainSubjects: requestData.mainSubjects ? JSON.parse(requestData.mainSubjects) : [],
+        additionalSubjects: requestData.additionalSubjects ? JSON.parse(requestData.additionalSubjects) : [],
         totalScore: requestData.totalScore || 0,
         totalOutOf: requestData.totalOutOf || 0,
         percentage: requestData.percentage || 0
       }
     });
-
   } catch (error) {
     console.error('Error in /api/check-result:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'حدث خطأ في الخادم: ' + error.message 
-    });
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
   }
 });
-// فتح نتيجة
+
+// ✅ Open Result
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
   try {
-    const requestsRef = db.collection('requests');
-    const resultsRef = db.collection('results');
+    const [reqRows] = await db.query("SELECT * FROM requests WHERE seatNumber = ?", [seatNumber]);
+    const [resRows] = await db.query("SELECT * FROM results WHERE seatNumber = ?", [seatNumber]);
 
-    const requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
-    const resultSnap = await resultsRef.where('seatNumber', '==', seatNumber).get();
-
-    if (requestSnap.empty || resultSnap.empty) {
+    if (reqRows.length === 0 || resRows.length === 0) {
       return res.json({ success: false, message: 'طلب أو نتيجة غير موجودة' });
     }
 
-    const requestDoc = requestSnap.docs[0];
-    const resultDoc = resultSnap.docs[0];
-
-    await requestDoc.ref.update({
-      paid: true,
-      result: resultDoc.data()
-    });
+    await db.query("UPDATE requests SET paid = ?, result = ? WHERE id = ?", [
+      true,
+      JSON.stringify(resRows[0]),
+      reqRows[0].id
+    ]);
 
     res.json({ success: true });
   } catch (error) {
@@ -272,66 +244,52 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
+// ✅ Debug
 app.get('/api/debug-requests', async (req, res) => {
   try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      return { id: doc.id, ...doc.data() };
-    });
-    
-    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
-    res.json({ requests });
+    const [rows] = await db.query("SELECT * FROM requests");
+    res.json({ requests: rows });
   } catch (error) {
-    console.error('Error in /api/debug-requests:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// ================= APIs للداشبورد =================
-// جلب كل النتائج
+// ✅ Dashboard APIs
 app.get('/api/results', async (req, res) => {
   try {
-    const snap = await db.collection('results').get();
-    const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ results });
+    const [rows] = await db.query("SELECT * FROM results");
+    res.json({ results: rows });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// جلب كل الحجوزات
 app.get('/api/reservations', async (req, res) => {
   try {
-    const snap = await db.collection('reservations').get();
-    const reservations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ reservations });
+    const [rows] = await db.query("SELECT * FROM reservations");
+    res.json({ reservations: rows });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// حذف حجز
 app.delete('/api/reservations/:id', async (req, res) => {
   try {
-    await db.collection('reservations').doc(req.params.id).delete();
+    await db.query("DELETE FROM reservations WHERE id = ?", [req.params.id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// حذف طلب دفع
 app.delete('/api/requests/:id', async (req, res) => {
   try {
-    await db.collection('requests').doc(req.params.id).delete();
+    await db.query("DELETE FROM requests WHERE id = ?", [req.params.id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-// ==============================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
