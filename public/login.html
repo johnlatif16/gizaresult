@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>تسجيل الدخول للإدارة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
@@ -13,14 +12,9 @@
             --primary: #4361ee;
             --primary-dark: #3a56d4;
             --secondary: #7209b7;
-            --secondary-dark: #5e089a;
             --accent: #f72585;
             --light: #f8f9fa;
             --dark: #1a1a2e;
-            --success: #4cc9f0;
-            --danger: #e63946;
-            --warning: #ffbe0b;
-            --info: #4895ef;
         }
         
         * {
@@ -34,368 +28,193 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             color: var(--light);
-            overflow-x: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
         
-        /* تأثيرات ثلاثية الأبعاد للخلفية */
-        #three-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        
-        .glass-effect {
+        .login-container {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
         }
         
-        .card-3d {
-            transform-style: preserve-3d;
-            perspective: 1000px;
-            transition: transform 0.4s ease;
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
         
-        .card-3d:hover {
-            transform: translateY(-10px) rotateX(5deg) rotateY(-5deg);
-        }
-        
-        .btn-3d {
-            transform-style: preserve-3d;
-            perspective: 500px;
-            transition: all 0.3s ease;
-            transform: translateZ(0);
-        }
-        
-        .btn-3d:hover {
-            transform: translateZ(20px) translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn-3d:active {
-            transform: translateZ(5px) translateY(2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .gradient-text {
+        .login-icon {
+            font-size: 3rem;
             background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-size: 300% 300%;
-            animation: gradient 4s ease infinite;
+            margin-bottom: 15px;
+            display: inline-block;
         }
         
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
         }
         
-        .floating {
-            animation: floating 6s ease-in-out infinite;
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
         }
         
-        @keyframes floating {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(5deg); }
+        .form-group {
+            margin-bottom: 20px;
         }
         
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            opacity: 0.5;
-            animation: float-particle 15s infinite linear;
-        }
-        
-        @keyframes float-particle {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); }
-            100% { transform: translateY(-100vh) translateX(100px) rotate(360deg); }
-        }
-        
-        .slide-in {
-            animation: slideIn 0.6s forwards;
-            opacity: 0;
-            transform: translateY(50px);
-        }
-        
-        @keyframes slideIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
         }
         
         .form-input {
             width: 100%;
-            padding: 16px 20px;
+            padding: 14px 16px;
             border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 14px;
-            transition: all 0.3s ease;
+            border-radius: 10px;
             background: rgba(255, 255, 255, 0.1);
-            font-family: 'Tajawal', sans-serif;
             color: white;
-            font-size: 1rem;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s ease;
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
             background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
         }
         
         .form-input::placeholder {
             color: rgba(255, 255, 255, 0.6);
         }
         
-        /* تحسينات للاستجابة */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .submit-btn:hover {
+            background: linear-gradient(to right, var(--primary-dark), #2d3bd4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .error-message {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(230, 57, 70, 0.2);
+            color: #ff6b6b;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
         @media (max-width: 480px) {
             .login-container {
-                padding: 25px;
+                padding: 20px;
             }
             
             .login-title {
-                font-size: 1.8rem;
-            }
-            
-            .login-icon {
-                font-size: 2.8rem;
-            }
-            
-            .form-input {
-                padding: 14px 16px;
+                font-size: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- رسومات ثلاثية الأبعاد في الخلفية -->
-    <div id="three-container"></div>
-    
-    <!-- جسيمات عائمة -->
-    <div id="particles"></div>
-    
-    <div class="card-3d glass-effect rounded-2xl p-8 w-full max-w-md slide-in">
-        <div class="login-header text-center mb-8">
-            <div class="floating inline-block mb-6">
-                <i class="fas fa-user-shield text-5xl gradient-text"></i>
-            </div>
-            <h1 class="text-3xl font-bold mb-4 gradient-text">تسجيل الدخول للإدارة</h1>
-            <p class="text-gray-300">يجب أن تمتلك صلاحية الدخول إلى هذه الصفحة</p>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-user-shield login-icon"></i>
+            <h1 class="login-title">تسجيل الدخول للإدارة</h1>
+            <p class="login-subtitle">يجب أن تمتلك صلاحية الدخول إلى هذه الصفحة</p>
         </div>
         
-        <form action="/login" method="POST" class="space-y-6">
+        <form id="loginForm">
             <div class="form-group">
-                <label class="block text-gray-300 mb-3">اسم المستخدم</label>
-                <div class="relative">
-                    <input type="text" name="username" required class="form-input" placeholder="أدخل اسم المستخدم">
-                    <i class="fas fa-user absolute left-4 top-4 text-gray-400"></i>
-                </div>
+                <label class="form-label">اسم المستخدم</label>
+                <input type="text" name="username" required class="form-input" placeholder="أدخل اسم المستخدم">
             </div>
             
             <div class="form-group">
-                <label class="block text-gray-300 mb-3">كلمة المرور</label>
-                <div class="relative">
-                    <input type="password" name="password" required class="form-input" placeholder="أدخل كلمة المرور">
-                    <i class="fas fa-lock absolute left-4 top-4 text-gray-400"></i>
-                </div>
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" name="password" required class="form-input" placeholder="أدخل كلمة المرور">
             </div>
             
-            <button type="submit" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg">
-                <i class="fas fa-sign-in-alt ml-2"></i>
+            <button type="submit" class="submit-btn">
                 تسجيل الدخول
             </button>
         </form>
 
-        <!-- رسالة خطأ -->
-        <div id="error-message" class="mt-6 p-4 bg-red-500 bg-opacity-20 text-red-200 rounded-xl hidden">
-            <i class="fas fa-exclamation-circle ml-2"></i>
-            <span id="error-text"></span>
+        <div id="errorMessage" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorText"></span>
         </div>
     </div>
 
     <script>
-        // إنشاء تأثيرات ثلاثية الأبعاد في الخلفية
-        function initThreeJS() {
-            const container = document.getElementById('three-container');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
-            
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-            
-            // إنشاء أشكال هندسية عشوائية
-            const geometries = [
-                new THREE.IcosahedronGeometry(1, 0),
-                new THREE.OctahedronGeometry(1, 0),
-                new THREE.TetrahedronGeometry(1, 0),
-                new THREE.SphereGeometry(1, 12, 12)
-            ];
-            
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: 0x4361ee, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0x7209b7, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0xf72585, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0x4cc9f0, transparent: true, opacity: 0.2 })
-            ];
-            
-            const objects = [];
-            const numObjects = 15;
-            
-            for (let i = 0; i < numObjects; i++) {
-                const geometry = geometries[Math.floor(Math.random() * geometries.length)];
-                const material = materials[Math.floor(Math.random() * materials.length)];
-                const mesh = new THREE.Mesh(geometry, material);
-                
-                mesh.position.x = Math.random() * 40 - 20;
-                mesh.position.y = Math.random() * 40 - 20;
-                mesh.position.z = Math.random() * 40 - 20;
-                
-                mesh.rotation.x = Math.random() * Math.PI;
-                mesh.rotation.y = Math.random() * Math.PI;
-                
-                mesh.scale.setScalar(Math.random() * 3 + 1);
-                
-                scene.add(mesh);
-                objects.push(mesh);
-            }
-            
-            // إضافة إضاءة
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            camera.position.z = 30;
-            
-            // تحريك الكامرا والأشكال
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                objects.forEach(obj => {
-                    obj.rotation.x += 0.005;
-                    obj.rotation.y += 0.008;
-                });
-                
-                camera.position.x = Math.sin(Date.now() * 0.0005) * 20;
-                camera.position.z = Math.cos(Date.now() * 0.0005) * 20;
-                camera.lookAt(scene.position);
-                
-                renderer.render(scene, camera);
-            }
-            
-            animate();
-            
-            // تحديث الحجم عند تغيير حجم النافذة
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-        
-        // إنشاء جسيمات عائمة
-        function createParticles() {
-            const container = document.getElementById('particles');
-            const numParticles = 30;
-            
-            for (let i = 0; i < numParticles; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                
-                const size = Math.random() * 20 + 5;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.top = `${Math.random() * 100}vh`;
-                
-                particle.style.animationDelay = `${Math.random() * 15}s`;
-                particle.style.animationDuration = `${Math.random() * 10 + 15}s`;
-                
-                container.appendChild(particle);
-            }
-        }
-        
-        // عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            initThreeJS();
-            createParticles();
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
             
-            // إضافة تأثيرات الظهور المتتالي للعناصر
-            document.querySelectorAll('.slide-in').forEach((el, i) => {
-                el.style.animationDelay = `${0.2 + i * 0.1}s`;
+            // بيانات تسجيل الدخول من متغيرات Railway (يتم تعيينها من الخادم)
+            const validUsername = '<%= process.env.ADMIN_USERNAME || "admin" %>';
+            const validPassword = '<%= process.env.ADMIN_PASSWORD || "admin123" %>';
+            
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = this.querySelector('input[name="username"]').value;
+                const password = this.querySelector('input[name="password"]').value;
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                
+                // إظهار حالة التحميل
+                submitBtn.textContent = 'جاري تسجيل الدخول...';
+                submitBtn.disabled = true;
+                errorMessage.style.display = 'none';
+                
+                // محاكاة اتصال بالخادم
+                setTimeout(() => {
+                    if (username === validUsername && password === validPassword) {
+                        // تسجيل الدخول ناجح - إعادة التوجيه إلى لوحة التحكم
+                        window.location.href = '/dashboard';
+                    } else {
+                        // تسجيل الدخول فاشل
+                        errorText.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                        errorMessage.style.display = 'block';
+                    }
+                    
+                    // إعادة تعيين حالة الزر
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }, 1000);
             });
-            
-            // معالجة تسجيل الدخول
-            const loginForm = document.querySelector('form[action="/login"]');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const username = this.querySelector('input[name="username"]').value;
-                    const password = this.querySelector('input[name="password"]').value;
-                    const errorMessage = document.getElementById('error-message');
-                    const errorText = document.getElementById('error-text');
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    
-                    // إظهار حالة التحميل
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري تسجيل الدخول...';
-                    submitBtn.disabled = true;
-                    errorMessage.classList.add('hidden');
-                    
-                    // محاكاة عملية تسجيل الدخول (استبدل هذا بالاتصال الحقيقي بالخادم)
-                    setTimeout(() => {
-                        if (username === 'admin' && password === 'admin123') {
-                            // تسجيل الدخول ناجح - توجيه إلى لوحة التحكم
-                            window.location.href = '/dashboard.html';
-                        } else {
-                            // تسجيل الدخول فاشل
-                            errorText.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
-                            errorMessage.classList.remove('hidden');
-                            
-                            // تأثير اهتزاز عند الخطأ
-                            loginForm.classList.add('animate-shake');
-                            setTimeout(() => {
-                                loginForm.classList.remove('animate-shake');
-                            }, 500);
-                        }
-                        
-                        // إعادة تعيين حالة الزر
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 1500);
-                });
-            }
-            
-            // إضافة تأثير اهتزاز للعناصر
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-                    20%, 40%, 60%, 80% { transform: translateX(10px); }
-                }
-                .animate-shake {
-                    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-                }
-            `;
-            document.head.appendChild(style);
         });
     </script>
 </body>
