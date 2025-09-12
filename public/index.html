@@ -1,1165 +1,1177 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نتيجتك - نظام الاستعلام عن النتائج</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-        
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --secondary-dark: #5e089a;
-            --accent: #f72585;
-            --light: #f8f9fa;
-            --dark: #1a1a2e;
-            --success: #4cc9f0;
-            --danger: #e63946;
-            --warning: #ffbe0b;
-            --info: #4895ef;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: var(--light);
-            overflow-x: hidden;
-        }
-        
-        /* تأثيرات ثلاثية الأبعاد للخلفية */
-        #three-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        
-        .floating {
-            animation: floating 6s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(5deg); }
-        }
-        
-        .pulse {
-            animation: pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        
-        .card-3d {
-            transform-style: preserve-3d;
-            perspective: 1000px;
-            transition: transform 0.4s ease;
-        }
-        
-        .card-3d:hover {
-            transform: translateY(-10px) rotateX(5deg) rotateY(-5deg);
-        }
-        
-        .btn-3d {
-            transform-style: preserve-3d;
-            perspective: 500px;
-            transition: all 0.3s ease;
-            transform: translateZ(0);
-        }
-        
-        .btn-3d:hover {
-            transform: translateZ(20px) translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn-3d:active {
-            transform: translateZ(5px) translateY(2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .gradient-text {
-            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 300% 300%;
-            animation: gradient 4s ease infinite;
-        }
-        
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            opacity: 0.5;
-            animation: float-particle 15s infinite linear;
-        }
-        
-        @keyframes float-particle {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); }
-            100% { transform: translateY(-100vh) translateX(100px) rotate(360deg); }
-        }
-        
-        .neon-border {
-            box-shadow: 
-                0 0 5px rgba(67, 97, 238, 0.5),
-                0 0 10px rgba(67, 97, 238, 0.3),
-                0 0 15px rgba(67, 97, 238, 0.2),
-                0 0 20px rgba(67, 97, 238, 0.1);
-            border: 1px solid rgba(67, 97, 238, 0.3);
-        }
-        
-        .slide-in {
-            animation: slideIn 0.6s forwards;
-            opacity: 0;
-            transform: translateY(50px);
-        }
-        
-        @keyframes slideIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .rotate-3d {
-            transform-style: preserve-3d;
-            animation: rotate3d 20s infinite linear;
-        }
-        
-        @keyframes rotate3d {
-            0% { transform: perspective(1000px) rotateY(0deg); }
-            100% { transform: perspective(1000px) rotateY(360deg); }
-        }
-        
-        /* تصميم متجاوب للشاشات المختلفة */
-        @media (max-width: 768px) {
-            .mobile-stack {
-                flex-direction: column;
-            }
-            
-            .mobile-full {
-                width: 100%;
-            }
-            
-            .mobile-text-center {
-                text-align: center;
-            }
-            
-            .header-icon {
-                font-size: 2.5rem !important;
-            }
-            
-            .header h1 {
-                font-size: 2rem !important;
-            }
-        }
-        
-        @media (min-width: 1920px) {
-            .container {
-                max-width: 1600px;
-            }
-            
-            .card {
-                padding: 2rem !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتيجتك</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+  
+  :root {
+    --primary: #3b82f6;
+    --secondary: #10b981;
+    --accent: #8b5cf6;
+    --light: #f8fafc;
+    --dark: #1e293b;
+  }
+  
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    min-height: 100vh;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(to right, var(--primary), #2563eb);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+  }
+  
+  .btn-secondary {
+    background: linear-gradient(to right, var(--secondary), #059669);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+  }
+  
+  .btn-secondary:hover {
+    background: linear-gradient(to right, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+  }
+  
+  .btn-telegram {
+    background: linear-gradient(to right, #0088cc, #2AABEE);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(42, 171, 238, 0.2);
+  }
+  
+  .btn-telegram:hover {
+    background: linear-gradient(to right, #2AABEE, #229ED9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(42, 171, 238, 0.3);
+  }
+  
+  .alert-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  @media (min-width: 768px) {
+    .alert-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .alert-box {
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .alert-danger {
+    border-right: 4px solid #dc3545;
+    background: linear-gradient(to left, #fff0f0, #fff);
+  }
+  
+  .alert-success {
+    border-right: 4px solid #10b981;
+    background: linear-gradient(to left, #f0fdf4, #fff);
+  }
+  
+  .alert-info {
+    border-right: 4px solid #3b82f6;
+    background: linear-gradient(to left, #f0f9ff, #fff);
+  }
+  
+  .alert-purple {
+    border-right: 4px solid #8b5cf6;
+    background: linear-gradient(to left, #f5f3ff, #fff);
+  }
+  
+  .alert-icon {
+    font-size: 1.8rem;
+    margin-left: 12px;
+    flex-shrink: 0;
+  }
+  
+  .alert-danger .alert-icon { color: #dc3545; }
+  .alert-success .alert-icon { color: #10b981; }
+  .alert-info .alert-icon { color: #3b82f6; }
+  .alert-purple .alert-icon { color: #8b5cf6; }
+  
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  th {
+    background: linear-gradient(to right, var(--primary), #2563eb);
+    color: white;
+    padding: 12px;
+    font-weight: 600;
+  }
+  
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: center;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+  
+  input, .file-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s;
+    background: #f9fafb;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background: white;
+  }
+  
+  .file-input {
+    padding: 8px;
+  }
+  
+  .header-icon {
+    font-size: 3rem;
+    background: linear-gradient(to right, var(--primary), var(--accent));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    margin-left: 8px;
+  }
+  
+  .feature-icon {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-left: 10px;
+  }
+  
+  .footer {
+    background: var(--dark);
+    color: white;
+    padding: 20px;
+    margin-top: 40px;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      padding: 16px;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-telegram {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+
+  /* تنسيقات الطباعة */
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #printableResult, #printableResult * {
+      visibility: visible;
+    }
+    #printableResult {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 20px;
+      background: white;
+    }
+    .no-print {
+      display: none !important;
+    }
+    .card {
+      box-shadow: none;
+      border: 1px solid #ddd;
+      page-break-inside: avoid;
+    }
+    table {
+      page-break-inside: avoid;
+    }
+    h2, h3 {
+      page-break-after: avoid;
+    }
+  }
+
+  /* تنسيقات النتيجة القابلة للطباعة */
+  .result-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .result-section {
+    margin-bottom: 25px;
+    page-break-inside: avoid;
+  }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+
+  .result-table th, .result-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .result-table th {
+    background-color: #f2f2f2;
+  }
+
+  .summary-box {
+    background-color: #f9fafb;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+
+  /* نافذة الطباعة */
+  .print-window {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  .print-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 10px;
+  }
+
+  .close {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+  }
+
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  #pdf-container {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+  }
+</style>
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
-    <!-- رسومات ثلاثية الأبعاد في الخلفية -->
-    <div id="three-container"></div>
-    
-    <!-- جسيمات عائمة -->
-    <div id="particles"></div>
 
-    <div class="container max-w-6xl mx-auto px-4">
-        <!-- الهيدر -->
-        <header class="header text-center my-12 slide-in" style="animation-delay: 0.2s;">
-            <div class="floating inline-block mb-6">
-                <i class="fas fa-graduation-cap header-icon text-5xl gradient-text"></i>
-            </div>
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 gradient-text">نتيجتك</h1>
-            <p class="text-xl opacity-80">نظام الاستعلام عن نتائج الامتحانات</p>
-            <div class="pulse mt-6 inline-block px-6 py-3 rounded-full glass-effect neon-border">
-                <p class="font-medium">هذا الموقع تانية ثانوي فقط بمحافظة الجيزة</p>
-            </div>
-        </header>
+<div class="container max-w-4xl mx-auto">
+  <!-- الهيدر -->
+  <header class="text-center my-8">
+    <i class="fas fa-graduation-cap header-icon"></i>
+    <h1 class="text-4xl font-bold mb-2 text-gray-800">نتيجتك</h1>
+    <p class="text-lg text-gray-600">موقع الاستعلام عن نتائج الامتحانات</p>
+    <p class="text-lg text-gray-600">هذا الموقع تانية ثانوي فقط بمحافظة الجيزة</p>
+    <h1>الموقع يتم تحديثه الان برجاء عدم الدفع</h1>
+  </header>
 
-        <!-- التنبيهات -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div class="card-3d glass-effect rounded-2xl p-6 slide-in" style="animation-delay: 0.3s;">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-triangle text-2xl text-red-400 mt-1 ml-3"></i>
-                    <div>
-                        <h3 class="font-bold text-red-400 mb-2">النتيجة مظهرتش</h3>
-                        <p class="text-green-300">"إِلهُ السَّلاَمِ مَعَكُمْ أَجْمَعِينَ. آمِينَ." (رو 15: 33).</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card-3d glass-effect rounded-2xl p-6 slide-in" style="animation-delay: 0.4s;">
-                <div class="flex items-start">
-                    <i class="fas fa-ban text-2xl text-blue-400 mt-1 ml-3"></i>
-                    <p class="text-blue-200">ممنوع منعاً باتاً تفتح أي حاجة أو تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وأنا مش مسؤول</p>
-                </div>
-            </div>
-            
-            <div class="card-3d glass-effect rounded-2xl p-6 slide-in" style="animation-delay: 0.5s;">
-                <div class="flex items-start">
-                    <i class="fas fa-info-circle text-2xl text-green-400 mt-1 ml-3"></i>
-                    <p class="text-gray-200">هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط. البيانات سرية تامة ثم تتحذف بعد الاستطلاع على النتيجة</p>
-                </div>
-            </div>
-            
-            <div class="card-3d glass-effect rounded-2xl p-6 slide-in" style="animation-delay: 0.6s;">
-                <div class="flex items-start">
-                    <i class="fas fa-envelope text-2xl text-purple-400 mt-1 ml-3"></i>
-                    <p class="text-purple-200">"ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- أزرار حجز النتيجة -->
-        <div class="card-3d glass-effect rounded-2xl p-8 mb-10 slide-in" style="animation-delay: 0.7s;">
-            <h2 class="text-2xl font-semibold mb-6 text-center">
-                <i class="fas fa-ticket-alt mr-2 gradient-text"></i>
-                <span class="gradient-text">حجز النتيجة مسبقاً</span>
-            </h2>
-            <p class="text-center mb-6 text-gray-300">برجاء للحجز دفع المبلغ 25 جنيهاً الى الرقم هذا</p>
-            <h1 class="text-2xl font-bold text-center mb-6 text-blue-300 pulse">01274445091</h1>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="https://t.me/gizaresult_bot" target="_blank" class="btn-3d bg-[#0088cc] text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center">
-                    <i class="fab fa-telegram-plane ml-2"></i>
-                    حجز عبر التيليجرام
-                </a>
-                
-                <button onclick="showReservation()" class="btn-3d bg-gradient-to-r from-purple-600 to-blue-500 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center">
-                    <i class="fas fa-globe ml-2"></i>
-                    حجز عبر الموقع
-                </button>
-            </div>
-        </div>
-
-        <!-- قسم حجز النتيجة عبر الموقع -->
-        <div class="card-3d glass-effect rounded-2xl p-8 mb-10 hidden" id="reservation">
-            <h2 class="text-2xl font-semibold mb-6 text-center">
-                <i class="fas fa-globe mr-2 gradient-text"></i>
-                <span class="gradient-text">حجز النتيجة عبر الموقع</span>
-            </h2>
-            
-            <form id="reservationForm" class="space-y-6">
-                <div>
-                    <label class="block text-gray-300 mb-3">الرقم القومي</label>
-                    <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">رقم الهاتف</label>
-                    <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">البريد الإلكتروني</label>
-                    <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">رقم المحول (الرقم الذي تم التحويل منه)</label>
-                    <input name="senderPhone" placeholder="أدخل رقم الهاتف المحول منه" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">سكرين شوت التحويل</label>
-                    <input type="file" name="screenshot" required class="file-input w-full p-3 rounded-xl glass-effect border border-gray-700 text-white">
-                </div>
-                
-                <button type="submit" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold text-lg">
-                    <i class="fas fa-check-circle ml-2"></i>
-                    تأكيد الحجز
-                </button>
-            </form>
-        </div>
-
-        <!-- الأزرار الرئيسية -->
-        <div class="flex flex-col sm:flex-row gap-6 justify-center mb-10 slide-in" style="animation-delay: 0.8s;">
-            <button onclick="showPayment()" class="btn-3d mobile-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center">
-                <i class="fas fa-money-bill-wave ml-2"></i>
-                إتمام الدفع للاستعلام عن النتيجة
-            </button>
-            <button onclick="showCheck()" class="btn-3d mobile-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center">
-                <i class="fas fa-search ml-2"></i>
-                استعلام عن النتيجة بعد الدفع
-            </button>
-        </div>
-
-        <!-- قسم الدفع -->
-        <div class="card-3d glass-effect rounded-2xl p-8 mb-10 hidden" id="payment">
-            <h2 class="text-2xl font-semibold mb-6 text-center">
-                <i class="fas fa-credit-card mr-2 gradient-text"></i>
-                <span class="gradient-text">الدفع عن طريق تحويل محفظة</span>
-            </h2>
-            
-            <p class="mb-6 text-center font-bold text-blue-300">برجاء الضغط على الزر مرة واحدة ثم انتظر تحميل التصفح</p>
-
-            <div class="glass-effect p-5 rounded-xl mb-6 neon-border">
-                <p class="text-blue-300 font-bold text-center">
-                    قم بالتحويل إلى الرقم: 
-                    <span class="text-2xl pulse">01274445091</span>
-                </p>
-            </div>
-            
-            <form id="paymentForm" class="space-y-6">
-                <div>
-                    <label class="block text-gray-300 mb-3">الرقم القومي</label>
-                    <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">رقم الجلوس</label>
-                    <input name="seatNumber" placeholder="أدخل رقم الجلوس" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">رقم الهاتف</label>
-                    <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">البريد الإلكتروني</label>
-                    <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-300 mb-3">صورة إثبات التحويل</label>
-                    <input type="file" name="screenshot" required class="file-input w-full p-3 rounded-xl glass-effect border border-gray-700 text-white">
-                </div>
-                
-                <button type="submit" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold text-lg">
-                    <i class="fas fa-check-circle ml-2"></i>
-                    تأكيد الدفع وإرسال البيانات
-                </button>
-            </form>
-        </div>
-
-        <!-- قسم الاستعلام -->
-        <div class="card-3d glass-effect rounded-2xl p-8 mb-10 hidden" id="check">
-            <h2 class="text-2xl font-semibold mb-6 text-center">
-                <i class="fas fa-search mr-2 gradient-text"></i>
-                <span class="gradient-text">استعلام عن النتيجة</span>
-            </h2>
-            
-            <form id="checkForm" class="space-y-6">
-                <div>
-                    <label class="block text-gray-300 mb-3">رقم الهاتف المسجل</label>
-                    <input name="phone" id="phoneInput" placeholder="أدخل رقم الهاتف الذي استخدمته في الدفع" required class="w-full p-4 rounded-xl glass-effect border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <button type="submit" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg">
-                    <i class="fas fa-download ml-2"></i>
-                    استعلام عن النتيجة
-                </button>
-            </form>
-
-            <!-- نتائج الاستعلام -->
-            <div id="resultContainer" class="mt-8 hidden">
-                <div class="glass-effect p-6 rounded-xl text-center mb-8 neon-border">
-                    <h3 class="text-2xl font-bold gradient-text">تهانينا! هذه هي نتيجتك</h3>
-                </div>
-                
-                <!-- النتيجة القابلة للطباعة -->
-                <div id="printableResult" class="space-y-6">
-                    <div class="result-header text-center mb-8">
-                        <h2 class="text-2xl font-bold gradient-text">نتيجة الطالب</h2>
-                        <p class="text-gray-300 mt-2">موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
-                        <p class="text-gray-400">الصف الثاني الثانوي - العام الدراسي 2025/2026</p>
-                    </div>
-                    
-                    <div class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-3">
-                            <i class="fas fa-user-graduate mr-2 gradient-text"></i>
-                            بيانات الطالب
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300" id="studentInfo"></div>
-                    </div>
-
-                    <div class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-3">
-                            <i class="fas fa-book mr-2 gradient-text"></i>
-                            المواد الأساسية
-                        </h3>
-                        <table id="mainSubjectsTable" class="w-full text-white">
-                            <thead>
-                                <tr class="border-b border-gray-700">
-                                    <th class="pb-3">المادة</th>
-                                    <th class="pb-3">الدرجة</th>
-                                    <th class="pb-3">من</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-3">
-                            <i class="fas fa-book-open mr-2 gradient-text"></i>
-                            المواد الإضافية
-                        </h3>
-                        <table id="additionalSubjectsTable" class="w-full text-white">
-                            <thead>
-                                <tr class="border-b border-gray-700">
-                                    <th class="pb-3">المادة</th>
-                                    <th class="pb-3">الدرجة</th>
-                                    <th class="pb-3">من</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="glass-effect rounded-2xl p-6">
-                        <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-3">
-                            <i class="fas fa-chart-pie mr-2 gradient-text"></i>
-                            الإجمالي والنسبة
-                        </h3>
-                        <table class="w-full text-white">
-                            <tr class="border-b border-gray-700">
-                                <th class="py-3 text-right">المجموع الكلي</th>
-                                <td id="totalScore" class="py-3 font-bold text-left"></td>
-                            </tr>
-                            <tr class="border-b border-gray-700">
-                                <th class="py-3 text-right">المجموع الكلي الممكن</th>
-                                <td id="totalOutOf" class="py-3 text-left"></td>
-                            </tr>
-                            <tr>
-                                <th class="py-3 text-right">النسبة المئوية</th>
-                                <td id="percentage" class="py-3 font-bold text-green-400 text-left"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                        <button onclick="printResult()" class="btn-3d bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium">
-                            <i class="fas fa-print ml-2"></i>
-                            طباعة النتيجة
-                        </button>
-                        <button onclick="saveAsPDF()" class="btn-3d bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-medium">
-                            <i class="fas fa-file-pdf ml-2"></i>
-                            حفظ كPDF
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- المميزات -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
-            <div class="card-3d glass-effect rounded-2xl p-6 text-center">
-                <div class="floating inline-block mb-4">
-                    <i class="fas fa-lock feature-icon text-3xl gradient-text"></i>
-                </div>
-                <h3 class="font-bold mb-3 text-white">بيانات آمنة</h3>
-                <p class="text-gray-400">بياناتك محمية ولا يتم مشاركتها مع أي طرف ثالث</p>
-            </div>
-            
-            <div class="card-3d glass-effect rounded-2xl p-6 text-center">
-                <div class="floating inline-block mb-4">
-                    <i class="fas fa-bolt feature-icon text-3xl gradient-text"></i>
-                </div>
-                <h3 class="font-bold mb-3 text-white">نتائج سريعة</h3>
-                <p class="text-gray-400">احصل على نتيجتك في خلال دقائق من التحويل</p>
-            </div>
-            
-            <div class="card-3d glass-effect rounded-2xl p-6 text-center">
-                <div class="floating inline-block mb-4">
-                    <i class="fas fa-headset feature-icon text-3xl gradient-text"></i>
-                </div>
-                <h3 class="font-bold mb-3 text-white">دعم فني</h3>
-                <p class="text-gray-400">فريق الدعم متاح لمساعدتك في أي استفسار</p>
-            </div>
-        </div>
-
-        <!-- الفوتر -->
-        <div class="footer text-center rounded-2xl glass-effect p-6 mt-8 mb-12">
-            <p class="text-gray-400">هذا الموقع غير تابع لأي جهة حكومية أو وزارة</p>
-            <p class="mt-3 text-gray-400">
-                تم انشاء هذا الموقع بواسطة 
-                <a href="https://wa.me/201274445091" class="text-purple-300 font-semibold hover:text-white transition-colors">
-                    John Latif
-                </a>
-            </p>
-        </div>
+  <!-- التنبيهات على شكل شبكة -->
+  <div class="alert-grid">
+    <div class="alert-box alert-danger">
+      <i class="fas fa-exclamation-triangle alert-icon"></i>
+      <div>
+        <p class="font-bold text-red-600">النتيجة مظهرتش</p>
+        <p class="text-green-700 font-medium">"إِلهُ السَّلاَمِ مَعَكُمْ أَجْمَعِينَ. آمِينَ." (رو 15: 33).</p>
+      </div>
     </div>
 
-    <!-- حاوية مخفية لإنشاء PDF -->
-    <div id="pdf-container" style="position: absolute; left: -9999px; top: -9999px;"></div>
+    <div class="alert-box alert-info">
+      <i class="fas fa-ban alert-icon"></i>
+      <p class="text-blue-800 font-bold">ممنوع منعاً باتاً تفتح أي حاجة أو تحاول تجيب النتيجة من مكان تاني علشان هيحصل مشكلة وأنا مش مسؤول</p>
+    </div>
 
-    <script>
-        // إنشاء تأثيرات ثلاثية الأبعاد في الخلفية
-        function initThreeJS() {
-            const container = document.getElementById('three-container');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
-            
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-            
-            // إنشاء أشكال هندسية عشوائية
-            const geometries = [
-                new THREE.IcosahedronGeometry(1, 0),
-                new THREE.OctahedronGeometry(1, 0),
-                new THREE.TetrahedronGeometry(1, 0),
-                new THREE.SphereGeometry(1, 12, 12)
-            ];
-            
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: 0x4361ee, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0x7209b7, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0xf72585, transparent: true, opacity: 0.2 }),
-                new THREE.MeshPhongMaterial({ color: 0x4cc9f0, transparent: true, opacity: 0.2 })
-            ];
-            
-            const objects = [];
-            const numObjects = 15;
-            
-            for (let i = 0; i < numObjects; i++) {
-                const geometry = geometries[Math.floor(Math.random() * geometries.length)];
-                const material = materials[Math.floor(Math.random() * materials.length)];
-                const mesh = new THREE.Mesh(geometry, material);
-                
-                mesh.position.x = Math.random() * 40 - 20;
-                mesh.position.y = Math.random() * 40 - 20;
-                mesh.position.z = Math.random() * 40 - 20;
-                
-                mesh.rotation.x = Math.random() * Math.PI;
-                mesh.rotation.y = Math.random() * Math.PI;
-                
-                mesh.scale.setScalar(Math.random() * 3 + 1);
-                
-                scene.add(mesh);
-                objects.push(mesh);
-            }
-            
-            // إضافة إضاءة
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            camera.position.z = 30;
-            
-            // تحريك الكامرا والأشكال
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                objects.forEach(obj => {
-                    obj.rotation.x += 0.005;
-                    obj.rotation.y += 0.008;
-                });
-                
-                camera.position.x = Math.sin(Date.now() * 0.0005) * 20;
-                camera.position.z = Math.cos(Date.now() * 0.0005) * 20;
-                camera.lookAt(scene.position);
-                
-                renderer.render(scene, camera);
-            }
-            
-            animate();
-            
-            // تحديث الحجم عند تغيير حجم النافذة
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
+    <div class="alert-box alert-success">
+      <i class="fas fa-info-circle alert-icon"></i>
+      <p class="text-gray-800">هذا الموقع غير تابع لأي جهة حكومية أو وزارة، وإنما هو مبادرة شخصية للمساعدة في الحصول على النتائج فقط. البيانات سرية تامة ثم تتحذف بعد الاستطلاع على النتيجة</p>
+    </div>
+
+    <div class="alert-box alert-purple">
+      <i class="fas fa-envelope alert-icon"></i>
+      <p class="text-purple-800 font-bold">"ستظهر النتيجة على الصفحة الإلكترونية وسيتم أيضًا إرسالها إلى البريد الإلكتروني خلال دقيقتين تقريبًا."</p>
+    </div>
+  </div>
+
+  <!-- أزرار حجز النتيجة -->
+  <div class="card p-6 mb-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">
+      <i class="fas fa-ticket-alt"></i>
+      حجز النتيجة مسبقاً
+    </h2>
+    <h2>برجاء للحجز دفع المبلغ 25 جنيهاً الى الرقم هذا</h2>
+    <h1>01274445091</h1>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="https://t.me/gizaresult_bot" target="_blank" class="btn-telegram text-center">
+        <i class="fab fa-telegram-plane"></i>
+        حجز عبر التيليجرام
+      </a>
+      
+      <button onclick="showReservation()" class="btn-secondary">
+        <i class="fas fa-globe"></i>
+        حجز عبر الموقع
+      </button>
+    </div>
+  </div>
+
+<!-- قسم حجز النتيجة عبر الموقع -->
+<div class="card p-6 mb-6 hidden" id="reservation">
+  <h2 class="text-2xl font-semibold mb-4 text-gray-800">
+    <i class="fas fa-globe"></i>
+    حجز النتيجة عبر الموقع
+  </h2>
+  
+  <form id="reservationForm" class="space-y-4">
+    <div>
+      <label class="block text-gray-700 mb-2">الرقم القومي</label>
+      <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-3 border rounded-lg">
+    </div>
+    
+    <div>
+      <label class="block text-gray-700 mb-2">رقم الهاتف</label>
+      <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-3 border rounded-lg">
+    </div>
+    
+    <div>
+      <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+      <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-3 border rounded-lg">
+    </div>
+    
+    <!-- الحقول الجديدة المطلوبة -->
+    <div>
+      <label class="block text-gray-700 mb-2">رقم المحول (الرقم الذي تم التحويل منه)</label>
+      <input name="senderPhone" placeholder="أدخل رقم الهاتف المحول منه" required class="w-full p-3 border rounded-lg">
+    </div>
+    
+    <div>
+      <label class="block text-gray-700 mb-2">سكرين شوت التحويل</label>
+      <input type="file" name="screenshot" required class="file-input">
+    </div>
+    <!-- نهاية الحقول الجديدة -->
+    
+    <button type="submit" class="btn-primary w-full py-3">
+      <i class="fas fa-check-circle"></i>
+      تأكيد الحجز
+    </button>
+  </form>
+</div>
+
+  <!-- الأزرار الرئيسية -->
+  <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+    <button onclick="showPayment()" class="btn-primary">
+      <i class="fas fa-money-bill-wave"></i>
+      إتمام الدفع للاستعلام عن النتيجة
+    </button>
+    <button onclick="showCheck()" class="btn-secondary">
+      <i class="fas fa-search"></i>
+      استعلام عن النتيجة بعد الدفع
+    </button>
+  </div>
+
+  <!-- قسم الدفع -->
+  <div class="card p-6 mb-6 hidden" id="payment">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">
+      <i class="fas fa-credit-card"></i>
+      الدفع عن طريق تحويل محفظة
+    </h2>
+    
+    <h1>برجاء الضغط على الزر مرة واحدة ثم انتظر تحميل التصفح</h1>
+
+    <div class="bg-blue-50 p-4 rounded-lg mb-4">
+      <p class="text-blue-800 font-bold text-center">
+        قم بالتحويل إلى الرقم: 
+        <span class="text-xl">01274445091</span>
+      </p>
+    </div>
+    
+    <form id="paymentForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-2">الرقم القومي</label>
+        <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">رقم الجلوس</label>
+        <input name="seatNumber" placeholder="أدخل رقم الجلوس" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">رقم الهاتف</label>
+        <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+        <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">صورة إثبات التحويل</label>
+        <input type="file" name="screenshot" required class="file-input">
+      </div>
+      
+      <button type="submit" class="btn-primary w-full py-3">
+        <i class="fas fa-check-circle"></i>
+        تأكيد الدفع وإرسال البيانات(برجاء الضغط على الزر مرة واحدة ثم انتظر تحميل التصفح)
+      </button>
+    </form>
+  </div>
+
+  <!-- قسم الاستعلام -->
+  <div class="card p-6 mb-6 hidden" id="check">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">
+      <i class="fas fa-search"></i>
+      استعلام عن النتيجة
+    </h2>
+    
+    <form id="checkForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-2">رقم الهاتف المسجل</label>
+        <input name="phone" id="phoneInput" placeholder="أدخل رقم الهاتف الذي استخدمته في الدفع" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <button type="submit" class="btn-secondary w-full py-3">
+        <i class="fas fa-download"></i>
+        استعلام عن النتيجة
+      </button>
+    </form>
+
+    <!-- نتائج الاستعلام -->
+    <div id="resultContainer" class="mt-6 hidden">
+      <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg text-center mb-6">
+        <h3 class="text-xl font-bold">تهانينا! هذه هي نتيجتك</h3>
+      </div>
+      
+      <!-- النتيجة القابلة للطباعة -->
+      <div id="printableResult">
+        <div class="result-header">
+          <h2>نتيجة الطالب</h2>
+          <p>موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
+          <p>الصف الثاني الثانوي - العام الدراسي 2025/2026</p>
+        </div>
         
-        // إنشاء جسيمات عائمة
-        function createParticles() {
-            const container = document.getElementById('particles');
-            const numParticles = 30;
-            
-            for (let i = 0; i < numParticles; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                
-                const size = Math.random() * 20 + 5;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.top = `${Math.random() * 100}vh`;
-                
-                particle.style.animationDelay = `${Math.random() * 15}s`;
-                particle.style.animationDuration = `${Math.random() * 10 + 15}s`;
-                
-                container.appendChild(particle);
-            }
+        <div class="card p-4 mb-6">
+          <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-user-graduate"></i>
+            بيانات الطالب
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="studentInfo"></div>
+        </div>
+
+        <div class="card p-4 mb-6">
+          <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-book"></i>
+            المواد الأساسية
+          </h3>
+          <table id="mainSubjectsTable">
+            <thead>
+              <tr>
+                <th>المادة</th>
+                <th>الدرجة</th>
+                <th>من</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card p-4 mb-6">
+          <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-book-open"></i>
+            المواد الإضافية
+          </h3>
+          <table id="additionalSubjectsTable">
+            <thead>
+              <tr>
+                <th>المادة</th>
+                <th>الدرجة</th>
+                <th>من</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card p-4">
+          <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-chart-pie"></i>
+            الإجمالي والنسبة
+          </h3>
+          <table>
+            <tr>
+              <th>المجموع الكلي</th>
+              <td id="totalScore" class="font-bold"></td>
+            </tr>
+            <tr>
+              <th>المجموع الكلي الممكن</th>
+              <td id="totalOutOf"></td>
+            </tr>
+            <tr>
+              <th>النسبة المئوية</th>
+              <td id="percentage" class="font-bold text-green-600"></td>
+            </tr>
+          </table>
+        </div>
+          <button onclick="saveAsPDF()" class="btn-secondary ml-4">
+            <i class="fas fa-file-pdf"></i>
+            حفظ كPDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- المميزات -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
+    <div class="card p-4 text-center">
+      <i class="fas fa-lock feature-icon"></i>
+      <h3 class="font-bold mb-2">بيانات آمنة</h3>
+      <p class="text-gray-600">بياناتك محمية ولا يتم مشاركتها مع أي طرف ثالث</p>
+    </div>
+    
+    <div class="card p-4 text-center">
+      <i class="fas fa-bolt feature-icon"></i>
+      <h3 class="font-bold mb-2">نتائج سريعة</h3>
+      <p class="text-gray-600">احصل على نتيجتك في خلال دقائق من التحويل</p>
+    </div>
+    
+    <div class="card p-4 text-center">
+      <i class="fas fa-headset feature-icon"></i>
+      <h3 class="font-bold mb-2">دعم فني</h3>
+      <p class="text-gray-600">فريق الدعم متاح لمساعدتك في أي استفسار</p>
+    </div>
+  </div>
+
+  <!-- الفوتر -->
+  <div class="footer text-center rounded-lg">
+    <p>هذا الموقع غير تابع لأي جهة حكومية أو وزارة</p>
+    <p class="mt-2">
+      تم انشاء هذا الموقع بواسطة 
+      <a href="https://wa.me/201274445091" class="text-purple-500 font-semibold hover:text-purple-700">
+        John Latif
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- حاوية مخفية لإنشاء PDF -->
+<div id="pdf-container" style="position: absolute; left: -9999px; top: -9999px;"></div>
+
+<script>
+// متغير لتخزين النتيجة الحالية
+let currentResult = null;
+
+function showPayment() {
+  document.getElementById('payment').classList.remove('hidden');
+  document.getElementById('check').classList.add('hidden');
+  document.getElementById('reservation').classList.add('hidden');
+}
+
+function showCheck() {
+  document.getElementById('check').classList.remove('hidden');
+  document.getElementById('payment').classList.add('hidden');
+  document.getElementById('reservation').classList.add('hidden');
+}
+
+function showReservation() {
+  document.getElementById('reservation').classList.remove('hidden');
+  document.getElementById('payment').classList.add('hidden');
+  document.getElementById('check').classList.add('hidden');
+}
+
+// معالجة استعلام النتيجة
+document.getElementById('checkForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const phone = document.getElementById('phoneInput').value;
+
+  // عرض رسالة تحميل
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> جاري البحث...';
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/check-result', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({phone})
+    });
+
+    const data = await res.json();
+    
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'فشل في جلب النتيجة');
+    }
+
+    currentResult = data.result;
+    displayResult(data.result);
+    
+  } catch (error) {
+    alert(error.message || 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد');
+    console.error('Error:', error);
+  } finally {
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
+// معالجة حجز النتيجة
+document.getElementById('reservationForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  
+  // التحقق من وجود ملف
+  if (!formData.get('screenshot') || formData.get('screenshot').size === 0) {
+    alert('يرجى رفع صورة إثبات التحويل');
+    return;
+  }
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> جاري الحجز...';
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/reserve', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res.ok) {
+      alert('تم تسجيل الحجز بنجاح، وسيتم التواصل معك قريبًا.');
+      e.target.reset();
+      document.getElementById('reservation').classList.add('hidden');
+    } else {
+      const errorText = await res.text();
+      throw new Error(errorText || 'فشل في تسجيل الحجز');
+    }
+  } catch (error) {
+    alert('حدث خطأ أثناء معالجة الحجز: ' + error.message);
+    console.error('Error:', error);
+  } finally {
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
+
+// معالجة دفع النتيجة
+document.getElementById('paymentForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> جاري الإرسال...';
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/pay', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res.ok) {
+      alert('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
+      e.target.reset();
+      document.getElementById('payment').classList.add('hidden');
+    } else {
+      throw new Error('فشل في إرسال البيانات');
+    }
+  } catch (error) {
+    alert('حدث خطأ أثناء إرسال البيانات: ' + error.message);
+    console.error('Error:', error);
+  } finally {
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
+
+// عرض النتيجة - الإصدار المحسن
+function displayResult(result) {
+  if (!result || typeof result !== 'object') {
+    alert('بيانات النتيجة غير صحيحة');
+    return;
+  }
+
+  console.log('النتيجة المستلمة:', result); // لأغراض التصحيح
+
+  // بيانات الطالب
+  const infoDiv = document.getElementById('studentInfo');
+  infoDiv.innerHTML = '';
+  
+  // إضافة الحقول الديناميكية
+  const fieldsToShow = [
+    { key: 'name', label: 'اسم الطالب' },
+    { key: 'seatNumber', label: 'رقم الجلوس' },
+    { key: 'stage', label: 'المرحلة' },
+    { key: 'gradeLevel', label: 'الصف' },
+    { key: 'schoolName', label: 'المدرسة' },
+    { key: 'notes', label: 'ملاحظات' }
+  ];
+  
+  fieldsToShow.forEach(field => {
+    if (result[field.key] !== undefined && result[field.key] !== null && result[field.key] !== '') {
+      const div = document.createElement('div');
+      div.innerHTML = `<strong>${field.label}:</strong> ${result[field.key]}`;
+      infoDiv.appendChild(div);
+    }
+  });
+
+  // المواد الأساسية
+  const mainTbody = document.querySelector('#mainSubjectsTable tbody');
+  mainTbody.innerHTML = '';
+  
+  if (result.mainSubjects && Array.isArray(result.mainSubjects) && result.mainSubjects.length > 0) {
+    result.mainSubjects.forEach(sub => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${sub.name || 'غير معروف'}</td>
+        <td>${sub.score || '0'}</td>
+        <td>${sub.outOf || '0'}</td>
+      `;
+      mainTbody.appendChild(tr);
+    });
+  } else {
+    mainTbody.innerHTML = '<tr><td colspan="3">لا توجد بيانات</td></tr>';
+  }
+
+  // المواد الإضافية
+  const addTbody = document.querySelector('#additionalSubjectsTable tbody');
+  addTbody.innerHTML = '';
+  
+  if (result.additionalSubjects && Array.isArray(result.additionalSubjects) && result.additionalSubjects.length > 0) {
+    result.additionalSubjects.forEach(sub => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${sub.name || 'غير معروف'}</td>
+        <td>${sub.score || '0'}</td>
+        <td>${sub.outOf || '0'}</td>
+      `;
+      addTbody.appendChild(tr);
+    });
+  } else {
+    addTbody.innerHTML = '<tr><td colspan="3">لا توجد بيانات</td></tr>';
+  }
+
+  // الإجمالي والنسبة
+  const totalScore = result.totalScore || 0;
+  const totalOutOf = result.totalOutOf || 0;
+  let percentage = result.percentage;
+  
+  if (!percentage && totalOutOf > 0) {
+    percentage = Math.round((totalScore / totalOutOf) * 100);
+  }
+  
+  document.getElementById('totalScore').textContent = totalScore;
+  document.getElementById('totalOutOf').textContent = totalOutOf;
+  document.getElementById('percentage').textContent = (percentage || 0) + '%';
+
+  document.getElementById('resultContainer').classList.remove('hidden');
+  currentResult = result;
+}
+
+// طباعة النتيجة
+function printResult() {
+  if (!currentResult) {
+    alert('لا توجد نتيجة للطباعة');
+    return;
+  }
+
+  // إنشاء نافذة طباعة جديدة
+  const printWindow = window.open('', '_blank');
+  
+  // محتوى HTML مخصص للطباعة
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <title>نتيجة الطالب - ${currentResult.name || ''}</title>
+      <style>
+        body {
+          font-family: 'Tajawal', sans-serif;
+          padding: 20px;
+          color: #000;
+          background: white;
+          line-height: 1.6;
         }
-        
-        // تهيئة التأثيرات عند تحميل الصفحة
-        window.addEventListener('DOMContentLoaded', () => {
-            initThreeJS();
-            createParticles();
-            
-            // إضافة تأثيرات الظهور المتتالي للعناصر
-            document.querySelectorAll('.slide-in').forEach((el, i) => {
-                el.style.animationDelay = `${0.2 + i * 0.1}s`;
-            });
-        });
-        
-        // (بقية الدوال JavaScript تبقى كما هي مع تعديلات طفيفة للون)
-        let currentResult = null;
-
-        function showPayment() {
-            document.getElementById('payment').classList.remove('hidden');
-            document.getElementById('check').classList.add('hidden');
-            document.getElementById('reservation').classList.add('hidden');
+        .card {
+          background: white;
+          border-radius: 8px;
+          border: 1px solid #ddd;
+          padding: 15px;
+          margin-bottom: 15px;
         }
-
-        function showCheck() {
-            document.getElementById('check').classList.remove('hidden');
-            document.getElementById('payment').classList.add('hidden');
-            document.getElementById('reservation').classList.add('hidden');
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 10px 0;
         }
-
-        function showReservation() {
-            document.getElementById('reservation').classList.remove('hidden');
-            document.getElementById('payment').classList.add('hidden');
-            document.getElementById('check').classList.add('hidden');
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: center;
         }
-
-        // معالجة استعلام النتيجة
-        document.getElementById('checkForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const phone = document.getElementById('phoneInput').value;
-
-            // عرض رسالة تحميل
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري البحث...';
-            submitBtn.disabled = true;
-
-            try {
-                const res = await fetch('/api/check-result', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({phone})
-                });
-
-                const data = await res.json();
-                
-                if (!res.ok || !data.success) {
-                    throw new Error(data.message || 'فشل في جلب النتيجة');
-                }
-
-                currentResult = data.result;
-                displayResult(data.result);
-                
-            } catch (error) {
-                alert(error.message || 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد');
-                console.error('Error:', error);
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-
-        // معالجة حجز النتيجة
-        document.getElementById('reservationForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            
-            // التحقق من وجود ملف
-            if (!formData.get('screenshot') || formData.get('screenshot').size === 0) {
-                alert('يرجى رفع صورة إثبات التحويل');
-                return;
-            }
-
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحجز...';
-            submitBtn.disabled = true;
-
-            try {
-                const res = await fetch('/reserve', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (res.ok) {
-                    alert('تم تسجيل الحجز بنجاح، وسيتم التواصل معك قريبًا.');
-                    e.target.reset();
-                    document.getElementById('reservation').classList.add('hidden');
-                } else {
-                    const errorText = await res.text();
-                    throw new Error(errorText || 'فشل في تسجيل الحجز');
-                }
-            } catch (error) {
-                alert('حدث خطأ أثناء معالجة الحجز: ' + error.message);
-                console.error('Error:', error);
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-
-        // معالجة دفع النتيجة
-        document.getElementById('paymentForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الإرسال...';
-            submitBtn.disabled = true;
-
-            try {
-                const res = await fetch('/pay', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (res.ok) {
-                    alert('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
-                    e.target.reset();
-                    document.getElementById('payment').classList.add('hidden');
-                } else {
-                    throw new Error('فشل في إرسال البيانات');
-                }
-            } catch (error) {
-                alert('حدث خطأ أثناء إرسال البيانات: ' + error.message);
-                console.error('Error:', error);
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-
-        // عرض النتيجة - الإصدار المحسن
-        function displayResult(result) {
-            if (!result || typeof result !== 'object') {
-                alert('بيانات النتيجة غير صحيحة');
-                return;
-            }
-
-            console.log('النتيجة المستلمة:', result); // لأغراض التصحيح
-
-            // بيانات الطالب
-            const infoDiv = document.getElementById('studentInfo');
-            infoDiv.innerHTML = '';
-            
-            // إضافة الحقول الديناميكية
-            const fieldsToShow = [
-                { key: 'name', label: 'اسم الطالب' },
-                { key: 'seatNumber', label: 'رقم الجلوس' },
-                { key: 'stage', label: 'المرحلة' },
-                { key: 'gradeLevel', label: 'الصف' },
-                { key: 'schoolName', label: 'المدرسة' },
-                { key: 'notes', label: 'ملاحظات' }
-            ];
-            
-            fieldsToShow.forEach(field => {
-                if (result[field.key] !== undefined && result[field.key] !== null && result[field.key] !== '') {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<strong>${field.label}:</strong> ${result[field.key]}`;
-                    infoDiv.appendChild(div);
-                }
-            });
-
-            // المواد الأساسية
-            const mainTbody = document.querySelector('#mainSubjectsTable tbody');
-            mainTbody.innerHTML = '';
-            
-            if (result.mainSubjects && Array.isArray(result.mainSubjects) && result.mainSubjects.length > 0) {
-                result.mainSubjects.forEach(sub => {
-                    const tr = document.createElement('tr');
-                    tr.classList.add('border-b', 'border-gray-700');
-                    tr.innerHTML = `
-                        <td class="py-3">${sub.name || 'غير معروف'}</td>
-                        <td class="py-3">${sub.score || '0'}</td>
-                        <td class="py-3">${sub.outOf || '0'}</td>
-                    `;
-                    mainTbody.appendChild(tr);
-                });
-            } else {
-                mainTbody.innerHTML = '<tr class="border-b border-gray-700"><td colspan="3" class="py-3 text-center">لا توجد بيانات</td></tr>';
-            }
-
-            // المواد الإضافية
-            const addTbody = document.querySelector('#additionalSubjectsTable tbody');
-            addTbody.innerHTML = '';
-            
-            if (result.additionalSubjects && Array.isArray(result.additionalSubjects) && result.additionalSubjects.length > 0) {
-                result.additionalSubjects.forEach(sub => {
-                    const tr = document.createElement('tr');
-                    tr.classList.add('border-b', 'border-gray-700');
-                    tr.innerHTML = `
-                        <td class="py-3">${sub.name || 'غير معروف'}</td>
-                        <td class="py-3">${sub.score || '0'}</td>
-                        <td class="py-3">${sub.outOf || '0'}</td>
-                    `;
-                    addTbody.appendChild(tr);
-                });
-            } else {
-                addTbody.innerHTML = '<tr class="border-b border-gray-700"><td colspan="3" class="py-3 text-center">لا توجد بيانات</td></tr>';
-            }
-
-            // الإجمالي والنسبة
-            const totalScore = result.totalScore || 0;
-            const totalOutOf = result.totalOutOf || 0;
-            let percentage = result.percentage;
-            
-            if (!percentage && totalOutOf > 0) {
-                percentage = Math.round((totalScore / totalOutOf) * 100);
-            }
-            
-            document.getElementById('totalScore').textContent = totalScore;
-            document.getElementById('totalOutOf').textContent = totalOutOf;
-            document.getElementById('percentage').textContent = (percentage || 0) + '%';
-
-            document.getElementById('resultContainer').classList.remove('hidden');
-            currentResult = result;
+        th {
+          background-color: #f2f2f2;
+          font-weight: bold;
         }
-
-        // طباعة النتيجة
-        function printResult() {
-            if (!currentResult) {
-                alert('لا توجد نتيجة للطباعة');
-                return;
-            }
-
-            // إنشاء نافذة طباعة جديدة
-            const printWindow = window.open('', '_blank');
-            
-            // محتوى HTML مخصص للطباعة
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html lang="ar" dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>نتيجة الطالب - ${currentResult.name || ''}</title>
-                    <style>
-                        body {
-                            font-family: 'Tajawal', sans-serif;
-                            padding: 20px;
-                            color: #000;
-                            background: white;
-                            line-height: 1.6;
-                        }
-                        .card {
-                            background: white;
-                            border-radius: 8px;
-                            border: 1px solid #ddd;
-                            padding: 15px;
-                            margin-bottom: 15px;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 10px 0;
-                        }
-                        th, td {
-                            border: 1px solid #ddd;
-                            padding: 8px;
-                            text-align: center;
-                        }
-                        th {
-                            background-color: #f2f2f2;
-                            font-weight: bold;
-                        }
-                        .result-header {
-                            text-align: center;
-                            margin-bottom: 20px;
-                            padding-bottom: 15px;
-                            border-bottom: 2px solid #3b82f6;
-                        }
-                        .summary-box {
-                            background-color: #f9fafb;
-                            padding: 15px;
-                            border-radius: 8px;
-                            margin: 15px 0;
-                        }
-                        .no-print {
-                            display: none !important;
-                        }
-                        @media print {
-                            body {
-                                padding: 0;
-                                margin: 0;
-                            }
-                            .card {
-                                page-break-inside: avoid;
-                            }
-                            table {
-                                page-break-inside: avoid;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="result-header">
-                        <h2>نتيجة الطالب</h2>
-                        <p>موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
-                        <p>الصف الثاني الثانوي - العام الدراسي 2025/2026</p>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>بيانات الطالب</h3>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
-                            <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
-                            <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
-                            <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
-                            <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
-                            <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>المواد الأساسية</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>المادة</th>
-                                    <th>الدرجة</th>
-                                    <th>من</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${currentResult.mainSubjects ? currentResult.mainSubjects.map(sub => 
-                                    `<tr><td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td></tr>`
-                                ).join('') : '<tr><td colspan="3">لا توجد بيانات</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card">
-                        <h3>المواد الإضافية</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>المادة</th>
-                                    <th>الدرجة</th>
-                                    <th>من</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${currentResult.additionalSubjects ? currentResult.additionalSubjects.map(sub => 
-                                    `<tr><td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td></tr>`
-                                ).join('') : '<tr><td colspan="3">لا توجد بيانات</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card">
-                        <h3>الإجمالي والنسبة</h3>
-                        <table>
-                            <tr>
-                                <th>المجموع الكلي</th>
-                                <td>${currentResult.totalScore || '0'}</td>
-                            </tr>
-                            <tr>
-                                <th>المجموع الكلي الممكن</th>
-                                <td>${currentResult.totalOutOf || '0'}</td>
-                            </tr>
-                            <tr>
-                                <th>النسبة المئوية</th>
-                                <td>${currentResult.percentage || '0'}%</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="no-print" style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.print()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-                            طباعة النتيجة
-                        </button>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            
-            // الانتظار حتى يتم تحميل المحتوى ثم التركيز على النافذة للطباعة
-            setTimeout(() => {
-                printWindow.focus();
-            }, 500);
+        .result-header {
+          text-align: center;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #3b82f6;
         }
-
-        // حفظ النتيجة كPDF
-        async function saveAsPDF() {
-            if (!currentResult) {
-                alert('لا توجد نتيجة لحفظها');
-                return;
-            }
-
-            try {
-                // إنشاء عنصر مؤقت للطباعة
-                const printableElement = document.createElement('div');
-                printableElement.style.padding = '20px';
-                printableElement.style.fontFamily = "'Tajawal', sans-serif";
-                printableElement.style.direction = 'rtl';
-                printableElement.style.background = 'white';
-                printableElement.style.color = 'black';
-                
-                printableElement.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3b82f6;">
-                        <h2>نتيجة الطالب</h2>
-                        <p>موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
-                        <p>الصف الثاني الثانوي - العام الدراسي 2023/2024</p>
-                    </div>
-                    
-                    <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
-                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">بيانات الطالب</h3>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
-                            <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
-                            <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
-                            <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
-                            <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
-                            <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
-                        </div>
-                    </div>
-
-                    <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
-                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">المواد الأساسية</h3>
-                        <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                            <thead>
-                                <tr>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المادة</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">الدرجة</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">من</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${currentResult.mainSubjects ? currentResult.mainSubjects.map(sub => 
-                                    `<tr>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.name}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.score}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.outOf}</td>
-                                    </tr>`
-                                ).join('') : '<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center;">لا توجد بيانات</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
-                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">المواد الإضافية</h3>
-                        <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-                            <thead>
-                                <tr>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المادة</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">الدرجة</th>
-                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">من</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${currentResult.additionalSubjects ? currentResult.additionalSubjects.map(sub => 
-                                    `<tr>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.name}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.score}</td>
-                                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.outOf}</td>
-                                    </tr>`
-                                ).join('') : '<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center;">لا توجد بيانات</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px;">
-                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">الإجمالي والنسبة</h3>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المجموع الكلي</th>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">${currentResult.totalScore || '0'}</td>
-                            </tr>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المجموع الكلي الممكن</th>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${currentResult.totalOutOf || '0'}</td>
-                            </tr>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">النسبة المئوية</th>
-                                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; color: green;">${currentResult.percentage || '0'}%</td>
-                            </tr>
-                        </table>
-                    </div>
-                `;
-                
-                // إضافة العنصر إلى الجسم مؤقتاً
-                document.getElementById('pdf-container').appendChild(printableElement);
-                
-                // استخدام html2canvas لالتقاط لقطة للعنصر
-                const canvas = await html2canvas(printableElement, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                });
-                
-                // تحويل Canvas إلى صورة
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                
-                // إنشاء PDF باستخدام jsPDF
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                // حساب أبعاد الصورة لتناسب PDF
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = canvas.width;
-                const imgHeight = canvas.height;
-                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-                const imgX = (pdfWidth - imgWidth * ratio) / 2;
-                const imgY = 10;
-                
-                // إضافة الصورة إلى PDF
-                pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-                
-                // حفظ PDF
-                pdf.save(`نتيجة_${currentResult.name || 'الطالب'}.pdf`);
-                
-                // إزالة العنصر المؤقت
-                document.getElementById('pdf-container').removeChild(printableElement);
-                
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('حدث خطأ أثناء إنشاء PDF: ' + error.message);
-            }
+        .summary-box {
+          background-color: #f9fafb;
+          padding: 15px;
+          border-radius: 8px;
+          margin: 15px 0;
         }
-    </script>
+        .no-print {
+          display: none !important;
+        }
+        @media print {
+          body {
+            padding: 0;
+            margin: 0;
+          }
+          .card {
+            page-break-inside: avoid;
+          }
+          table {
+            page-break-inside: avoid;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="result-header">
+        <h2>نتيجة الطالب</h2>
+        <p>موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
+        <p>الصف الثاني الثانوي - العام الدراسي 2025/2026</p>
+      </div>
+      
+      <div class="card">
+        <h3>بيانات الطالب</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
+          <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
+          <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
+          <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
+          <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
+          <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>المواد الأساسية</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>المادة</th>
+              <th>الدرجة</th>
+              <th>من</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentResult.mainSubjects ? currentResult.mainSubjects.map(sub => 
+              `<tr><td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td></tr>`
+            ).join('') : '<tr><td colspan="3">لا توجد بيانات</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>المواد الإضافية</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>المادة</th>
+              <th>الدرجة</th>
+              <th>من</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentResult.additionalSubjects ? currentResult.additionalSubjects.map(sub => 
+              `<tr><td>${sub.name}</td><td>${sub.score}</td><td>${sub.outOf}</td></tr>`
+            ).join('') : '<tr><td colspan="3">لا توجد بيانات</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>الإجمالي والنسبة</h3>
+        <table>
+          <tr>
+            <th>المجموع الكلي</th>
+            <td>${currentResult.totalScore || '0'}</td>
+          </tr>
+          <tr>
+            <th>المجموع الكلي الممكن</th>
+            <td>${currentResult.totalOutOf || '0'}</td>
+          </tr>
+          <tr>
+            <th>النسبة المئوية</th>
+            <td>${currentResult.percentage || '0'}%</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+          طباعة النتيجة
+        </button>
+      </div>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  
+  // الانتظار حتى يتم تحميل المحتوى ثم التركيز على النافذة للطباعة
+  setTimeout(() => {
+    printWindow.focus();
+  }, 500);
+}
+
+// حفظ النتيجة كPDF
+async function saveAsPDF() {
+  if (!currentResult) {
+    alert('لا توجد نتيجة لحفظها');
+    return;
+  }
+
+  try {
+    // إنشاء عنصر مؤقت للطباعة
+    const printableElement = document.createElement('div');
+    printableElement.style.padding = '20px';
+    printableElement.style.fontFamily = "'Tajawal', sans-serif";
+    printableElement.style.direction = 'rtl';
+    
+    printableElement.innerHTML = `
+      <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3b82f6;">
+        <h2>نتيجة الطالب</h2>
+        <p>موقع الاستعلام عن نتائج الامتحانات - محافظة الجيزة</p>
+        <p>الصف الثاني الثانوي - العام الدراسي 2023/2024</p>
+      </div>
+      
+      <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">بيانات الطالب</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
+          <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
+          <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
+          <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
+          <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
+          <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
+        </div>
+      </div>
+
+      <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">المواد الأساسية</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المادة</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">الدرجة</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">من</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentResult.mainSubjects ? currentResult.mainSubjects.map(sub => 
+              `<tr>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.name}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.score}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.outOf}</td>
+              </tr>`
+            ).join('') : '<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center;">لا توجد بيانات</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">المواد الإضافية</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المادة</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">الدرجة</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">من</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentResult.additionalSubjects ? currentResult.additionalSubjects.map(sub => 
+              `<tr>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.name}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.score}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sub.outOf}</td>
+              </tr>`
+            ).join('') : '<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center;">لا توجد بيانات</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background: white; border-radius: 8px; border: 1px solid #ddd; padding: 15px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">الإجمالي والنسبة</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المجموع الكلي</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">${currentResult.totalScore || '0'}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">المجموع الكلي الممكن</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${currentResult.totalOutOf || '0'}</td>
+          </tr>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2; font-weight: bold;">النسبة المئوية</th>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; color: green;">${currentResult.percentage || '0'}%</td>
+          </tr>
+        </table>
+      </div>
+    `;
+    
+    // إضافة العنصر إلى الجسم مؤقتاً
+    document.getElementById('pdf-container').appendChild(printableElement);
+    
+    // استخدام html2canvas لالتقاط لقطة للعنصر
+    const canvas = await html2canvas(printableElement, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
+    
+    // تحويل Canvas إلى صورة
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    
+    // إنشاء PDF باستخدام jsPDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // حساب أبعاد الصورة لتناسب PDF
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const imgX = (pdfWidth - imgWidth * ratio) / 2;
+    const imgY = 10;
+    
+    // إضافة الصورة إلى PDF
+    pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+    
+    // حفظ PDF
+    pdf.save(`نتيجة_${currentResult.name || 'الطالب'}.pdf`);
+    
+    // إزالة العنصر المؤقت
+    document.getElementById('pdf-container').removeChild(printableElement);
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('حدث خطأ أثناء إنشاء PDF: ' + error.message);
+  }
+}
+</script>
 </body>
 </html>
