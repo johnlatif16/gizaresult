@@ -2,220 +2,28 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تسجيل الدخول للإدارة</title>
+    <title>تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-        
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --accent: #f72585;
-            --light: #f8f9fa;
-            --dark: #1a1a2e;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: var(--light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .login-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            border-radius: 16px;
-            padding: 30px;
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .login-icon {
-            font-size: 3rem;
-            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 15px;
-            display: inline-block;
-        }
-        
-        .login-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: white;
-        }
-        
-        .login-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-family: 'Tajawal', sans-serif;
-            transition: all 0.3s ease;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
-        }
-        
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: none;
-            background: linear-gradient(to right, var(--primary), var(--primary-dark));
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Tajawal', sans-serif;
-        }
-        
-        .submit-btn:hover {
-            background: linear-gradient(to right, var(--primary-dark), #2d3bd4);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        .error-message {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(230, 57, 70, 0.2);
-            color: #ff6b6b;
-            border-radius: 8px;
-            text-align: center;
-            display: none;
-        }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 20px;
-            }
-            
-            .login-title {
-                font-size: 1.5rem;
-            }
-        }
+        body { font-family: 'Tajawal', sans-serif; }
     </style>
 </head>
-<body>
-    <div class="login-container">
-        <div class="login-header">
-            <i class="fas fa-user-shield login-icon"></i>
-            <h1 class="login-title">تسجيل الدخول للإدارة</h1>
-            <p class="login-subtitle">يجب أن تمتلك صلاحية الدخول إلى هذه الصفحة</p>
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label">اسم المستخدم</label>
-                <input type="text" name="username" required class="form-input" placeholder="أدخل اسم المستخدم">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 class="text-2xl font-bold mb-6 text-center">تسجيل الدخول للإدارة</h2>
+        <form action="/login" method="POST">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">اسم المستخدم</label>
+                <input type="text" name="username" required class="w-full p-2 border rounded">
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">كلمة المرور</label>
-                <input type="password" name="password" required class="form-input" placeholder="أدخل كلمة المرور">
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2">كلمة المرور</label>
+                <input type="password" name="password" required class="w-full p-2 border rounded">
             </div>
-            
-            <button type="submit" class="submit-btn">
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                 تسجيل الدخول
             </button>
         </form>
-
-        <div id="errorMessage" class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="errorText"></span>
-        </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            // بيانات تسجيل الدخول من متغيرات Railway (يتم تعيينها من الخادم)
-            const validUsername = '<%= process.env.ADMIN_USERNAME || "admin" %>';
-            const validPassword = '<%= process.env.ADMIN_PASSWORD || "admin123" %>';
-            
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const username = this.querySelector('input[name="username"]').value;
-                const password = this.querySelector('input[name="password"]').value;
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                
-                // إظهار حالة التحميل
-                submitBtn.textContent = 'جاري تسجيل الدخول...';
-                submitBtn.disabled = true;
-                errorMessage.style.display = 'none';
-                
-                // محاكاة اتصال بالخادم
-                setTimeout(() => {
-                    if (username === validUsername && password === validPassword) {
-                        // تسجيل الدخول ناجح - إعادة التوجيه إلى لوحة التحكم
-                        window.location.href = '/dashboard';
-                    } else {
-                        // تسجيل الدخول فاشل
-                        errorText.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
-                        errorMessage.style.display = 'block';
-                    }
-                    
-                    // إعادة تعيين حالة الزر
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }, 1000);
-            });
-        });
-    </script>
 </body>
 </html>
