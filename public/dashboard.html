@@ -1,846 +1,836 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>لوحة تحكم الادمن</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
-  
-  :root {
-    --primary: #3b82f6;
-    --primary-dark: #2563eb;
-    --secondary: #10b981;
-    --secondary-dark: #059669;
-    --accent: #8b5cf6;
-    --light: #f8fafc;
-    --dark: #1e293b;
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --info: #3b82f6;
-  }
-  
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  body {
-    font-family: 'Tajawal', sans-serif;
-    display: flex;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    overflow-x: hidden;
-    position: relative;
-  }
-  
-  /* تأثيرات ثلاثية الأبعاد للخلفية */
-  .bg-3d-effect {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    opacity: 0.1;
-    background: 
-      radial-gradient(circle at 20% 30%, var(--primary) 0%, transparent 30%),
-      radial-gradient(circle at 80% 70%, var(--secondary) 0%, transparent 30%),
-      radial-gradient(circle at 40% 80%, var(--accent) 0%, transparent 30%);
-  }
-  
-  .sidebar {
-    width: 280px;
-    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
-    color: white;
-    padding: 25px 20px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-  
-  .sidebar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(to right, var(--secondary), var(--accent));
-  }
-  
-  .sidebar .logo {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .sidebar .logo i {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    display: inline-block;
-    background: linear-gradient(to right, #fff, #e0f2fe);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  
-  .sidebar .logo h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-  
-  .sidebar button {
-    margin-bottom: 15px;
-    text-align: right;
-    padding: 14px 18px;
-    border-radius: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    display: flex;
-    align-items: center;
-    border: none;
-    position: relative;
-    overflow: hidden;
-    transform: translateZ(0);
-  }
-  
-  .sidebar button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-  }
-  
-  .sidebar button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(-8px) translateZ(0);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .sidebar button:hover::before {
-    transform: translateY(0);
-  }
-  
-  .sidebar button i {
-    margin-left: 12px;
-    font-size: 1.3rem;
-    transition: transform 0.3s ease;
-  }
-  
-  .sidebar button:hover i {
-    transform: scale(1.2);
-  }
-  
-  .sidebar .logout-btn {
-    margin-top: auto;
-    background: rgba(239, 68, 68, 0.2);
-  }
-  
-  .sidebar .logout-btn:hover {
-    background: rgba(239, 68, 68, 0.3);
-  }
-  
-  .content {
-    flex-grow: 1;
-    padding: 30px;
-    overflow-x: auto;
-    background-color: rgba(241, 245, 249, 0.9);
-  }
-  
-  .hidden {
-    display: none;
-  }
-  
-  .card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 18px;
-    box-shadow: 
-      0 10px 25px -5px rgba(0, 0, 0, 0.1),
-      0 0 15px rgba(59, 130, 246, 0.1);
-    padding: 25px;
-    margin-bottom: 30px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.5s ease;
-  }
-  
-  .card:hover {
-    box-shadow: 
-      0 15px 30px -10px rgba(0, 0, 0, 0.15),
-      0 0 20px rgba(59, 130, 246, 0.15);
-    transform: translateY(-5px);
-  }
-  
-  .card:hover::before {
-    transform: scaleX(1);
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 25px 0;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-    background: white;
-    transition: all 0.3s ease;
-  }
-  
-  table:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-  }
-  
-  th {
-    background: linear-gradient(to right, var(--primary), var(--primary-dark));
-    color: white;
-    padding: 16px;
-    font-weight: 600;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  th::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
-  }
-  
-  table:hover th::after {
-    transform: translateY(0);
-  }
-  
-  td {
-    padding: 14px;
-    border-bottom: 1px solid #e5e7eb;
-    text-align: center;
-    transition: background-color 0.2s ease;
-  }
-  
-  tr:last-child td {
-    border-bottom: none;
-  }
-  
-  tr:nth-child(even) {
-    background-color: #f9fafb;
-  }
-  
-  tr:hover td {
-    background-color: #f0f9ff;
-  }
-  
-  .action-btn {
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    transform: translateZ(0);
-  }
-  
-  .action-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-  }
-  
-  .action-btn:hover {
-    transform: translateY(-3px) translateZ(0);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .action-btn:hover::before {
-    transform: translateY(0);
-  }
-  
-  .action-btn i {
-    margin-left: 8px;
-  }
-  
-  .open-btn {
-    background: linear-gradient(to right, var(--success), var(--secondary-dark));
-    color: white;
-  }
-  
-  .open-btn:hover {
-    background: linear-gradient(to right, var(--secondary-dark), #047857);
-  }
-  
-  .send-btn {
-    background: linear-gradient(to right, var(--primary), var(--primary-dark));
-    color: white;
-  }
-  
-  .send-btn:hover {
-    background: linear-gradient(to right, var(--primary-dark), #1e40af);
-  }
-  
-  .delete-btn {
-    background: linear-gradient(to right, var(--danger), #b91c1c);
-    color: white;
-  }
-  
-  .delete-btn:hover {
-    background: linear-gradient(to right, #b91c1c, #991b1b);
-  }
-  
-  img.screenshot {
-    width: 100px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  img.screenshot:hover {
-    transform: scale(2.2);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    position: relative;
-  }
-  
-  input, textarea {
-    width: 100%;
-    padding: 14px 18px;
-    border: 2px solid #e5e7eb;
-    border-radius: 14px;
-    transition: all 0.3s ease;
-    background: rgba(249, 250, 251, 0.8);
-    font-family: 'Tajawal', sans-serif;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  input:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 
-      0 0 0 3px rgba(59, 130, 246, 0.2),
-      inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    background: white;
-    transform: translateY(-2px);
-  }
-  
-  .section-title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 3px solid var(--primary);
-    position: relative;
-    display: inline-block;
-  }
-  
-  .section-title::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    border-radius: 3px;
-  }
-  
-  /* تأثيرات الظهور */
-  .fade-in {
-    animation: fadeIn 0.6s ease forwards;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  /* تأثيرات التحديث */
-  .updating::after {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-right: 8px;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  /* تحسينات للاستجابة */
-  @media (max-width: 1024px) {
-    body {
-      flex-direction: column;
-    }
-    
-    .sidebar {
-      width: 100%;
-      padding: 15px;
-    }
-    
-    .sidebar .logo {
-      margin-bottom: 20px;
-    }
-    
-    .content {
-      padding: 20px;
-    }
-    
-    table {
-      display: block;
-      overflow-x: auto;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .sidebar button {
-      padding: 12px 15px;
-      font-size: 0.9rem;
-    }
-    
-    .section-title {
-      font-size: 1.6rem;
-    }
-    
-    .card {
-      padding: 20px;
-    }
-    
-    th, td {
-      padding: 12px 10px;
-      font-size: 0.9rem;
-    }
-    
-    .action-btn {
-      padding: 8px 12px;
-      font-size: 0.8rem;
-    }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة - نظام النتائج</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+        
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --secondary-dark: #5e089a;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #1a1a2e;
+            --success: #4cc9f0;
+            --danger: #e63946;
+            --warning: #ffbe0b;
+            --info: #4895ef;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: var(--light);
+            overflow-x: hidden;
+        }
+        
+        /* تأثيرات ثلاثية الأبعاد للخلفية */
+        #three-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .card-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: transform 0.4s ease;
+        }
+        
+        .card-3d:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(-5deg);
+        }
+        
+        .btn-3d {
+            transform-style: preserve-3d;
+            perspective: 500px;
+            transition: all 0.3s ease;
+            transform: translateZ(0);
+        }
+        
+        .btn-3d:hover {
+            transform: translateZ(20px) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradient 4s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+        }
+        
+        .sidebar .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar .logo i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            background: linear-gradient(to right, #fff, #e0f2fe);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sidebar .logo h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .sidebar button {
+            margin-bottom: 15px;
+            text-align: right;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            border: none;
+        }
+        
+        .sidebar button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-8px);
+        }
+        
+        .sidebar button i {
+            margin-left: 12px;
+            font-size: 1.3rem;
+        }
+        
+        .sidebar .logout-btn {
+            margin-top: auto;
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .sidebar .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        
+        .content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-x: auto;
+            background-color: rgba(241, 245, 249, 0.9);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .action-btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-btn i {
+            margin-left: 8px;
+        }
+        
+        .open-btn {
+            background: linear-gradient(to right, var(--success), var(--secondary-dark));
+            color: white;
+        }
+        
+        .send-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .delete-btn {
+            background: linear-gradient(to right, var(--danger), #b91c1c);
+            color: white;
+        }
+        
+        img.screenshot {
+            width: 100px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        img.screenshot:hover {
+            transform: scale(2.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary);
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 3px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            transition: all 0.3s;
+            background: rgba(249, 250, 251, 0.8);
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- رسومات ثلاثية الأبعاد في الخلفية -->
+    <div id="three-container"></div>
 
-<div class="bg-3d-effect"></div>
-
-<div class="sidebar">
-  <div class="logo">
-    <i class="fas fa-user-shield"></i>
-    <h2>لوحة التحكم</h2>
-  </div>
-  
-  <button onclick="showSection('requests')">
-    <i class="fas fa-money-bill-wave"></i>
-    الطلبات
-  </button>
-  
-  <button onclick="showSection('results')">
-    <i class="fas fa-chart-line"></i>
-    النتائج
-  </button>
-  
-  <button onclick="showSection('reservations')">
-    <i class="fas fa-calendar-check"></i>
-    الحجوزات
-  </button>
-  
-  <button onclick="showSection('send')">
-    <i class="fas fa-envelope"></i>
-    إرسال النتيجة
-  </button>
-  
-  <button onclick="logout()" class="logout-btn">
-    <i class="fas fa-sign-out-alt"></i>
-    تسجيل الخروج
-  </button>
-</div>
-
-<div class="content">
-  <!-- طلبات الدفع -->
-  <div id="requests" class="hidden fade-in">
-    <h2 class="section-title">طلبات الدفع</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الرقم القومي</th>
-            <th>رقم الجلوس</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>سكرين التحويل</th>
-            <th>تاريخ الطلب</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="requestsTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- النتائج المفتوحة -->
-  <div id="results" class="hidden fade-in">
-    <h2 class="section-title">النتائج المفتوحة</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>رقم الجلوس</th>
-            <th>الاسم</th>
-            <th>الصف</th>
-            <th>المدرسة</th>
-            <th>النسبة %</th>
-            <th>الملاحظات</th>
-            <th>فتح النتيجة</th>
-            <th>إرسال البريد</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- قسم الحجوزات -->
-  <div id="reservations" class="hidden fade-in">
-    <h2 class="section-title">قسم الحجوزات</h2>
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الرقم القومي</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>رقم المحول</th>
-            <th>صورة التحويل</th>
-            <th>تاريخ الحجز</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="reservationsTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- إرسال البريد -->
-  <div id="send" class="hidden fade-in">
-    <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
-    <div class="card max-w-md mx-auto">
-      <form id="sendForm" class="space-y-4">
-        <div>
-          <label class="block text-gray-700 mb-2">رقم الجلوس</label>
-          <input id="sendSeat" placeholder="أدخل رقم الجلوس" required>
+    <!-- لوحة التحكم -->
+    <div style="display: flex; min-height: 100vh;">
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-user-shield"></i>
+                <h2>لوحة التحكم</h2>
+            </div>
+            
+            <button onclick="showSection('requests')">
+                <i class="fas fa-money-bill-wave"></i>
+                الطلبات
+            </button>
+            
+            <button onclick="showSection('results')">
+                <i class="fas fa-chart-line"></i>
+                النتائج
+            </button>
+            
+            <button onclick="showSection('reservations')">
+                <i class="fas fa-calendar-check"></i>
+                الحجوزات
+            </button>
+            
+            <button onclick="showSection('send')">
+                <i class="fas fa-envelope"></i>
+                إرسال النتيجة
+            </button>
+            
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </button>
         </div>
-        
-        <div>
-          <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-          <input id="sendEmail" placeholder="أدخل البريد الإلكتروني" required>
+
+        <div class="content">
+            <!-- طلبات الدفع -->
+            <div id="requests">
+                <h2 class="section-title">طلبات الدفع</h2>
+                <div class="card-3d glass-effect rounded-2xl p-6">
+                    <table class="w-full text-white">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="pb-3">الرقم القومي</th>
+                                <th class="pb-3">رقم الجلوس</th>
+                                <th class="pb-3">رقم الهاتف</th>
+                                <th class="pb-3">البريد الإلكتروني</th>
+                                <th class="pb-3">سكرين التحويل</th>
+                                <th class="pb-3">تاريخ الطلب</th>
+                                <th class="pb-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTable">
+                            <tr>
+                                <td class="py-4 text-center" colspan="7">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+                                    <p class="mt-2">جاري تحميل البيانات...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- النتائج المفتوحة -->
+            <div id="results" class="hidden">
+                <h2 class="section-title">النتائج المفتوحة</h2>
+                <div class="card-3d glass-effect rounded-2xl p-6">
+                    <table class="w-full text-white">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="pb-3">رقم الجلوس</th>
+                                <th class="pb-3">الاسم</th>
+                                <th class="pb-3">الصف</th>
+                                <th class="pb-3">المدرسة</th>
+                                <th class="pb-3">النسبة %</th>
+                                <th class="pb-3">الملاحظات</th>
+                                <th class="pb-3">فتح النتيجة</th>
+                                <th class="pb-3">إرسال البريد</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                            <tr>
+                                <td class="py-4 text-center" colspan="8">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+                                    <p class="mt-2">جاري تحميل البيانات...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- قسم الحجوزات -->
+            <div id="reservations" class="hidden">
+                <h2 class="section-title">قسم الحجوزات</h2>
+                <div class="card-3d glass-effect rounded-2xl p-6">
+                    <table class="w-full text-white">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="pb-3">الرقم القومي</th>
+                                <th class="pb-3">رقم الهاتف</th>
+                                <th class="pb-3">البريد الإلكتروني</th>
+                                <th class="pb-3">رقم المحول</th>
+                                <th class="pb-3">صورة التحويل</th>
+                                <th class="pb-3">تاريخ الحجز</th>
+                                <th class="pb-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservationsTable">
+                            <tr>
+                                <td class="py-4 text-center" colspan="7">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+                                    <p class="mt-2">جاري تحميل البيانات...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- إرسال البريد -->
+            <div id="send" class="hidden">
+                <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
+                <div class="card-3d glass-effect rounded-2xl p-6 max-w-md mx-auto">
+                    <form id="sendForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2">رقم الجلوس</label>
+                            <input id="sendSeat" placeholder="أدخل رقم الجلوس" required class="form-input">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 mb-2">البريد الإلكتروني</label>
+                            <input id="sendEmail" placeholder="أدخل البريد الإلكتروني" required class="form-input">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 mb-2">نص الرسالة</label>
+                            <textarea id="sendMessage" placeholder="أدخل نص الرسالة (اختياري)" rows="4" class="form-input"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="action-btn send-btn w-full py-3">
+                            <i class="fas fa-paper-plane"></i>
+                            إرسال
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-        
-        <div>
-          <label class="block text-gray-700 mb-2">نص الرسالة</label>
-          <textarea id="sendMessage" placeholder="أدخل نص الرسالة (اختياري)" rows="4"></textarea>
-        </div>
-        
-        <button type="submit" class="action-btn send-btn w-full py-3">
-          <i class="fas fa-paper-plane"></i>
-          إرسال
-        </button>
-      </form>
     </div>
-  </div>
-</div>
 
-<script>
-function showSection(id){
-  ['requests','results','reservations','send'].forEach(sec => {
-    const el = document.getElementById(sec);
-    if (el) el.classList.add('hidden');
-  });
-  
-  const targetEl = document.getElementById(id);
-  if (targetEl) {
-    targetEl.classList.remove('hidden');
-    targetEl.classList.add('fade-in');
-  }
-}
-
-function logout(){ 
-  if (confirm('هل تريد تسجيل الخروج؟')) {
-    window.location.href = '/login.html'; 
-  }
-}
-
-// تحميل الطلبات
-async function loadRequests(){
-  try {
-    const res = await fetch('/api/requests');
-    const data = await res.json();
-    const tbody = document.getElementById('requestsTable');
-    
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    data.requests.forEach(r => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${r.nationalId || 'N/A'}</td>
-        <td>${r.seatNumber}</td>
-        <td>${r.phone}</td>
-        <td>${r.email}</td>
-        <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
-        <td>${new Date(r.created_at).toLocaleString()}</td>
-        <td>
-          <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
-            <i class="fas fa-trash"></i> حذف
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (error) {
-    console.error('Error loading requests:', error);
-  }
-}
-
-// تحميل النتائج
-async function loadResults(){
-  try {
-    const res = await fetch('/api/results');
-    const data = await res.json();
-    const tbody = document.getElementById('resultsTable');
-    
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    data.results.forEach(student => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${student.seatNumber}</td>
-        <td>${student.name}</td>
-        <td>${student.gradeLevel}</td>
-        <td>${student.schoolName}</td>
-        <td>${student.percentage}%</td>
-        <td>${student.notes || ''}</td>
-        <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
-        <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (error) {
-    console.error('Error loading results:', error);
-  }
-}
-
-// تحميل الحجوزات
-async function loadReservations(){
-  try {
-    const res = await fetch('/api/reservations');
-    const data = await res.json();
-    const tbody = document.getElementById('reservationsTable');
-    
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    data.reservations.forEach(reservation => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${reservation.nationalId}</td>
-        <td>${reservation.phone}</td>
-        <td>${reservation.email}</td>
-        <td>${reservation.senderPhone || 'غير متوفر'}</td>
-        <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
-        <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
-        <td>
-          <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
-            <i class="fas fa-trash"></i> حذف
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (error) {
-    console.error('Error loading reservations:', error);
-  }
-}
-
-// حذف حجز
-async function deleteReservation(id) {
-  if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
-    try {
-      const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      
-      if (data.success) {
-        alert('تم حذف الحجز بنجاح');
-        loadReservations();
-      } else {
-        alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
-      }
-    } catch (error) {
-      alert('حدث خطأ أثناء حذف الحجز');
-      console.error('Error deleting reservation:', error);
-    }
-  }
-}
-
-// حذف طلب
-async function deleteRequest(id) {
-  if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-    try {
-      const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      
-      if (data.success) {
-        alert('تم حذف الطلب بنجاح');
-        loadRequests();
-      } else {
-        alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
-      }
-    } catch (error) {
-      alert('حدث خطأ أثناء حذف الطلب');
-      console.error('Error deleting request:', error);
-    }
-  }
-}
-
-// فتح نتيجة مباشرة
-async function openResult(seatNumber){
-  try {
-    const res = await fetch('/api/open-result', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({seatNumber})
-    });
-    
-    const data = await res.json();
-    alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
-    loadRequests();
-    loadResults();
-  } catch (error) {
-    alert('حدث خطأ أثناء فتح النتيجة');
-    console.error('Error opening result:', error);
-  }
-}
-
-// إرسال البريد مباشرة
-function sendEmailPrompt(seatNumber){
-  const email = prompt('البريد الإلكتروني:');
-  if(!email) return alert('البريد الإلكتروني مطلوب');
-  
-  const message = prompt('نص الرسالة:');
-  
-  fetch('/api/send-email-dashboard',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({seatNumber,email,message})
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
-  })
-  .catch(error => {
-    alert('حدث خطأ أثناء الإرسال');
-    console.error('Error sending email:', error);
-  });
-}
-
-// عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-  loadRequests();
-  loadResults();
-  loadReservations();
-  
-  // تحديث دوري
-  setInterval(() => {
-    loadRequests();
-    loadResults();
-    loadReservations();
-  }, 10000);
-  
-  // إرسال النموذج
-  const sendForm = document.getElementById('sendForm');
-  if (sendForm) {
-    sendForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const seatNumber = document.getElementById('sendSeat').value;
-      const email = document.getElementById('sendEmail').value;
-      const message = document.getElementById('sendMessage').value;
-      
-      fetch('/api/send-email-dashboard',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({seatNumber,email,message})
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
-        if (data.success) {
-          sendForm.reset();
+    <script>
+        // إنشاء تأثيرات ثلاثية الأبعاد في الخلفية
+        function initThreeJS() {
+            const container = document.getElementById('three-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+            
+            // إنشاء أشكال هندسية عشوائية
+            const geometries = [
+                new THREE.IcosahedronGeometry(1, 0),
+                new THREE.OctahedronGeometry(1, 0),
+                new THREE.TetrahedronGeometry(1, 0),
+                new THREE.SphereGeometry(1, 12, 12)
+            ];
+            
+            const materials = [
+                new THREE.MeshPhongMaterial({ color: 0x4361ee, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0x7209b7, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0xf72585, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0x4cc9f0, transparent: true, opacity: 0.2 })
+            ];
+            
+            const objects = [];
+            const numObjects = 15;
+            
+            for (let i = 0; i < numObjects; i++) {
+                const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+                const material = materials[Math.floor(Math.random() * materials.length)];
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                mesh.position.x = Math.random() * 40 - 20;
+                mesh.position.y = Math.random() * 40 - 20;
+                mesh.position.z = Math.random() * 40 - 20;
+                
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+                
+                mesh.scale.setScalar(Math.random() * 3 + 1);
+                
+                scene.add(mesh);
+                objects.push(mesh);
+            }
+            
+            // إضافة إضاءة
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            camera.position.z = 30;
+            
+            // تحريك الكامرا والأشكال
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                objects.forEach(obj => {
+                    obj.rotation.x += 0.005;
+                    obj.rotation.y += 0.008;
+                });
+                
+                camera.position.x = Math.sin(Date.now() * 0.0005) * 20;
+                camera.position.z = Math.cos(Date.now() * 0.0005) * 20;
+                camera.lookAt(scene.position);
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // تحديث الحجم عند تغيير حجم النافذة
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
-      })
-      .catch(error => {
-        alert('حدث خطأ أثناء الإرسال');
-        console.error('Error sending email:', error);
-      });
-    });
-  }
-});
-</script>
+        
+        // وظائف لوحة التحكم
+        function showSection(id){
+            ['requests','results','reservations','send'].forEach(sec => {
+                const el = document.getElementById(sec);
+                if (el) el.classList.add('hidden');
+            });
+            
+            const targetEl = document.getElementById(id);
+            if (targetEl) {
+                targetEl.classList.remove('hidden');
+            }
+        }
 
+        function logout(){ 
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                window.location.href = '/login.html'; 
+            }
+        }
+
+        // تحميل الطلبات الحقيقية من الخادم
+        async function loadRequests(){
+            try {
+                const res = await fetch('/api/requests');
+                const data = await res.json();
+                const tbody = document.getElementById('requestsTable');
+                
+                if (!tbody) return;
+                
+                if (!data.requests || data.requests.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td class="py-4 text-center" colspan="7">
+                                <i class="fas fa-inbox text-2xl text-gray-400"></i>
+                                <p class="mt-2">لا توجد طلبات حالياً</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                data.requests.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border-b', 'border-gray-700');
+                    tr.innerHTML = `
+                        <td class="py-3">${r.nationalId || 'N/A'}</td>
+                        <td class="py-3">${r.seatNumber}</td>
+                        <td class="py-3">${r.phone}</td>
+                        <td class="py-3">${r.email}</td>
+                        <td class="py-3">${r.screenshot ? `<img class="screenshot" src="/uploads/${r.screenshot}" />` : 'لا يوجد'}</td>
+                        <td class="py-3">${new Date(r.created_at).toLocaleString('ar-EG')}</td>
+                        <td class="py-3">
+                            <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                const tbody = document.getElementById('requestsTable');
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="py-4 text-center" colspan="7">
+                            <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                            <p class="mt-2">حدث خطأ في تحميل البيانات</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // تحميل النتائج الحقيقية من الخادم
+        async function loadResults(){
+            try {
+                const res = await fetch('/api/results');
+                const data = await res.json();
+                const tbody = document.getElementById('resultsTable');
+                
+                if (!tbody) return;
+                
+                if (!data.results || data.results.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td class="py-4 text-center" colspan="8">
+                                <i class="fas fa-inbox text-2xl text-gray-400"></i>
+                                <p class="mt-2">لا توجد نتائج حالياً</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                data.results.forEach(student => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border-b', 'border-gray-700');
+                    tr.innerHTML = `
+                        <td class="py-3">${student.seatNumber}</td>
+                        <td class="py-3">${student.name}</td>
+                        <td class="py-3">${student.gradeLevel}</td>
+                        <td class="py-3">${student.schoolName}</td>
+                        <td class="py-3">${student.percentage}%</td>
+                        <td class="py-3">${student.notes || ''}</td>
+                        <td class="py-3"><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
+                        <td class="py-3"><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading results:', error);
+                const tbody = document.getElementById('resultsTable');
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="py-4 text-center" colspan="8">
+                            <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                            <p class="mt-2">حدث خطأ في تحميل البيانات</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // تحميل الحجوزات الحقيقية من الخادم
+        async function loadReservations(){
+            try {
+                const res = await fetch('/api/reservations');
+                const data = await res.json();
+                const tbody = document.getElementById('reservationsTable');
+                
+                if (!tbody) return;
+                
+                if (!data.reservations || data.reservations.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td class="py-4 text-center" colspan="7">
+                                <i class="fas fa-inbox text-2xl text-gray-400"></i>
+                                <p class="mt-2">لا توجد حجوزات حالياً</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                data.reservations.forEach(reservation => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border-b', 'border-gray-700');
+                    tr.innerHTML = `
+                        <td class="py-3">${reservation.nationalId}</td>
+                        <td class="py-3">${reservation.phone}</td>
+                        <td class="py-3">${reservation.email}</td>
+                        <td class="py-3">${reservation.senderPhone || 'غير متوفر'}</td>
+                        <td class="py-3">${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
+                        <td class="py-3">${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString('ar-EG') : ''}</td>
+                        <td class="py-3">
+                            <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading reservations:', error);
+                const tbody = document.getElementById('reservationsTable');
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="py-4 text-center" colspan="7">
+                            <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                            <p class="mt-2">حدث خطأ في تحميل البيانات</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // حذف حجز
+        async function deleteReservation(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
+                try {
+                    const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert('تم حذف الحجز بنجاح');
+                        loadReservations();
+                    } else {
+                        alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('حدث خطأ أثناء حذف الحجز');
+                    console.error('Error deleting reservation:', error);
+                }
+            }
+        }
+
+        // حذف طلب
+        async function deleteRequest(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+                try {
+                    const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert('تم حذف الطلب بنجاح');
+                        loadRequests();
+                    } else {
+                        alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('حدث خطأ أثناء حذف الطلب');
+                    console.error('Error deleting request:', error);
+                }
+            }
+        }
+
+        // فتح نتيجة مباشرة
+        async function openResult(seatNumber){
+            try {
+                const res = await fetch('/api/open-result', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({seatNumber})
+                });
+                
+                const data = await res.json();
+                alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
+                loadRequests();
+                loadResults();
+            } catch (error) {
+                alert('حدث خطأ أثناء فتح النتيجة');
+                console.error('Error opening result:', error);
+            }
+        }
+
+        // إرسال البريد مباشرة
+        function sendEmailPrompt(seatNumber){
+            const email = prompt('البريد الإلكتروني:');
+            if(!email) return alert('البريد الإلكتروني مطلوب');
+            
+            const message = prompt('نص الرسالة:');
+            
+            fetch('/api/send-email-dashboard',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({seatNumber,email,message})
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+            })
+            .catch(error => {
+                alert('حدث خطأ أثناء الإرسال');
+                console.error('Error sending email:', error);
+            });
+        }
+
+        // عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            initThreeJS();
+            
+            // تحميل البيانات الحقيقية
+            loadRequests();
+            loadResults();
+            loadReservations();
+            
+            // تحديث دوري كل 30 ثانية
+            setInterval(() => {
+                loadRequests();
+                loadResults();
+                loadReservations();
+            }, 30000);
+            
+            // إرسال النموذج
+            const sendForm = document.getElementById('sendForm');
+            if (sendForm) {
+                sendForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const seatNumber = document.getElementById('sendSeat').value;
+                    const email = document.getElementById('sendEmail').value;
+                    const message = document.getElementById('sendMessage').value;
+                    
+                    fetch('/api/send-email-dashboard',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({seatNumber,email,message})
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+                        if (data.success) {
+                            sendForm.reset();
+                        }
+                    })
+                    .catch(error => {
+                        alert('حدث خطأ أثناء الإرسال');
+                        console.error('Error sending email:', error);
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
