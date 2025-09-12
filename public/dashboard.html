@@ -10,58 +10,157 @@
   
   :root {
     --primary: #3b82f6;
+    --primary-dark: #2563eb;
     --secondary: #10b981;
+    --secondary-dark: #059669;
     --accent: #8b5cf6;
     --light: #f8fafc;
     --dark: #1e293b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
   
   body {
     font-family: 'Tajawal', sans-serif;
     display: flex;
     min-height: 100vh;
-    background-color: #f8fafc;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* تأثيرات ثلاثية الأبعاد للخلفية */
+  .bg-3d-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.1;
+    background: 
+      radial-gradient(circle at 20% 30%, var(--primary) 0%, transparent 30%),
+      radial-gradient(circle at 80% 70%, var(--secondary) 0%, transparent 30%),
+      radial-gradient(circle at 40% 80%, var(--accent) 0%, transparent 30%);
   }
   
   .sidebar {
-    width: 250px;
-    background: linear-gradient(to bottom, var(--primary), #2563eb);
+    width: 280px;
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
     color: white;
-    padding: 20px;
+    padding: 25px 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--secondary), var(--accent));
+  }
+  
+  .sidebar .logo {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .sidebar .logo i {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: inline-block;
+    background: linear-gradient(to right, #fff, #e0f2fe);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .sidebar .logo h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
   }
   
   .sidebar button {
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     text-align: right;
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 14px 18px;
+    border-radius: 12px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     background: rgba(255, 255, 255, 0.1);
     color: white;
     display: flex;
     align-items: center;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+  }
+  
+  .sidebar button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
   }
   
   .sidebar button:hover {
     background: rgba(255, 255, 255, 0.2);
-    transform: translateX(-5px);
+    transform: translateX(-8px) translateZ(0);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .sidebar button:hover::before {
+    transform: translateY(0);
   }
   
   .sidebar button i {
-    margin-left: 10px;
-    font-size: 1.2rem;
+    margin-left: 12px;
+    font-size: 1.3rem;
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar button:hover i {
+    transform: scale(1.2);
+  }
+  
+  .sidebar .logout-btn {
+    margin-top: auto;
+    background: rgba(239, 68, 68, 0.2);
+  }
+  
+  .sidebar .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
   }
   
   .content {
     flex-grow: 1;
-    padding: 25px;
+    padding: 30px;
     overflow-x: auto;
-    background-color: #f1f5f9;
+    background-color: rgba(241, 245, 249, 0.9);
   }
   
   .hidden {
@@ -69,34 +168,91 @@
   }
   
   .card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 18px;
+    box-shadow: 
+      0 10px 25px -5px rgba(0, 0, 0, 0.1),
+      0 0 15px rgba(59, 130, 246, 0.1);
+    padding: 25px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease;
+  }
+  
+  .card:hover {
+    box-shadow: 
+      0 15px 30px -10px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(59, 130, 246, 0.15);
+    transform: translateY(-5px);
+  }
+  
+  .card:hover::before {
+    transform: scaleX(1);
   }
   
   table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 20px 0;
-    border-radius: 12px;
+    margin: 25px 0;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    background: white;
+    transition: all 0.3s ease;
+  }
+  
+  table:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
   }
   
   th {
-    background: linear-gradient(to right, var(--primary), #2563eb);
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
     color: white;
-    padding: 14px;
+    padding: 16px;
     font-weight: 600;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  th::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  table:hover th::after {
+    transform: translateY(0);
   }
   
   td {
-    padding: 12px;
+    padding: 14px;
     border-bottom: 1px solid #e5e7eb;
     text-align: center;
+    transition: background-color 0.2s ease;
   }
   
   tr:last-child td {
@@ -107,88 +263,222 @@
     background-color: #f9fafb;
   }
   
+  tr:hover td {
+    background-color: #f0f9ff;
+  }
+  
   .action-btn {
-    padding: 8px 14px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+  }
+  
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .action-btn:hover {
+    transform: translateY(-3px) translateZ(0);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .action-btn:hover::before {
+    transform: translateY(0);
+  }
+  
+  .action-btn i {
+    margin-left: 8px;
   }
   
   .open-btn {
-    background: linear-gradient(to right, #16a34a, #15803d);
+    background: linear-gradient(to right, var(--success), var(--secondary-dark));
     color: white;
   }
   
   .open-btn:hover {
-    background: linear-gradient(to right, #15803d, #166534);
-    transform: translateY(-2px);
+    background: linear-gradient(to right, var(--secondary-dark), #047857);
   }
   
   .send-btn {
-    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
     color: white;
   }
   
   .send-btn:hover {
-    background: linear-gradient(to right, #1d4ed8, #1e40af);
-    transform: translateY(-2px);
+    background: linear-gradient(to right, var(--primary-dark), #1e40af);
   }
   
   .delete-btn {
-    background: linear-gradient(to right, #dc2626, #b91c1c);
+    background: linear-gradient(to right, var(--danger), #b91c1c);
     color: white;
   }
   
   .delete-btn:hover {
     background: linear-gradient(to right, #b91c1c, #991b1b);
-    transform: translateY(-2px);
   }
   
   img.screenshot {
     width: 100px;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    transition: all 0.3s;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   img.screenshot:hover {
-    transform: scale(1.8);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(2.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    position: relative;
   }
   
   input, textarea {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 18px;
     border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    transition: all 0.3s;
-    background: #f9fafb;
+    border-radius: 14px;
+    transition: all 0.3s ease;
+    background: rgba(249, 250, 251, 0.8);
+    font-family: 'Tajawal', sans-serif;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
   }
   
   input:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    box-shadow: 
+      0 0 0 3px rgba(59, 130, 246, 0.2),
+      inset 0 2px 4px rgba(0, 0, 0, 0.05);
     background: white;
+    transform: translateY(-2px);
   }
   
   .section-title {
-    font-size: 1.8rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 800;
     color: var(--dark);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
     border-bottom: 3px solid var(--primary);
+    position: relative;
+    display: inline-block;
+  }
+  
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    border-radius: 3px;
+  }
+  
+  /* تأثيرات الظهور */
+  .fade-in {
+    animation: fadeIn 0.6s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* تأثيرات التحديث */
+  .updating::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* تحسينات للاستجابة */
+  @media (max-width: 1024px) {
+    body {
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      width: 100%;
+      padding: 15px;
+    }
+    
+    .sidebar .logo {
+      margin-bottom: 20px;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar button {
+      padding: 12px 15px;
+      font-size: 0.9rem;
+    }
+    
+    .section-title {
+      font-size: 1.6rem;
+    }
+    
+    .card {
+      padding: 20px;
+    }
+    
+    th, td {
+      padding: 12px 10px;
+      font-size: 0.9rem;
+    }
+    
+    .action-btn {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
   }
 </style>
 </head>
 <body>
 
+<div class="bg-3d-effect"></div>
+
 <div class="sidebar">
-  <div class="text-center mb-8">
-    <i class="fas fa-user-shield fa-2x mb-2"></i>
-    <h2 class="text-xl font-bold">لوحة التحكم</h2>
+  <div class="logo">
+    <i class="fas fa-user-shield"></i>
+    <h2>لوحة التحكم</h2>
   </div>
   
   <button onclick="showSection('requests')">
@@ -211,17 +501,15 @@
     إرسال النتيجة
   </button>
   
-  <div class="mt-auto">
-    <button onclick="logout()" class="bg-red-500 hover:bg-red-600">
-      <i class="fas fa-sign-out-alt"></i>
-      تسجيل الخروج
-    </button>
-  </div>
+  <button onclick="logout()" class="logout-btn">
+    <i class="fas fa-sign-out-alt"></i>
+    تسجيل الخروج
+  </button>
 </div>
 
 <div class="content">
   <!-- طلبات الدفع -->
-  <div id="requests" class="hidden">
+  <div id="requests" class="hidden fade-in">
     <h2 class="section-title">طلبات الدفع</h2>
     <div class="card">
       <table>
@@ -242,7 +530,7 @@
   </div>
 
   <!-- النتائج المفتوحة -->
-  <div id="results" class="hidden">
+  <div id="results" class="hidden fade-in">
     <h2 class="section-title">النتائج المفتوحة</h2>
     <div class="card">
       <table>
@@ -263,29 +551,29 @@
     </div>
   </div>
 
-<!-- قسم الحجوزات -->
-<div id="reservations" class="hidden">
-  <h2 class="section-title">قسم الحجوزات</h2>
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>الرقم القومي</th>
-          <th>رقم الهاتف</th>
-          <th>البريد الإلكتروني</th>
-          <th>رقم المحول</th>
-          <th>صورة التحويل</th>
-          <th>تاريخ الحجز</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="reservationsTable"></tbody>
-    </table>
+  <!-- قسم الحجوزات -->
+  <div id="reservations" class="hidden fade-in">
+    <h2 class="section-title">قسم الحجوزات</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم القومي</th>
+            <th>رقم الهاتف</th>
+            <th>البريد الإلكتروني</th>
+            <th>رقم المحول</th>
+            <th>صورة التحويل</th>
+            <th>تاريخ الحجز</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="reservationsTable"></tbody>
+      </table>
+    </div>
   </div>
-</div>
 
   <!-- إرسال البريد -->
-  <div id="send" class="hidden">
+  <div id="send" class="hidden fade-in">
     <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
     <div class="card max-w-md mx-auto">
       <form id="sendForm" class="space-y-4">
@@ -315,149 +603,243 @@
 
 <script>
 function showSection(id){
-  ['requests','results','reservations','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  ['requests','results','reservations','send'].forEach(sec => {
+    const el = document.getElementById(sec);
+    if (el) el.classList.add('hidden');
+  });
+  
+  const targetEl = document.getElementById(id);
+  if (targetEl) {
+    targetEl.classList.remove('hidden');
+    targetEl.classList.add('fade-in');
+  }
 }
 
-function logout(){ window.location.href = '/login.html'; }
+function logout(){ 
+  if (confirm('هل تريد تسجيل الخروج؟')) {
+    window.location.href = '/login.html'; 
+  }
+}
 
 // تحميل الطلبات
 async function loadRequests(){
-  const res = await fetch('/api/requests');
-  const data = await res.json();
-  const tbody = document.getElementById('requestsTable');
-  tbody.innerHTML = '';
-data.requests.forEach(r => {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${r.nationalId || 'N/A'}</td>
-    <td>${r.seatNumber}</td>
-    <td>${r.phone}</td>
-    <td>${r.email}</td>
-    <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
-    <td>${new Date(r.created_at).toLocaleString()}</td>
-    <td>
-      <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
-        <i class="fas fa-trash"></i> حذف
-      </button>
-    </td>
-  `;
-  tbody.appendChild(tr);
-});
+  try {
+    const res = await fetch('/api/requests');
+    const data = await res.json();
+    const tbody = document.getElementById('requestsTable');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    data.requests.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.nationalId || 'N/A'}</td>
+        <td>${r.seatNumber}</td>
+        <td>${r.phone}</td>
+        <td>${r.email}</td>
+        <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>
+        <td>
+          <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error loading requests:', error);
+  }
 }
 
 // تحميل النتائج
 async function loadResults(){
-  const res = await fetch('/api/results');
-  const data = await res.json();
-  const tbody = document.getElementById('resultsTable');
-  tbody.innerHTML = '';
-  data.results.forEach(student => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${student.seatNumber}</td>
-      <td>${student.name}</td>
-      <td>${student.gradeLevel}</td>
-      <td>${student.schoolName}</td>
-      <td>${student.percentage}%</td>
-      <td>${student.notes || ''}</td>
-      <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
-      <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    const res = await fetch('/api/results');
+    const data = await res.json();
+    const tbody = document.getElementById('resultsTable');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    data.results.forEach(student => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${student.seatNumber}</td>
+        <td>${student.name}</td>
+        <td>${student.gradeLevel}</td>
+        <td>${student.schoolName}</td>
+        <td>${student.percentage}%</td>
+        <td>${student.notes || ''}</td>
+        <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
+        <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error loading results:', error);
+  }
 }
 
 // تحميل الحجوزات
 async function loadReservations(){
-  const res = await fetch('/api/reservations');
-  const data = await res.json();
-  const tbody = document.getElementById('reservationsTable');
-  tbody.innerHTML = '';
-  data.reservations.forEach(reservation => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${reservation.nationalId}</td>
-      <td>${reservation.phone}</td>
-      <td>${reservation.email}</td>
-      <td>${reservation.senderPhone || 'غير متوفر'}</td>
-      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
-      <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
-      <td>
-        <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
-          <i class="fas fa-trash"></i> حذف
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    const res = await fetch('/api/reservations');
+    const data = await res.json();
+    const tbody = document.getElementById('reservationsTable');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    data.reservations.forEach(reservation => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${reservation.nationalId}</td>
+        <td>${reservation.phone}</td>
+        <td>${reservation.email}</td>
+        <td>${reservation.senderPhone || 'غير متوفر'}</td>
+        <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
+        <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
+        <td>
+          <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Error loading reservations:', error);
+  }
 }
 
 // حذف حجز
 async function deleteReservation(id) {
   if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
-    const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      alert('تم حذف الحجز بنجاح');
-      loadReservations();
-    } else {
-      alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+    try {
+      const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('تم حذف الحجز بنجاح');
+        loadReservations();
+      } else {
+        alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ أثناء حذف الحجز');
+      console.error('Error deleting reservation:', error);
     }
   }
 }
 
+// حذف طلب
 async function deleteRequest(id) {
   if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-    const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      alert('تم حذف الطلب بنجاح');
-      loadRequests();
-    } else {
-      alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+    try {
+      const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('تم حذف الطلب بنجاح');
+        loadRequests();
+      } else {
+        alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ أثناء حذف الطلب');
+      console.error('Error deleting request:', error);
     }
   }
 }
 
 // فتح نتيجة مباشرة
 async function openResult(seatNumber){
-  const res = await fetch('/api/open-result', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({seatNumber})
-  });
-  const data = await res.json();
-  alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
-  loadRequests();
-  loadResults();
+  try {
+    const res = await fetch('/api/open-result', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({seatNumber})
+    });
+    
+    const data = await res.json();
+    alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
+    loadRequests();
+    loadResults();
+  } catch (error) {
+    alert('حدث خطأ أثناء فتح النتيجة');
+    console.error('Error opening result:', error);
+  }
 }
 
 // إرسال البريد مباشرة
 function sendEmailPrompt(seatNumber){
   const email = prompt('البريد الإلكتروني:');
   if(!email) return alert('البريد الإلكتروني مطلوب');
+  
   const message = prompt('نص الرسالة:');
+  
   fetch('/api/send-email-dashboard',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({seatNumber,email,message})
-  }).then(res=>res.json()).then(data=>{
+  })
+  .then(res => res.json())
+  .then(data => {
     alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+  })
+  .catch(error => {
+    alert('حدث خطأ أثناء الإرسال');
+    console.error('Error sending email:', error);
   });
 }
 
 // عند تحميل الصفحة
-loadRequests();
-loadResults();
-loadReservations();
-
-// تحديث دوري
-setInterval(()=>{
+document.addEventListener('DOMContentLoaded', function() {
   loadRequests();
   loadResults();
   loadReservations();
-}, 10000);
+  
+  // تحديث دوري
+  setInterval(() => {
+    loadRequests();
+    loadResults();
+    loadReservations();
+  }, 10000);
+  
+  // إرسال النموذج
+  const sendForm = document.getElementById('sendForm');
+  if (sendForm) {
+    sendForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const seatNumber = document.getElementById('sendSeat').value;
+      const email = document.getElementById('sendEmail').value;
+      const message = document.getElementById('sendMessage').value;
+      
+      fetch('/api/send-email-dashboard',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({seatNumber,email,message})
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+        if (data.success) {
+          sendForm.reset();
+        }
+      })
+      .catch(error => {
+        alert('حدث خطأ أثناء الإرسال');
+        console.error('Error sending email:', error);
+      });
+    });
+  }
+});
 </script>
 
 </body>
