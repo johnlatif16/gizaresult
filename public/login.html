@@ -2,19 +2,25 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تسجيل الدخول</title>
+    <title>تسجيل الدخول للإدارة</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
         
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --secondary: #10b981;
-            --accent: #8b5cf6;
-            --light: #f8fafc;
-            --dark: #1e293b;
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --secondary-dark: #5e089a;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #1a1a2e;
+            --success: #4cc9f0;
+            --danger: #e63946;
+            --warning: #ffbe0b;
+            --info: #4895ef;
         }
         
         * {
@@ -25,215 +31,132 @@
         
         body {
             font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
+            color: var(--light);
+            overflow-x: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             padding: 20px;
-            position: relative;
-            overflow: hidden;
         }
         
         /* تأثيرات ثلاثية الأبعاد للخلفية */
-        .bg-3d-effect {
+        #three-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.1;
-            background: 
-                radial-gradient(circle at 20% 30%, var(--primary) 0%, transparent 30%),
-                radial-gradient(circle at 80% 70%, var(--secondary) 0%, transparent 30%),
-                radial-gradient(circle at 40% 80%, var(--accent) 0%, transparent 30%);
         }
         
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 
-                0 15px 35px rgba(0, 0, 0, 0.1),
-                0 0 20px rgba(59, 130, 246, 0.1);
-            padding: 35px;
-            width: 100%;
-            max-width: 420px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .card-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: transform 0.4s ease;
+        }
+        
+        .card-3d:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(-5deg);
+        }
+        
+        .btn-3d {
+            transform-style: preserve-3d;
+            perspective: 500px;
+            transition: all 0.3s ease;
             transform: translateZ(0);
         }
         
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.5s ease;
+        .btn-3d:hover {
+            transform: translateZ(20px) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
         }
         
-        .login-container:hover {
-            box-shadow: 
-                0 20px 45px rgba(0, 0, 0, 0.15),
-                0 0 25px rgba(59, 130, 246, 0.15);
-            transform: translateY(-8px);
+        .btn-3d:active {
+            transform: translateZ(5px) translateY(2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
         
-        .login-container:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
-        
-        .login-icon {
-            font-size: 3.5rem;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            background-clip: text;
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 15px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
+            background-size: 300% 300%;
+            animation: gradient 4s ease infinite;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
-        .login-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, var(--dark), var(--primary));
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            position: relative;
-            display: inline-block;
+        .floating {
+            animation: floating 6s ease-in-out infinite;
         }
         
-        .login-title::after {
-            content: '';
+        @keyframes floating {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+        
+        .particle {
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            border-radius: 2px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            opacity: 0.5;
+            animation: float-particle 15s infinite linear;
         }
         
-        .form-group {
-            margin-bottom: 25px;
-            position: relative;
+        @keyframes float-particle {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) translateX(100px) rotate(360deg); }
         }
         
-        .form-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--dark);
-            padding-right: 5px;
+        .slide-in {
+            animation: slideIn 0.6s forwards;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .form-input {
             width: 100%;
             padding: 16px 20px;
-            border: 2px solid #e5e7eb;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 14px;
             transition: all 0.3s ease;
-            background: rgba(249, 250, 251, 0.8);
+            background: rgba(255, 255, 255, 0.1);
             font-family: 'Tajawal', sans-serif;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            color: white;
             font-size: 1rem;
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 
-                0 0 0 3px rgba(59, 130, 246, 0.2),
-                inset 0 2px 4px rgba(0, 0, 0, 0.05);
-            background: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+            background: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
         }
         
-        .form-input-icon {
-            position: absolute;
-            left: 15px;
-            top: 45px;
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-            position: relative;
-            overflow: hidden;
-            border: none;
-            cursor: pointer;
-            background: linear-gradient(to right, var(--primary), var(--primary-dark));
-            color: white;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: translateZ(0);
-        }
-        
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-        }
-        
-        .submit-btn:hover {
-            background: linear-gradient(to right, var(--primary-dark), #1d4ed8);
-            transform: translateY(-4px) translateZ(0);
-            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
-        }
-        
-        .submit-btn:hover::before {
-            transform: translateY(0);
-        }
-        
-        .submit-btn i {
-            margin-left: 10px;
-        }
-        
-        /* تأثيرات الظهور */
-        .fade-in {
-            animation: fadeIn 0.8s ease forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
         }
         
         /* تحسينات للاستجابة */
@@ -253,44 +176,227 @@
             .form-input {
                 padding: 14px 16px;
             }
-            
-            .submit-btn {
-                padding: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-3d-effect"></div>
+    <!-- رسومات ثلاثية الأبعاد في الخلفية -->
+    <div id="three-container"></div>
     
-    <div class="login-container fade-in">
-        <div class="login-header">
-            <i class="fas fa-user-shield login-icon"></i>
-            <h1 class="login-title">تسجيل الدخول للإدارة</h1>
+    <!-- جسيمات عائمة -->
+    <div id="particles"></div>
+    
+    <div class="card-3d glass-effect rounded-2xl p-8 w-full max-w-md slide-in">
+        <div class="login-header text-center mb-8">
+            <div class="floating inline-block mb-6">
+                <i class="fas fa-user-shield text-5xl gradient-text"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-4 gradient-text">تسجيل الدخول للإدارة</h1>
+            <p class="text-gray-300">يجب أن تمتلك صلاحية الدخول إلى هذه الصفحة</p>
         </div>
         
-        <form action="/login" method="POST">
+        <form action="/login" method="POST" class="space-y-6">
             <div class="form-group">
-                <label class="form-label">اسم المستخدم</label>
+                <label class="block text-gray-300 mb-3">اسم المستخدم</label>
                 <div class="relative">
-                    <input type="text" name="username" required class="form-input">
-                    <i class="fas fa-user form-input-icon"></i>
+                    <input type="text" name="username" required class="form-input" placeholder="أدخل اسم المستخدم">
+                    <i class="fas fa-user absolute left-4 top-4 text-gray-400"></i>
                 </div>
             </div>
             
             <div class="form-group">
-                <label class="form-label">كلمة المرور</label>
+                <label class="block text-gray-300 mb-3">كلمة المرور</label>
                 <div class="relative">
-                    <input type="password" name="password" required class="form-input">
-                    <i class="fas fa-lock form-input-icon"></i>
+                    <input type="password" name="password" required class="form-input" placeholder="أدخل كلمة المرور">
+                    <i class="fas fa-lock absolute left-4 top-4 text-gray-400"></i>
                 </div>
             </div>
             
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-sign-in-alt"></i>
+            <button type="submit" class="btn-3d w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg">
+                <i class="fas fa-sign-in-alt ml-2"></i>
                 تسجيل الدخول
             </button>
         </form>
+
+        <!-- رسالة خطأ -->
+        <div id="error-message" class="mt-6 p-4 bg-red-500 bg-opacity-20 text-red-200 rounded-xl hidden">
+            <i class="fas fa-exclamation-circle ml-2"></i>
+            <span id="error-text"></span>
+        </div>
     </div>
+
+    <script>
+        // إنشاء تأثيرات ثلاثية الأبعاد في الخلفية
+        function initThreeJS() {
+            const container = document.getElementById('three-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+            
+            // إنشاء أشكال هندسية عشوائية
+            const geometries = [
+                new THREE.IcosahedronGeometry(1, 0),
+                new THREE.OctahedronGeometry(1, 0),
+                new THREE.TetrahedronGeometry(1, 0),
+                new THREE.SphereGeometry(1, 12, 12)
+            ];
+            
+            const materials = [
+                new THREE.MeshPhongMaterial({ color: 0x4361ee, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0x7209b7, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0xf72585, transparent: true, opacity: 0.2 }),
+                new THREE.MeshPhongMaterial({ color: 0x4cc9f0, transparent: true, opacity: 0.2 })
+            ];
+            
+            const objects = [];
+            const numObjects = 15;
+            
+            for (let i = 0; i < numObjects; i++) {
+                const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+                const material = materials[Math.floor(Math.random() * materials.length)];
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                mesh.position.x = Math.random() * 40 - 20;
+                mesh.position.y = Math.random() * 40 - 20;
+                mesh.position.z = Math.random() * 40 - 20;
+                
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+                
+                mesh.scale.setScalar(Math.random() * 3 + 1);
+                
+                scene.add(mesh);
+                objects.push(mesh);
+            }
+            
+            // إضافة إضاءة
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            camera.position.z = 30;
+            
+            // تحريك الكامرا والأشكال
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                objects.forEach(obj => {
+                    obj.rotation.x += 0.005;
+                    obj.rotation.y += 0.008;
+                });
+                
+                camera.position.x = Math.sin(Date.now() * 0.0005) * 20;
+                camera.position.z = Math.cos(Date.now() * 0.0005) * 20;
+                camera.lookAt(scene.position);
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // تحديث الحجم عند تغيير حجم النافذة
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // إنشاء جسيمات عائمة
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const numParticles = 30;
+            
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 20 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100}vh`;
+                
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                particle.style.animationDuration = `${Math.random() * 10 + 15}s`;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        // عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            initThreeJS();
+            createParticles();
+            
+            // إضافة تأثيرات الظهور المتتالي للعناصر
+            document.querySelectorAll('.slide-in').forEach((el, i) => {
+                el.style.animationDelay = `${0.2 + i * 0.1}s`;
+            });
+            
+            // معالجة تسجيل الدخول
+            const loginForm = document.querySelector('form[action="/login"]');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const username = this.querySelector('input[name="username"]').value;
+                    const password = this.querySelector('input[name="password"]').value;
+                    const errorMessage = document.getElementById('error-message');
+                    const errorText = document.getElementById('error-text');
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    // إظهار حالة التحميل
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري تسجيل الدخول...';
+                    submitBtn.disabled = true;
+                    errorMessage.classList.add('hidden');
+                    
+                    // محاكاة عملية تسجيل الدخول (استبدل هذا بالاتصال الحقيقي بالخادم)
+                    setTimeout(() => {
+                        if (username === 'admin' && password === 'admin123') {
+                            // تسجيل الدخول ناجح - توجيه إلى لوحة التحكم
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            // تسجيل الدخول فاشل
+                            errorText.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                            errorMessage.classList.remove('hidden');
+                            
+                            // تأثير اهتزاز عند الخطأ
+                            loginForm.classList.add('animate-shake');
+                            setTimeout(() => {
+                                loginForm.classList.remove('animate-shake');
+                            }, 500);
+                        }
+                        
+                        // إعادة تعيين حالة الزر
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 1500);
+                });
+            }
+            
+            // إضافة تأثير اهتزاز للعناصر
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+                    20%, 40%, 60%, 80% { transform: translateX(10px); }
+                }
+                .animate-shake {
+                    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
 </body>
 </html>
