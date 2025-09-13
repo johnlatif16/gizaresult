@@ -68,8 +68,6 @@ async function sendTelegramNotification(message) {
   }
 }
 
-
-
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
@@ -78,7 +76,6 @@ app.get('/api/requests', async (req, res) => {
     const snap = await db.collection('requests').get();
     const requests = snap.docs.map(doc => {
       const data = doc.data();
-      // إذا فيه سكرين تحويل، حوّله لرابط كامل
       if (data.screenshot && data.screenshot !== '') {
         data.screenshot = `/uploads/${data.screenshot}`;
       } else {
@@ -92,8 +89,6 @@ app.get('/api/requests', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
 
 // صفحة الدفع
 app.get('/pay', (req, res) => {
@@ -149,7 +144,6 @@ app.post('/reserve', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
-    // التحقق من وجود ملف سكرين شوت
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -164,8 +158,8 @@ app.post('/reserve', async (req, res) => {
       nationalId,
       phone,
       email,
-      senderPhone, // إضافة الرقم المحول
-      screenshot: filename, // إضافة صورة التحويل
+      senderPhone,
+      screenshot: filename,
       reserved_at: new Date().toISOString()
     };
 
@@ -195,7 +189,7 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب - الإصدار المصحح
+// التحقق من النتيجة للطالب
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
@@ -213,7 +207,6 @@ app.post('/api/check-result', async (req, res) => {
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
-    // التحقق إذا تم الدفع
     if (!requestData.paid) {
       return res.status(402).json({ 
         success: false, 
@@ -221,7 +214,6 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
-    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
       return res.json({
         success: true,
@@ -229,8 +221,6 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
     
-    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
-    // إرجاع بيانات النتيجة مباشرة من الطلب
     res.json({
       success: true,
       result: {
@@ -256,6 +246,7 @@ app.post('/api/check-result', async (req, res) => {
     });
   }
 });
+
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -285,7 +276,7 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
+// debug route
 app.get('/api/debug-requests', async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
@@ -301,8 +292,7 @@ app.get('/api/debug-requests', async (req, res) => {
   }
 });
 
-// ================= APIs للداشبورد =================
-// جلب كل النتائج
+// APIs للداشبورد
 app.get('/api/results', async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -313,7 +303,6 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
-// جلب كل الحجوزات
 app.get('/api/reservations', async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
@@ -324,7 +313,6 @@ app.get('/api/reservations', async (req, res) => {
   }
 });
 
-// حذف حجز
 app.delete('/api/reservations/:id', async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -334,7 +322,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
   }
 });
 
-// حذف طلب دفع
 app.delete('/api/requests/:id', async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -344,7 +331,7 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
-// ================= API خاص بالحجوزات بالتليفون =================
+// API خاص بالحجوزات بالتليفون
 app.post('/api/reservation-phone', async (req, res) => {
   try {
     const { nationalId, phone, senderPhone } = req.body;
@@ -353,7 +340,6 @@ app.post('/api/reservation-phone', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
-    // التحقق من وجود ملف
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -388,7 +374,6 @@ app.post('/api/reservation-phone', async (req, res) => {
   }
 });
 
-// جلب كل حجوزات التليفون
 app.get('/api/phone-reservations', async (req, res) => {
   try {
     const snap = await db.collection('phone_reservations').get();
@@ -397,6 +382,33 @@ app.get('/api/phone-reservations', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+});
+
+// ✅ حذف حجز التليفون
+app.delete('/api/reservation-phone/:id', async (req, res) => {
+  try {
+    await db.collection('phone_reservations').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ✅ APIs للإشعارات (داشبورد فقط)
+let dashboardNotificationVisible = false;
+
+app.get('/api/notification', (req, res) => {
+  res.json({ visible: dashboardNotificationVisible });
+});
+
+app.post('/api/notification/show', (req, res) => {
+  dashboardNotificationVisible = true;
+  res.json({ success: true, message: 'النتيجة ظهرت 🎉' });
+});
+
+app.post('/api/notification/hide', (req, res) => {
+  dashboardNotificationVisible = false;
+  res.json({ success: true, message: 'تم إخفاء الإشعار' });
 });
 
 // ==============================================
