@@ -34,7 +34,6 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-// دوال إشعارات
 async function sendEmailNotification(subject, text) {
   try {
     await transporter.sendMail({
@@ -43,7 +42,6 @@ async function sendEmailNotification(subject, text) {
       subject: subject,
       text: text
     });
-    console.log('Email notification sent successfully.');
   } catch (error) {
     console.error('Error sending email notification:', error);
   }
@@ -61,15 +59,12 @@ async function sendTelegramNotification(message) {
       text: message,
       parse_mode: 'HTML'
     });
-    console.log('Telegram notification sent successfully.');
   } catch (error) {
     console.error('Error sending Telegram notification:', error.message);
   }
 }
 
-// ----------------- Routes -----------------
-
-// ----------------- API الطلبات -----------------
+// ================= API الطلبات =================
 app.get('/api/requests', async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
@@ -84,7 +79,6 @@ app.get('/api/requests', async (req, res) => {
     });
     res.json({ requests });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -120,25 +114,21 @@ app.post('/pay', async (req, res) => {
     await db.collection('requests').add(newRequest);
 
     await sendEmailNotification('طلب دفع جديد', `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`);
-    await sendTelegramNotification(
-      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${phone}\nالبريد: ${email}`
-    );
+    await sendTelegramNotification(`<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${phone}\nالبريد: ${email}`);
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
   } catch (error) {
-    console.error('Error in /pay:', error);
     res.status(500).send(`حدث خطأ في الخادم: ${error.message}`);
   }
 });
 
-// الحجز
+// الحجز (شامل الهاتف والتليفون في نفس القسم)
 app.post('/reserve', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone } = req.body;
-    if (!nationalId || !phone || !email || !senderPhone) {
+    if (!nationalId || !phone || !senderPhone) {
       return res.status(400).send('البيانات غير مكتملة');
     }
-
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -151,7 +141,7 @@ app.post('/reserve', async (req, res) => {
     const newReservation = {
       nationalId,
       phone,
-      email,
+      email: email || null,
       senderPhone,
       screenshot: filename,
       reserved_at: new Date().toISOString()
@@ -160,13 +150,10 @@ app.post('/reserve', async (req, res) => {
     await db.collection('reservations').add(newReservation);
 
     await sendEmailNotification('طلب حجز جديد', `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`);
-    await sendTelegramNotification(
-      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
-    );
+    await sendTelegramNotification(`<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email || "N/A"}\nرقم المحول: ${senderPhone}`);
 
     res.send('تم تسجيل الحجز بنجاح.');
   } catch (error) {
-    console.error('Error in /reserve:', error);
     res.status(500).send('حدث خطأ أثناء معالجة الحجز');
   }
 });
@@ -188,7 +175,7 @@ app.post('/api/check-result', async (req, res) => {
     const snap = await requestsRef.where('phone', '==', phone).get();
 
     if (snap.empty) {
-      return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
+      return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة' });
     }
 
     const requestDoc = snap.docs[0];
@@ -198,29 +185,9 @@ app.post('/api/check-result', async (req, res) => {
       return res.status(402).json({ success: false, message: 'لم يتم الدفع بعد' });
     }
 
-    if (requestData.result) {
-      return res.json({ success: true, result: requestData.result });
-    }
-
-    res.json({
-      success: true,
-      result: {
-        name: requestData.name || "غير متوفر",
-        seatNumber: requestData.seatNumber || "غير متوفر",
-        stage: requestData.stage || "غير متوفر",
-        gradeLevel: requestData.gradeLevel || "غير متوفر",
-        schoolName: requestData.schoolName || "غير متوفر",
-        notes: requestData.notes || "لا توجد",
-        mainSubjects: requestData.mainSubjects || [],
-        additionalSubjects: requestData.additionalSubjects || [],
-        totalScore: requestData.totalScore || 0,
-        totalOutOf: requestData.totalOutOf || 0,
-        percentage: requestData.percentage || 0
-      }
-    });
+    res.json({ success: true, result: requestData.result || {} });
   } catch (error) {
-    console.error('Error in /api/check-result:', error);
-    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -241,16 +208,18 @@ app.post('/api/open-result', async (req, res) => {
     const requestDoc = requestSnap.docs[0];
     const resultDoc = resultSnap.docs[0];
 
-    await requestDoc.ref.update({ paid: true, result: resultDoc.data() });
+    await requestDoc.ref.update({
+      paid: true,
+      result: resultDoc.data()
+    });
 
     res.json({ success: true });
   } catch (error) {
-    console.error(error);
     res.json({ success: false, message: error.message });
   }
 });
 
-// APIs للداشبورد
+// ================= APIs للداشبورد =================
 app.get('/api/results', async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -271,6 +240,7 @@ app.get('/api/reservations', async (req, res) => {
   }
 });
 
+// حذف حجز
 app.delete('/api/reservations/:id', async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -280,6 +250,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
   }
 });
 
+// حذف طلب
 app.delete('/api/requests/:id', async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -289,59 +260,22 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
-// API خاص بحجوزات التليفون (مضاف لنفس قسم الحجوزات)
-app.post('/api/reservation-phone', async (req, res) => {
-  try {
-    const { nationalId, phone, senderPhone } = req.body;
-    if (!nationalId || !phone || !senderPhone) {
-      return res.status(400).send('البيانات غير مكتملة');
-    }
+// ================= API إشعار داخلي =================
+let showNotification = false;
 
-    if (!req.files || !req.files.screenshot) {
-      return res.status(400).send('يجب رفع سكرين التحويل');
-    }
-
-    const screenshot = req.files.screenshot;
-    const filename = Date.now() + path.extname(screenshot.name);
-    const uploadPath = path.join(__dirname, 'uploads', filename);
-    await screenshot.mv(uploadPath);
-
-    const newReservation = {
-      nationalId,
-      phone,
-      senderPhone,
-      screenshot: filename,
-      reserved_at: new Date().toISOString()
-    };
-
-    await db.collection('phone_reservations').add(newReservation);
-
-    res.send('تم تسجيل الحجز بالتليفون بنجاح.');
-  } catch (error) {
-    console.error('Error in /api/reservation-phone:', error);
-    res.status(500).send('حدث خطأ أثناء معالجة حجز التليفون');
-  }
+app.get('/api/notification', (req, res) => {
+  res.json({ show: showNotification });
 });
 
-app.get('/api/phone-reservations', async (req, res) => {
-  try {
-    const snap = await db.collection('phone_reservations').get();
-    const reservations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ reservations });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+app.post('/api/notification/show', (req, res) => {
+  showNotification = true;
+  res.json({ success: true });
 });
 
-app.delete('/api/reservation-phone/:id', async (req, res) => {
-  try {
-    await db.collection('phone_reservations').doc(req.params.id).delete();
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+app.post('/api/notification/hide', (req, res) => {
+  showNotification = false;
+  res.json({ success: true });
 });
 
-// ==============================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
