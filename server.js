@@ -68,22 +68,16 @@ async function sendTelegramNotification(message) {
   }
 }
 
-
-
 // ----------------- Routes -----------------
 
-// ----------------- API الطلبات -----------------
+// جلب كل الطلبات
 app.get('/api/requests', async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
     const requests = snap.docs.map(doc => {
       const data = doc.data();
-      // إذا فيه سكرين تحويل، حوّله لرابط كامل
-      if (data.screenshot && data.screenshot !== '') {
-        data.screenshot = `/uploads/${data.screenshot}`;
-      } else {
-        data.screenshot = null;
-      }
+      if (data.screenshot && data.screenshot !== '') data.screenshot = `/uploads/${data.screenshot}`;
+      else data.screenshot = null;
       return { id: doc.id, ...data };
     });
     res.json({ requests });
@@ -92,8 +86,6 @@ app.get('/api/requests', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
 
 // صفحة الدفع
 app.get('/pay', (req, res) => {
@@ -149,7 +141,6 @@ app.post('/reserve', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
-    // التحقق من وجود ملف سكرين شوت
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -164,8 +155,8 @@ app.post('/reserve', async (req, res) => {
       nationalId,
       phone,
       email,
-      senderPhone, // إضافة الرقم المحول
-      screenshot: filename, // إضافة صورة التحويل
+      senderPhone,
+      screenshot: filename,
       reserved_at: new Date().toISOString()
     };
 
@@ -195,42 +186,28 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب - الإصدار المصحح
+// التحقق من النتيجة للطالب
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
-
   try {
     const requestsRef = db.collection('requests');
     const snap = await requestsRef.where('phone', '==', phone).get();
 
     if (snap.empty) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
-      });
+      return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
     }
 
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
-    // التحقق إذا تم الدفع
     if (!requestData.paid) {
-      return res.status(402).json({ 
-        success: false, 
-        message: 'لم يتم الدفع بعد' 
-      });
+      return res.status(402).json({ success: false, message: 'لم يتم الدفع بعد' });
     }
 
-    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
-      return res.json({
-        success: true,
-        result: requestData.result
-      });
+      return res.json({ success: true, result: requestData.result });
     }
-    
-    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
-    // إرجاع بيانات النتيجة مباشرة من الطلب
+
     res.json({
       success: true,
       result: {
@@ -247,15 +224,12 @@ app.post('/api/check-result', async (req, res) => {
         percentage: requestData.percentage || 0
       }
     });
-
   } catch (error) {
     console.error('Error in /api/check-result:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'حدث خطأ في الخادم: ' + error.message 
-    });
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
   }
 });
+
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -285,24 +259,7 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
-app.get('/api/debug-requests', async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      return { id: doc.id, ...doc.data() };
-    });
-    
-    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
-    res.json({ requests });
-  } catch (error) {
-    console.error('Error in /api/debug-requests:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ================= APIs للداشبورد =================
-// جلب كل النتائج
+// APIs للداشبورد
 app.get('/api/results', async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -313,7 +270,6 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
-// جلب كل الحجوزات
 app.get('/api/reservations', async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
@@ -324,7 +280,6 @@ app.get('/api/reservations', async (req, res) => {
   }
 });
 
-// حذف حجز
 app.delete('/api/reservations/:id', async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -334,7 +289,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
   }
 });
 
-// حذف طلب دفع
 app.delete('/api/requests/:id', async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -344,7 +298,18 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
-// ==============================================
+// ----------------- الحجوزات (تليفون) -----------------
+app.get('/api/phone-reservations', async (req, res) => {
+  try {
+    const snap = await db.collection('reservations').get();
+    const phoneReservations = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(r => r.phone);
+    res.json({ reservations: phoneReservations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
