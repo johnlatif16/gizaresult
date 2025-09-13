@@ -181,6 +181,20 @@
     padding-bottom: 10px;
     border-bottom: 3px solid var(--primary);
   }
+
+  /* notification banner style */
+  .notification-banner {
+    background: linear-gradient(90deg, #16a34a, #15803d);
+    color: white;
+    padding: 14px 18px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    display: none;
+  }
+
 </style>
 </head>
 <body>
@@ -205,11 +219,17 @@
     <i class="fas fa-calendar-check"></i>
     الحجوزات
   </button>
-  
-  <button onclick="showSection('phoneReservations')">
-  <i class="fas fa-phone-alt"></i>
-  حجوزات التليفون
-</button>
+
+  <!-- إشعار: أزرار إظهار/إخفاء الإشعار -->
+  <button onclick="showNotifServer()">
+    <i class="fas fa-bell"></i>
+    إظهار الإشعار
+  </button>
+
+  <button onclick="hideNotifServer()">
+    <i class="fas fa-bell-slash"></i>
+    إخفاء الإشعار
+  </button>
 
   <button onclick="showSection('send')">
     <i class="fas fa-envelope"></i>
@@ -225,6 +245,11 @@
 </div>
 
 <div class="content">
+  <!-- Notification Banner -->
+  <div id="notificationBanner" class="notification-banner">
+    النتيجة ظهرت 🎉
+  </div>
+
   <!-- طلبات الدفع -->
   <div id="requests" class="hidden">
     <h2 class="section-title">طلبات الدفع</h2>
@@ -268,7 +293,7 @@
     </div>
   </div>
 
-<!-- قسم الحجوزات -->
+<!-- قسم الحجوزات (مدمج: الحجوزات العادية + حجوزات التليفون) -->
 <div id="reservations" class="hidden">
   <h2 class="section-title">قسم الحجوزات</h2>
   <div class="card">
@@ -281,30 +306,11 @@
           <th>رقم المحول</th>
           <th>صورة التحويل</th>
           <th>تاريخ الحجز</th>
+          <th>المصدر</th>
           <th>الإجراءات</th>
         </tr>
       </thead>
       <tbody id="reservationsTable"></tbody>
-    </table>
-  </div>
-</div>
-
-  <!-- حجوزات التليفون -->
-<div id="phoneReservations" class="hidden">
-  <h2 class="section-title">حجوزات التليفون</h2>
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>الرقم القومي</th>
-          <th>رقم الهاتف</th>
-          <th>رقم التليفون المحول</th>
-          <th>سكرين التحويل</th>
-          <th>تاريخ الحجز</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="phoneReservationsTable"></tbody>
     </table>
   </div>
 </div>
@@ -340,125 +346,187 @@
 
 <script>
 function showSection(id){
+  // sections array updated (no phoneReservations separate)
   ['requests','results','reservations','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
 function logout(){ window.location.href = '/login.html'; }
 
-// تحميل الطلبات
+// --------- تحميل الطلبات ----------
 async function loadRequests(){
-  const res = await fetch('/api/requests');
-  const data = await res.json();
-  const tbody = document.getElementById('requestsTable');
-  tbody.innerHTML = '';
-data.requests.forEach(r => {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${r.nationalId || 'N/A'}</td>
-    <td>${r.seatNumber}</td>
-    <td>${r.phone}</td>
-    <td>${r.email}</td>
-    <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
-    <td>${new Date(r.created_at).toLocaleString()}</td>
-    <td>
-      <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
-        <i class="fas fa-trash"></i> حذف
-      </button>
-    </td>
-  `;
-  tbody.appendChild(tr);
-});
+  try {
+    const res = await fetch('/api/requests');
+    const data = await res.json();
+    const tbody = document.getElementById('requestsTable');
+    tbody.innerHTML = '';
+    (data.requests || []).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.nationalId || 'N/A'}</td>
+        <td>${r.seatNumber || ''}</td>
+        <td>${r.phone || ''}</td>
+        <td>${r.email || ''}</td>
+        <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
+        <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+        <td>
+          <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error('Error loading requests:', e);
+  }
 }
 
-// تحميل النتائج
+// --------- تحميل النتائج ----------
 async function loadResults(){
-  const res = await fetch('/api/results');
-  const data = await res.json();
-  const tbody = document.getElementById('resultsTable');
-  tbody.innerHTML = '';
-  data.results.forEach(student => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${student.seatNumber}</td>
-      <td>${student.name}</td>
-      <td>${student.gradeLevel}</td>
-      <td>${student.schoolName}</td>
-      <td>${student.percentage}%</td>
-      <td>${student.notes || ''}</td>
-      <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
-      <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    const res = await fetch('/api/results');
+    const data = await res.json();
+    const tbody = document.getElementById('resultsTable');
+    tbody.innerHTML = '';
+    (data.results || []).forEach(student => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${student.seatNumber || ''}</td>
+        <td>${student.name || ''}</td>
+        <td>${student.gradeLevel || ''}</td>
+        <td>${student.schoolName || ''}</td>
+        <td>${student.percentage != null ? student.percentage + '%' : ''}</td>
+        <td>${student.notes || ''}</td>
+        <td><button class="action-btn open-btn" onclick="openResult('${student.seatNumber}')">فتح</button></td>
+        <td><button class="action-btn send-btn" onclick="sendEmailPrompt('${student.seatNumber}')">إرسال</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error('Error loading results:', e);
+  }
 }
 
-// تحميل الحجوزات
+// --------- تحميل الحجوزات (من مصدرين ودمجهم) ----------
 async function loadReservations(){
-  const res = await fetch('/api/reservations');
-  const data = await res.json();
-  const tbody = document.getElementById('reservationsTable');
-  tbody.innerHTML = '';
-  data.reservations.forEach(reservation => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${reservation.nationalId}</td>
-      <td>${reservation.phone}</td>
-      <td>${reservation.email}</td>
-      <td>${reservation.senderPhone || 'غير متوفر'}</td>
-      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
-      <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
-      <td>
-        <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
-          <i class="fas fa-trash"></i> حذف
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    // جلب الحجوزات العادية
+    const [res1, res2] = await Promise.all([
+      fetch('/api/reservations'),
+      fetch('/api/phone-reservations')
+    ]);
+
+    const data1 = res1.ok ? await res1.json() : { reservations: [] };
+    const data2 = res2.ok ? await res2.json() : { reservations: [] };
+
+    const list1 = (data1.reservations || []).map(item => ({...item, _source: 'reservations'}));
+    const list2 = (data2.reservations || []).map(item => ({...item, _source: 'phone_reservations'}));
+
+    // دمج القائمتين
+    const merged = list1.concat(list2);
+
+    const tbody = document.getElementById('reservationsTable');
+    tbody.innerHTML = '';
+
+    merged.forEach(reservation => {
+      // حقل الصورة: بعض السجلات عندها screenshot اسم الملف فقط
+      let imgHtml = 'لا يوجد';
+      if (reservation.screenshot) {
+        // إذا كانت قيمة screenshot تحتوي على مسار كامل أو رابط
+        if (reservation.screenshot.startsWith('/uploads') || reservation.screenshot.startsWith('http')) {
+          imgHtml = `<img class="screenshot" src="${reservation.screenshot}" />`;
+        } else {
+          imgHtml = `<img class="screenshot" src="/uploads/${reservation.screenshot}" />`;
+        }
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${reservation.nationalId || ''}</td>
+        <td>${reservation.phone || ''}</td>
+        <td>${reservation.email || (reservation._source === 'phone_reservations' ? '-' : '')}</td>
+        <td>${reservation.senderPhone || ''}</td>
+        <td>${imgHtml}</td>
+        <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
+        <td>${reservation._source === 'reservations' ? 'نظامي' : 'تليفون'}</td>
+        <td>
+          <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}','${reservation._source}')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (e) {
+    console.error('Error loading reservations:', e);
+  }
 }
 
-// حذف حجز
-async function deleteReservation(id) {
-  if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
-    const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+// --------- حذف حجز (يتعرف المصدر ويستدعي الراوت الصحيح) ----------
+async function deleteReservation(id, source) {
+  if (!confirm('هل أنت متأكد من حذف هذا الحجز؟')) return;
+
+  try {
+    let endpoint = '/api/reservations/' + id; // الافتراضي
+    if (source === 'phone_reservations') {
+      // راوت حذف لحجوزات التليفون — حاول تستعمل نفس المسار اللي عندك على السيرفر
+      endpoint = '/api/reservation-phone/' + id;
+    }
+
+    const res = await fetch(endpoint, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) {
       alert('تم حذف الحجز بنجاح');
       loadReservations();
     } else {
-      alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+      alert('حدث خطأ أثناء حذف الحجز: ' + (data.message || res.statusText));
     }
+  } catch (e) {
+    console.error('Error deleting reservation:', e);
+    alert('حدث خطأ أثناء حذف الحجز');
   }
 }
 
+// --------- حذف طلب ----------
 async function deleteRequest(id) {
   if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-    const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      alert('تم حذف الطلب بنجاح');
-      loadRequests();
-    } else {
-      alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+    try {
+      const res = await fetch(`/api/requests/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        alert('تم حذف الطلب بنجاح');
+        loadRequests();
+      } else {
+        alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+      }
+    } catch (e) {
+      console.error('Error deleting request:', e);
+      alert('حدث خطأ أثناء حذف الطلب');
     }
   }
 }
 
-// فتح نتيجة مباشرة
+// --------- فتح نتيجة مباشرة ----------
 async function openResult(seatNumber){
-  const res = await fetch('/api/open-result', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({seatNumber})
-  });
-  const data = await res.json();
-  alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
-  loadRequests();
-  loadResults();
+  try {
+    const res = await fetch('/api/open-result', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({seatNumber})
+    });
+    const data = await res.json();
+    alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
+    loadRequests();
+    loadResults();
+  } catch (e) {
+    console.error('Error opening result:', e);
+    alert('حدث خطأ أثناء فتح النتيجة');
+  }
 }
 
-// إرسال البريد مباشرة
+// --------- إرسال البريد مباشرة ----------
 function sendEmailPrompt(seatNumber){
   const email = prompt('البريد الإلكتروني:');
   if(!email) return alert('البريد الإلكتروني مطلوب');
@@ -469,59 +537,43 @@ function sendEmailPrompt(seatNumber){
     body:JSON.stringify({seatNumber,email,message})
   }).then(res=>res.json()).then(data=>{
     alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
-  });
-}
-// تحميل حجوزات التليفون
-async function loadPhoneReservations() {
-  const res = await fetch('/api/phone-reservations');
-  const data = await res.json();
-  const tbody = document.getElementById('phoneReservationsTable');
-  tbody.innerHTML = '';
-
-  data.reservations.forEach(reservation => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${reservation.nationalId}</td>
-      <td>${reservation.phone}</td>
-      <td>${reservation.senderPhone || 'غير متوفر'}</td>
-      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
-      <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
-      <td>
-        <button class="action-btn delete-btn" onclick="deletePhoneReservation('${reservation.id}')">
-          <i class="fas fa-trash"></i> حذف
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+  }).catch(err=>{
+    console.error('Error sending email:', err);
+    alert('حدث خطأ أثناء الإرسال');
   });
 }
 
-// حذف حجز التليفون
-async function deletePhoneReservation(id) {
-  if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
-    const res = await fetch(`/api/reservation-phone/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      alert('تم حذف الحجز بنجاح');
-      loadPhoneReservations();
-    } else {
-      alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
-    }
+// --------- إشعارات السيرفر (إظهار/إخفاء) ----------
+async function showNotifServer() {
+  try {
+    await fetch('/api/notification/show', { method: 'POST' });
+    document.getElementById('notificationBanner').style.display = 'block';
+  } catch (e) {
+    console.error('Error showing notification on server:', e);
+    alert('حدث خطأ أثناء إرسال أمر إظهار الإشعار للسيرفر');
   }
 }
-  
-// عند تحميل الصفحة
+
+async function hideNotifServer() {
+  try {
+    await fetch('/api/notification/hide', { method: 'POST' });
+    document.getElementById('notificationBanner').style.display = 'none';
+  } catch (e) {
+    console.error('Error hiding notification on server:', e);
+    alert('حدث خطأ أثناء إرسال أمر إخفاء الإشعار للسيرفر');
+  }
+}
+
+// --------- عند تحميل الصفحة: جلب كل البيانات ----------
 loadRequests();
 loadResults();
 loadReservations();
-loadPhoneReservations();
 
 // تحديث دوري
 setInterval(()=>{
   loadRequests();
   loadResults();
   loadReservations();
-  loadPhoneReservations();
 }, 10000);
 </script>
 
