@@ -473,13 +473,13 @@ function sendEmailPrompt(seatNumber){
 }
 // تحميل حجوزات التليفون
 async function loadPhoneReservations() {
-  const res = await fetch('/api/reservation-phone');
+  const res = await fetch('/api/phone-reservations');
   const data = await res.json();
   const tbody = document.getElementById('phoneReservationsTable');
   tbody.innerHTML = '';
 
   data.reservations.forEach(reservation => {
-    const res = await fetch('/api/reservations-phone');
+    const res = await fetch('/api/phone-reservations');
     tr.innerHTML = `
       <td>${reservation.nationalId}</td>
       <td>${reservation.phone}</td>
