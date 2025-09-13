@@ -206,6 +206,11 @@
     الحجوزات
   </button>
   
+  <button onclick="showSection('phoneReservations')">
+  <i class="fas fa-phone-alt"></i>
+  حجوزات التليفون
+</button>
+
   <button onclick="showSection('send')">
     <i class="fas fa-envelope"></i>
     إرسال النتيجة
@@ -280,6 +285,26 @@
         </tr>
       </thead>
       <tbody id="reservationsTable"></tbody>
+    </table>
+  </div>
+</div>
+
+  <!-- حجوزات التليفون -->
+<div id="phoneReservations" class="hidden">
+  <h2 class="section-title">حجوزات التليفون</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>الرقم القومي</th>
+          <th>رقم الهاتف</th>
+          <th>رقم التليفون المحول</th>
+          <th>سكرين التحويل</th>
+          <th>تاريخ الحجز</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="phoneReservationsTable"></tbody>
     </table>
   </div>
 </div>
@@ -446,17 +471,57 @@ function sendEmailPrompt(seatNumber){
     alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
   });
 }
+// تحميل حجوزات التليفون
+async function loadPhoneReservations() {
+  const res = await fetch('/api/reservation-phone');
+  const data = await res.json();
+  const tbody = document.getElementById('phoneReservationsTable');
+  tbody.innerHTML = '';
 
+  data.reservations.forEach(reservation => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${reservation.nationalId}</td>
+      <td>${reservation.phone}</td>
+      <td>${reservation.senderPhone || 'غير متوفر'}</td>
+      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
+      <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
+      <td>
+        <button class="action-btn delete-btn" onclick="deletePhoneReservation('${reservation.id}')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// حذف حجز التليفون
+async function deletePhoneReservation(id) {
+  if (confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
+    const res = await fetch(`/api/reservation-phone/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      alert('تم حذف الحجز بنجاح');
+      loadPhoneReservations();
+    } else {
+      alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+    }
+  }
+}
+  
 // عند تحميل الصفحة
 loadRequests();
 loadResults();
 loadReservations();
+loadPhoneReservations();
 
 // تحديث دوري
 setInterval(()=>{
   loadRequests();
   loadResults();
   loadReservations();
+  loadPhoneReservations();
 }, 10000);
 </script>
 
