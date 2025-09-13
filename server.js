@@ -353,10 +353,21 @@ app.post('/api/reservation-phone', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
+    // التحقق من وجود ملف
+    if (!req.files || !req.files.screenshot) {
+      return res.status(400).send('يجب رفع سكرين التحويل');
+    }
+
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    const uploadPath = path.join(__dirname, 'uploads', filename);
+    await screenshot.mv(uploadPath);
+
     const newReservation = {
       nationalId,
       phone,
-      senderPhone, // الرقم المحول
+      senderPhone,
+      screenshot: filename,
       reserved_at: new Date().toISOString()
     };
 
@@ -376,6 +387,7 @@ app.post('/api/reservation-phone', async (req, res) => {
     res.status(500).send('حدث خطأ أثناء معالجة حجز التليفون');
   }
 });
+
 
 // ==============================================
 
