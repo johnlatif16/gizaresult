@@ -260,6 +260,42 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
+// تخزين توكنات الأجهزة
+app.post('/api/register-token', async (req, res) => {
+  const { token, userId } = req.body;
+  if (!token) return res.status(400).json({ success: false, message: 'Token required' });
+
+  await db.collection('deviceTokens').doc(userId).set({ token });
+  res.json({ success: true });
+});
+
+// إرسال إشعار عند الضغط على "إظهار"
+app.post('/api/notification/show', async (req, res) => {
+  showNotification = true;
+
+  const tokensSnap = await db.collection('deviceTokens').get();
+  const tokens = tokensSnap.docs.map(doc => doc.data().token);
+
+  if (tokens.length > 0) {
+    const message = {
+      notification: {
+        title: 'إشعار جديد',
+        body: 'النتيجة ظهرت 🎉'
+      },
+      tokens: tokens
+    };
+
+    try {
+      const response = await admin.messaging().sendMulticast(message);
+      console.log('Push sent:', response);
+    } catch (error) {
+      console.error('Error sending push:', error);
+    }
+  }
+
+  res.json({ success: true });
+});
+
 // ================= API إشعار داخلي =================
 let showNotification = false;
 
