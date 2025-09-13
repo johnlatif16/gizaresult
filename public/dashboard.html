@@ -479,7 +479,7 @@ async function loadPhoneReservations() {
   tbody.innerHTML = '';
 
   data.reservations.forEach(reservation => {
-    const res = await fetch('/api/phone-reservations');
+    const res = await fetch('/api/reservations-phone');
     tr.innerHTML = `
       <td>${reservation.nationalId}</td>
       <td>${reservation.phone}</td>
