@@ -388,6 +388,16 @@ app.post('/api/reservation-phone', async (req, res) => {
   }
 });
 
+// جلب كل حجوزات التليفون
+app.get('/api/phone-reservations', async (req, res) => {
+  try {
+    const snap = await db.collection('phone_reservations').get();
+    const reservations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json({ reservations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // ==============================================
 
