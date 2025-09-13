@@ -68,6 +68,8 @@ async function sendTelegramNotification(message) {
   }
 }
 
+
+
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
@@ -76,6 +78,7 @@ app.get('/api/requests', async (req, res) => {
     const snap = await db.collection('requests').get();
     const requests = snap.docs.map(doc => {
       const data = doc.data();
+      // إذا فيه سكرين تحويل، حوّله لرابط كامل
       if (data.screenshot && data.screenshot !== '') {
         data.screenshot = `/uploads/${data.screenshot}`;
       } else {
@@ -89,6 +92,8 @@ app.get('/api/requests', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+
 
 // صفحة الدفع
 app.get('/pay', (req, res) => {
@@ -144,6 +149,7 @@ app.post('/reserve', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
+    // التحقق من وجود ملف سكرين شوت
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -158,8 +164,8 @@ app.post('/reserve', async (req, res) => {
       nationalId,
       phone,
       email,
-      senderPhone,
-      screenshot: filename,
+      senderPhone, // إضافة الرقم المحول
+      screenshot: filename, // إضافة صورة التحويل
       reserved_at: new Date().toISOString()
     };
 
@@ -189,7 +195,7 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب
+// التحقق من النتيجة للطالب - الإصدار المصحح
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
@@ -207,6 +213,7 @@ app.post('/api/check-result', async (req, res) => {
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
+    // التحقق إذا تم الدفع
     if (!requestData.paid) {
       return res.status(402).json({ 
         success: false, 
@@ -214,10 +221,16 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
+    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
-      return res.json({ success: true, result: requestData.result });
+      return res.json({
+        success: true,
+        result: requestData.result
+      });
     }
-
+    
+    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
+    // إرجاع بيانات النتيجة مباشرة من الطلب
     res.json({
       success: true,
       result: {
@@ -237,10 +250,12 @@ app.post('/api/check-result', async (req, res) => {
 
   } catch (error) {
     console.error('Error in /api/check-result:', error);
-    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: 'حدث خطأ في الخادم: ' + error.message 
+    });
   }
 });
-
 // فتح نتيجة
 app.post('/api/open-result', async (req, res) => {
   const { seatNumber } = req.body;
@@ -258,7 +273,10 @@ app.post('/api/open-result', async (req, res) => {
     const requestDoc = requestSnap.docs[0];
     const resultDoc = resultSnap.docs[0];
 
-    await requestDoc.ref.update({ paid: true, result: resultDoc.data() });
+    await requestDoc.ref.update({
+      paid: true,
+      result: resultDoc.data()
+    });
 
     res.json({ success: true });
   } catch (error) {
@@ -267,46 +285,14 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// ----------------- API تأكيد الدفع من التطبيق -----------------
-app.post('/api/payment-confirmation', async (req, res) => {
-  try {
-    const { phone, message } = req.body;
-    if (!phone || !message) {
-      return res.status(400).json({ success: false, message: 'Phone and message are required' });
-    }
-
-    const snap = await db.collection('requests').where('phone', '==', phone).get();
-    if (snap.empty) {
-      return res.status(404).json({ success: false, message: 'لم يتم العثور على طلب لهذا الرقم' });
-    }
-
-    const docRef = snap.docs[0].ref;
-    await docRef.update({
-      paid: true,
-      paymentMessage: message,
-      paid_at: new Date().toISOString()
-    });
-
-    await sendEmailNotification(
-      'تم تأكيد دفع تلقائي',
-      `تم تأكيد دفع للرقم: ${phone}\n\nالرسالة:\n${message}`
-    );
-    await sendTelegramNotification(
-      `<b>✅ دفع مؤكد تلقائي:</b>\n📱 ${phone}\n💬 ${message}`
-    );
-
-    res.json({ success: true, message: 'تم تحديث حالة الدفع' });
-  } catch (error) {
-    console.error('Error in /api/payment-confirmation:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Debug route
+// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
 app.get('/api/debug-requests', async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const requests = snap.docs.map(doc => {
+      return { id: doc.id, ...doc.data() };
+    });
+    
     console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
     res.json({ requests });
   } catch (error) {
@@ -316,6 +302,7 @@ app.get('/api/debug-requests', async (req, res) => {
 });
 
 // ================= APIs للداشبورد =================
+// جلب كل النتائج
 app.get('/api/results', async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -326,6 +313,7 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
+// جلب كل الحجوزات
 app.get('/api/reservations', async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
@@ -336,6 +324,7 @@ app.get('/api/reservations', async (req, res) => {
   }
 });
 
+// حذف حجز
 app.delete('/api/reservations/:id', async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -345,6 +334,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
   }
 });
 
+// حذف طلب دفع
 app.delete('/api/requests/:id', async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -353,6 +343,8 @@ app.delete('/api/requests/:id', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// ==============================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
