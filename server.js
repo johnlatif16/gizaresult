@@ -344,6 +344,39 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
+// ================= API خاص بالحجوزات بالتليفون =================
+app.post('/api/reservation-phone', async (req, res) => {
+  try {
+    const { nationalId, phone, senderPhone } = req.body;
+
+    if (!nationalId || !phone || !senderPhone) {
+      return res.status(400).send('البيانات غير مكتملة');
+    }
+
+    const newReservation = {
+      nationalId,
+      phone,
+      senderPhone, // الرقم المحول
+      reserved_at: new Date().toISOString()
+    };
+
+    await db.collection('phone_reservations').add(newReservation);
+
+    await sendEmailNotification(
+      'طلب حجز تليفون جديد',
+      `طلب حجز تليفون جديد:\n${JSON.stringify(newReservation, null, 2)}`
+    );
+    await sendTelegramNotification(
+      `<b>طلب حجز تليفون جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nرقم المحول: ${senderPhone}`
+    );
+
+    res.send('تم تسجيل الحجز بالتليفون بنجاح.');
+  } catch (error) {
+    console.error('Error in /api/reservation-phone:', error);
+    res.status(500).send('حدث خطأ أثناء معالجة حجز التليفون');
+  }
+});
+
 // ==============================================
 
 const PORT = process.env.PORT || 3000;
