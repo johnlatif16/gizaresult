@@ -7,7 +7,6 @@ const axios = require('axios');
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
 admin.initializeApp({
@@ -106,7 +105,6 @@ app.post('/pay', async (req, res) => {
     const screenshot = req.files.screenshot;
     const filename = Date.now() + path.extname(screenshot.name);
     const uploadPath = path.join(uploadsDir, filename);
-
     await screenshot.mv(uploadPath);
 
     const newRequest = {
@@ -121,10 +119,7 @@ app.post('/pay', async (req, res) => {
 
     await db.collection('requests').add(newRequest);
 
-    await sendEmailNotification(
-      'طلب دفع جديد',
-      `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`
-    );
+    await sendEmailNotification('طلب دفع جديد', `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`);
     await sendTelegramNotification(
       `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${phone}\nالبريد: ${email}`
     );
@@ -151,7 +146,6 @@ app.post('/reserve', async (req, res) => {
     const screenshot = req.files.screenshot;
     const filename = Date.now() + path.extname(screenshot.name);
     const uploadPath = path.join(uploadsDir, filename);
-
     await screenshot.mv(uploadPath);
 
     const newReservation = {
@@ -165,10 +159,7 @@ app.post('/reserve', async (req, res) => {
 
     await db.collection('reservations').add(newReservation);
 
-    await sendEmailNotification(
-      'طلب حجز جديد',
-      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
-    );
+    await sendEmailNotification('طلب حجز جديد', `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`);
     await sendTelegramNotification(
       `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
     );
@@ -189,38 +180,28 @@ app.post('/login', (req, res) => {
   res.send('خطأ في تسجيل الدخول');
 });
 
-// التحقق من النتيجة للطالب
+// التحقق من النتيجة
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
-
   try {
     const requestsRef = db.collection('requests');
     const snap = await requestsRef.where('phone', '==', phone).get();
 
     if (snap.empty) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
-      });
+      return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' });
     }
 
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
     if (!requestData.paid) {
-      return res.status(402).json({ 
-        success: false, 
-        message: 'لم يتم الدفع بعد' 
-      });
+      return res.status(402).json({ success: false, message: 'لم يتم الدفع بعد' });
     }
 
     if (requestData.result) {
-      return res.json({
-        success: true,
-        result: requestData.result
-      });
+      return res.json({ success: true, result: requestData.result });
     }
-    
+
     res.json({
       success: true,
       result: {
@@ -237,13 +218,9 @@ app.post('/api/check-result', async (req, res) => {
         percentage: requestData.percentage || 0
       }
     });
-
   } catch (error) {
     console.error('Error in /api/check-result:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'حدث خطأ في الخادم: ' + error.message 
-    });
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم: ' + error.message });
   }
 });
 
@@ -264,31 +241,12 @@ app.post('/api/open-result', async (req, res) => {
     const requestDoc = requestSnap.docs[0];
     const resultDoc = resultSnap.docs[0];
 
-    await requestDoc.ref.update({
-      paid: true,
-      result: resultDoc.data()
-    });
+    await requestDoc.ref.update({ paid: true, result: resultDoc.data() });
 
     res.json({ success: true });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });
-  }
-});
-
-// debug route
-app.get('/api/debug-requests', async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      return { id: doc.id, ...doc.data() };
-    });
-    
-    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
-    res.json({ requests });
-  } catch (error) {
-    console.error('Error in /api/debug-requests:', error);
-    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -331,11 +289,10 @@ app.delete('/api/requests/:id', async (req, res) => {
   }
 });
 
-// API خاص بالحجوزات بالتليفون
+// API خاص بحجوزات التليفون (مضاف لنفس قسم الحجوزات)
 app.post('/api/reservation-phone', async (req, res) => {
   try {
     const { nationalId, phone, senderPhone } = req.body;
-
     if (!nationalId || !phone || !senderPhone) {
       return res.status(400).send('البيانات غير مكتملة');
     }
@@ -359,14 +316,6 @@ app.post('/api/reservation-phone', async (req, res) => {
 
     await db.collection('phone_reservations').add(newReservation);
 
-    await sendEmailNotification(
-      'طلب حجز تليفون جديد',
-      `طلب حجز تليفون جديد:\n${JSON.stringify(newReservation, null, 2)}`
-    );
-    await sendTelegramNotification(
-      `<b>طلب حجز تليفون جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nرقم المحول: ${senderPhone}`
-    );
-
     res.send('تم تسجيل الحجز بالتليفون بنجاح.');
   } catch (error) {
     console.error('Error in /api/reservation-phone:', error);
@@ -384,7 +333,6 @@ app.get('/api/phone-reservations', async (req, res) => {
   }
 });
 
-// ✅ حذف حجز التليفون
 app.delete('/api/reservation-phone/:id', async (req, res) => {
   try {
     await db.collection('phone_reservations').doc(req.params.id).delete();
@@ -394,24 +342,6 @@ app.delete('/api/reservation-phone/:id', async (req, res) => {
   }
 });
 
-// ✅ APIs للإشعارات (داشبورد فقط)
-let dashboardNotificationVisible = false;
-
-app.get('/api/notification', (req, res) => {
-  res.json({ visible: dashboardNotificationVisible });
-});
-
-app.post('/api/notification/show', (req, res) => {
-  dashboardNotificationVisible = true;
-  res.json({ success: true, message: 'النتيجة ظهرت 🎉' });
-});
-
-app.post('/api/notification/hide', (req, res) => {
-  dashboardNotificationVisible = false;
-  res.json({ success: true, message: 'تم إخفاء الإشعار' });
-});
-
 // ==============================================
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
