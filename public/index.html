@@ -354,6 +354,21 @@
     left: -9999px;
     top: -9999px;
   }
+
+  /* تنسيقات الدردشة */
+  #chatbot input {
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+  }
+
+  #chatbot input::placeholder {
+    text-align: right;
+  }
+
+  #chatbot button {
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 500;
+  }
 </style>
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
@@ -661,15 +676,23 @@
   </button>
 </div>
 
-<!-- نافذة الدردشة -->
-<div id="chatbot" style="position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display:none; flex-direction: column; overflow:hidden; z-index: 1000; font-family: 'Tajawal', sans-serif;">
+<!-- نافذة الدردشة المعدلة -->
+<div id="chatbot" style="position: fixed; bottom: 80px; right: 20px; width: 320px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display:none; flex-direction: column; overflow:hidden; z-index: 1000; font-family: 'Tajawal', sans-serif;">
   <div style="background:#3b82f6; color:white; padding:10px; font-weight:bold; text-align:center; cursor:pointer;" onclick="toggleChatbot()">
-    دعم فني
+    دعم فني - أدخل بياناتك أولاً
   </div>
   <div id="chatMessages" style="flex:1; padding:10px; overflow-y:auto;"></div>
-  <div id="chatOptions" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+  <div id="chatOptions" style="padding:10px; display:none; flex-direction:column; gap:8px;">
     <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
     <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
+  </div>
+  
+  <!-- نموذج إدخال بيانات المستخدم -->
+  <div id="userDataForm" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+    <input type="text" id="userName" placeholder="الاسم بالكامل" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <input type="tel" id="userPhone" placeholder="رقم التليفون" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <input type="email" id="userEmail" placeholder="البريد الإلكتروني" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <button id="submitUserData" style="padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">تأكيد البيانات</button>
   </div>
 </div>
 <!-- حاوية مخفية لإنشاء PDF -->
@@ -678,6 +701,13 @@
 <script>
 // متغير لتخزين النتيجة الحالية
 let currentResult = null;
+
+// متغيرات لتخزين بيانات المستخدم في الدردشة
+let userData = {
+  name: '',
+  phone: '',
+  email: ''
+};
 
 function showPayment() {
   document.getElementById('payment').classList.remove('hidden');
@@ -1190,10 +1220,28 @@ async function saveAsPDF() {
     alert('حدث خطأ أثناء إنشاء PDF: ' + error.message);
   }
 }
+
+// ========== دوال الدردشة ==========
 // فتح/غلق الدردشة
 function toggleChatbot() {
   const bot = document.getElementById('chatbot');
   bot.style.display = bot.style.display === 'flex' ? 'none' : 'flex';
+  
+  // إعادة تعيين الدردشة عند فتحها
+  if (bot.style.display === 'flex') {
+    resetChatbot();
+  }
+}
+
+// إعادة تعيين الدردشة
+function resetChatbot() {
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatOptions').style.display = 'none';
+  document.getElementById('userDataForm').style.display = 'flex';
+  document.getElementById('userName').value = '';
+  document.getElementById('userPhone').value = '';
+  document.getElementById('userEmail').value = '';
+  userData = { name: '', phone: '', email: '' };
 }
 
 // إضافة رسالة
@@ -1218,41 +1266,71 @@ function addMessage(text, from = 'bot') {
   container.scrollTop = container.scrollHeight;
 }
 
-// التعامل مع الضغط على الاختيارات
-const chatOptions = document.getElementById('chatOptions');
+// معالجة إرسال بيانات المستخدم
+document.getElementById('submitUserData').addEventListener('click', function() {
+  const name = document.getElementById('userName').value.trim();
+  const phone = document.getElementById('userPhone').value.trim();
+  const email = document.getElementById('userEmail').value.trim();
+  
+  if (!name || !phone || !email) {
+    addMessage('يرجى ملء جميع البيانات المطلوبة');
+    return;
+  }
+  
+  // حفظ بيانات المستخدم
+  userData = { name, phone, email };
+  
+  // إخفاء نموذج البيانات وإظهار خيارات الدردشة
+  document.getElementById('userDataForm').style.display = 'none';
+  document.getElementById('chatOptions').style.display = 'flex';
+  
+  addMessage(`شكراً ${name}! كيف يمكنني مساعدتك؟`);
+});
 
-chatOptions.addEventListener('click', async (e) => {
+// التعامل مع الضغط على الاختيارات
+document.getElementById('chatOptions').addEventListener('click', async (e) => {
   const target = e.target;
   
-  // إذا كان الزر اللي اتضغط هو واحد من خيارات الدردشة
   if (target.classList.contains('chatOption')) {
     const action = target.getAttribute('data-action');
-    addMessage(target.textContent, 'user');
-
+    
     if (action === 'whatsapp') {
-      addMessage('تمام! هحولك على واتس اب الآن...');
+      addMessage(target.textContent, 'user');
+      addMessage('جاري تحويلك إلى واتساب...');
       window.open('https://wa.me/201274445091', '_blank');
+      
+      // إعادة تعيين الدردشة بعد ثانيتين
+      setTimeout(resetChatbot, 2000);
     } else if (action === 'ask') {
+      addMessage(target.textContent, 'user');
       addMessage('ممكن تكتب سؤالك هنا:');
-      chatOptions.innerHTML = `
+      
+      // استبدال الخيارات بحقل إدخال السؤال
+      document.getElementById('chatOptions').innerHTML = `
         <input type="text" id="userQuestion" placeholder="اكتب سؤالك..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:100%;">
         <button id="sendQuestion" style="margin-top:5px; padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">إرسال</button>
       `;
+      
       document.getElementById('sendQuestion').addEventListener('click', async () => {
-        const q = document.getElementById('userQuestion').value.trim();
-        if (q) {
-          addMessage(q, 'user');
-          addMessage('جاري إرسال استفسارك للادمن...');
-
+        const question = document.getElementById('userQuestion').value.trim();
+        if (question) {
+          addMessage(question, 'user');
+          addMessage('جاري إرسال استفسارك للإدارة...');
+          
           try {
+            // إرسال الاستفسار مع بيانات المستخدم إلى السيرفر
             const res = await fetch('/api/send-admin-message', {
               method: 'POST',
               headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({ message: q })
+              body: JSON.stringify({ 
+                message: question,
+                userData: userData
+              })
             });
+            
             const data = await res.json();
             if(data.success){
-              addMessage('تم إرسال استفسارك للادمن بنجاح!');
+              addMessage('تم إرسال استفسارك للإدارة بنجاح! سنتواصل معك قريباً.');
             } else {
               addMessage('حدث خطأ أثناء الإرسال.');
             }
@@ -1260,14 +1338,9 @@ chatOptions.addEventListener('click', async (e) => {
             console.error(e);
             addMessage('حدث خطأ أثناء الإرسال.');
           }
-
-          // إعادة ظهور الاختيارات بعد 2 ثانية
-          setTimeout(() => {
-            chatOptions.innerHTML = `
-              <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
-              <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
-            `;
-          }, 2000);
+          
+          // إعادة تعيين الدردشة بعد 3 ثوانٍ
+          setTimeout(resetChatbot, 3000);
         }
       });
     }
