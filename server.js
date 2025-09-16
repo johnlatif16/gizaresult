@@ -68,8 +68,6 @@ async function sendTelegramNotification(message) {
   }
 }
 
-
-
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
@@ -92,8 +90,6 @@ app.get('/api/requests', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
 
 // صفحة الدفع
 app.get('/pay', (req, res) => {
@@ -303,12 +299,13 @@ app.get('/api/debug-requests', async (req, res) => {
 
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
-  const { message } = req.body;
+  const { message, userData } = req.body;
   if(!message) return res.json({ success: false, message: 'الرسالة فارغة' });
 
   try {
     const newChatInquiry = {
       message,
+      userData: userData || {},
       created_at: new Date().toISOString(),
       status: 'new' // للحالة: جديد / مقروء
     };
@@ -316,15 +313,27 @@ app.post('/api/send-admin-message', async (req, res) => {
     // حفظ في Firestore
     const docRef = await db.collection('chat_inquiries').add(newChatInquiry);
 
-    // إرسال إشعار للادمن (بريد وTelegram)
+    // إرسال إشعار للادمن (بريد وTelegram) مع بيانات المستخدم
+    const emailText = `استفسار جديد من الدردشة\n\nالاسم: ${userData.name}\nالهاتف: ${userData.phone}\nالبريد: ${userData.email}\n\nالرسالة: ${message}`;
+    
+    const telegramMessage = `
+<b>استفسار جديد من الدردشة:</b>
+👤 <b>الاسم:</b> ${userData.name}
+📞 <b>الهاتف:</b> ${userData.phone}
+📧 <b>البريد:</b> ${userData.email}
+
+💬 <b>الرسالة:</b>
+${message}
+    `;
+
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: process.env.NOTIFICATION_EMAIL,
       subject: 'استفسار جديد من الدردشة',
-      text: message
+      text: emailText
     });
 
-    await sendTelegramNotification(`<b>استفسار جديد من الدردشة:</b>\n${message}`);
+    await sendTelegramNotification(telegramMessage);
 
     res.json({ success: true, id: docRef.id });
   } catch (error) {
