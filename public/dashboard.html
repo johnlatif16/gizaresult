@@ -399,7 +399,7 @@ async function loadReservations(){
       <td>${reservation.phone}</td>
       <td>${reservation.email}</td>
       <td>${reservation.senderPhone || 'غير متوفر'}</td>
-      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
+<td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
       <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
       <td>
         <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
@@ -514,8 +514,8 @@ setInterval(()=>{
   loadResults();
   loadReservations();
   loadChatInquiries();
-  setInterval(loadChatInquiries,)
 }, 10000);
+
 </script>
 
 </body>
