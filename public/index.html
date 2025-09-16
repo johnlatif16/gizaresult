@@ -654,7 +654,24 @@
     </p>
   </div>
 </div>
+<!-- زر فتح/غلق الدردشة -->
+<div id="chatbotToggle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+  <button onclick="toggleChatbot()" style="background:#3b82f6; color:white; border:none; padding:12px 20px; border-radius:50px; cursor:pointer; font-weight:bold;">
+    💬 الدعم
+  </button>
+</div>
 
+<!-- نافذة الدردشة -->
+<div id="chatbot" style="position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display:none; flex-direction: column; overflow:hidden; z-index: 1000; font-family: 'Tajawal', sans-serif;">
+  <div style="background:#3b82f6; color:white; padding:10px; font-weight:bold; text-align:center; cursor:pointer;" onclick="toggleChatbot()">
+    دعم فني
+  </div>
+  <div id="chatMessages" style="flex:1; padding:10px; overflow-y:auto;"></div>
+  <div id="chatOptions" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+    <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
+    <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
+  </div>
+</div>
 <!-- حاوية مخفية لإنشاء PDF -->
 <div id="pdf-container" style="position: absolute; left: -9999px; top: -9999px;"></div>
 
@@ -1173,6 +1190,73 @@ async function saveAsPDF() {
     alert('حدث خطأ أثناء إنشاء PDF: ' + error.message);
   }
 }
+// فتح/غلق الدردشة
+function toggleChatbot() {
+  const bot = document.getElementById('chatbot');
+  bot.style.display = bot.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// إضافة رسالة
+function addMessage(text, from = 'bot') {
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.style.marginBottom = '10px';
+  msg.style.padding = '8px 12px';
+  msg.style.borderRadius = '10px';
+  msg.style.maxWidth = '85%';
+  msg.style.wordBreak = 'break-word';
+  if (from === 'bot') {
+    msg.style.background = '#f0f9ff';
+    msg.style.alignSelf = 'flex-start';
+  } else {
+    msg.style.background = '#3b82f6';
+    msg.style.color = 'white';
+    msg.style.alignSelf = 'flex-end';
+  }
+  msg.textContent = text;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+// التعامل مع الضغط على الاختيارات
+document.querySelectorAll('.chatOption').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.getAttribute('data-action');
+    addMessage(btn.textContent, 'user');
+
+    if (action === 'whatsapp') {
+      addMessage('تمام! هحولك على واتس اب الآن...');
+      window.open('https://wa.me/201274445091', '_blank');
+    } else if (action === 'ask') {
+      addMessage('ممكن تكتب سؤالك هنا:');
+      // إظهار حقل كتابة جديد
+      const chatOptions = document.getElementById('chatOptions');
+      chatOptions.innerHTML = `
+        <input type="text" id="userQuestion" placeholder="اكتب سؤالك..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:100%;">
+        <button id="sendQuestion" style="margin-top:5px; padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">إرسال</button>
+      `;
+      document.getElementById('sendQuestion').addEventListener('click', () => {
+        const q = document.getElementById('userQuestion').value.trim();
+        if (q) {
+          addMessage(q, 'user');
+          addMessage('شكراً على استفسارك! سنرد عليك قريباً.');
+          // إعادة ظهور الاختيارات الأصلية بعد 2 ثانية
+          setTimeout(() => {
+            chatOptions.innerHTML = `
+              <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
+              <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
+            `;
+            // إعادة تفعيل الأحداث
+            document.querySelectorAll('.chatOption').forEach(btn => btn.addEventListener('click', arguments.callee));
+          }, 2000);
+        }
+      });
+    }
+  });
+});
+
+// رسالة ترحيبية عند فتح الدردشة لأول مرة
+addMessage('مرحباً! كيف يمكنني مساعدتك اليوم؟');
 </script>
 </body>
 </html>
