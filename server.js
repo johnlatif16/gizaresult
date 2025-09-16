@@ -348,7 +348,18 @@ ${message}
 app.get('/api/chat-inquiries', async (req, res) => {
   try {
     const snap = await db.collection('chat_inquiries').orderBy('created_at','desc').get();
-    const inquiries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const inquiries = snap.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        message: data.message,
+        userName: data.userData?.name || 'غير معروف',
+        userPhone: data.userData?.phone || 'غير معروف',
+        userEmail: data.userData?.email || 'غير معروف',
+        created_at: data.created_at,
+        status: data.status
+      };
+    });
     res.json({ inquiries });
   } catch(error){
     res.status(500).json({ success:false, message: error.message });
@@ -359,6 +370,18 @@ app.get('/api/chat-inquiries', async (req, res) => {
 app.delete('/api/chat-inquiries/:id', async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch(error){
+    res.status(500).json({ success:false, message: error.message });
+  }
+});
+
+// تحديث حالة الاستفسار كمقروء
+app.put('/api/chat-inquiries/:id/read', async (req, res) => {
+  try {
+    await db.collection('chat_inquiries').doc(req.params.id).update({
+      status: 'read'
+    });
     res.json({ success: true });
   } catch(error){
     res.status(500).json({ success:false, message: error.message });
