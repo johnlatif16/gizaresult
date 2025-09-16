@@ -1219,44 +1219,60 @@ function addMessage(text, from = 'bot') {
 }
 
 // التعامل مع الضغط على الاختيارات
-document.querySelectorAll('.chatOption').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const action = btn.getAttribute('data-action');
-    addMessage(btn.textContent, 'user');
+const chatOptions = document.getElementById('chatOptions');
+
+chatOptions.addEventListener('click', async (e) => {
+  const target = e.target;
+  
+  // إذا كان الزر اللي اتضغط هو واحد من خيارات الدردشة
+  if (target.classList.contains('chatOption')) {
+    const action = target.getAttribute('data-action');
+    addMessage(target.textContent, 'user');
 
     if (action === 'whatsapp') {
       addMessage('تمام! هحولك على واتس اب الآن...');
       window.open('https://wa.me/201274445091', '_blank');
     } else if (action === 'ask') {
       addMessage('ممكن تكتب سؤالك هنا:');
-      // إظهار حقل كتابة جديد
-      const chatOptions = document.getElementById('chatOptions');
       chatOptions.innerHTML = `
         <input type="text" id="userQuestion" placeholder="اكتب سؤالك..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:100%;">
         <button id="sendQuestion" style="margin-top:5px; padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">إرسال</button>
       `;
-      document.getElementById('sendQuestion').addEventListener('click', () => {
+      document.getElementById('sendQuestion').addEventListener('click', async () => {
         const q = document.getElementById('userQuestion').value.trim();
         if (q) {
           addMessage(q, 'user');
-          addMessage('شكراً على استفسارك! سنرد عليك قريباً.');
-          // إعادة ظهور الاختيارات الأصلية بعد 2 ثانية
+          addMessage('جاري إرسال استفسارك للادمن...');
+
+          try {
+            const res = await fetch('/api/send-admin-message', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ message: q })
+            });
+            const data = await res.json();
+            if(data.success){
+              addMessage('تم إرسال استفسارك للادمن بنجاح!');
+            } else {
+              addMessage('حدث خطأ أثناء الإرسال.');
+            }
+          } catch(e){
+            console.error(e);
+            addMessage('حدث خطأ أثناء الإرسال.');
+          }
+
+          // إعادة ظهور الاختيارات بعد 2 ثانية
           setTimeout(() => {
             chatOptions.innerHTML = `
               <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
               <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
             `;
-            // إعادة تفعيل الأحداث
-            document.querySelectorAll('.chatOption').forEach(btn => btn.addEventListener('click', arguments.callee));
           }, 2000);
         }
       });
     }
-  });
+  }
 });
-
-// رسالة ترحيبية عند فتح الدردشة لأول مرة
-addMessage('مرحباً! كيف يمكنني مساعدتك اليوم؟');
 </script>
 </body>
 </html>
