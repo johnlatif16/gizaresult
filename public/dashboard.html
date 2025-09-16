@@ -181,6 +181,40 @@
     padding-bottom: 10px;
     border-bottom: 3px solid var(--primary);
   }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+  
+  .status-badge.new {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+  
+  .status-badge.read {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
+  .btn-read {
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-right: 5px;
+    cursor: pointer;
+  }
+  
+  .btn-delete {
+    background: linear-gradient(to right, #dc2626, #b91c1c);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -205,10 +239,12 @@
     <i class="fas fa-calendar-check"></i>
     الحجوزات
   </button>
+  
   <button onclick="showSection('chatInquiries')">
-  <i class="fas fa-comments"></i>
-  استفسارات الدردشة
-</button>
+    <i class="fas fa-comments"></i>
+    استفسارات الدردشة
+  </button>
+  
   <button onclick="showSection('send')">
     <i class="fas fa-envelope"></i>
     إرسال النتيجة
@@ -266,42 +302,48 @@
     </div>
   </div>
 
-<!-- قسم الحجوزات -->
-<div id="reservations" class="hidden">
-  <h2 class="section-title">قسم الحجوزات</h2>
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>الرقم القومي</th>
-          <th>رقم الهاتف</th>
-          <th>البريد الإلكتروني</th>
-          <th>رقم المحول</th>
-          <th>صورة التحويل</th>
-          <th>تاريخ الحجز</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="reservationsTable"></tbody>
-    </table>
+  <!-- قسم الحجوزات -->
+  <div id="reservations" class="hidden">
+    <h2 class="section-title">قسم الحجوزات</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم القومي</th>
+            <th>رقم الهاتف</th>
+            <th>البريد الإلكتروني</th>
+            <th>رقم المحول</th>
+            <th>صورة التحويل</th>
+            <th>تاريخ الحجز</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="reservationsTable"></tbody>
+      </table>
+    </div>
   </div>
-</div>
-<div id="chatInquiries" class="hidden">
-  <h2 class="section-title">استفسارات الدردشة</h2>
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>الرسالة</th>
-          <th>تاريخ الإرسال</th>
-          <th>الحالة</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="chatInquiriesTable"></tbody>
-    </table>
+
+  <!-- استفسارات الدردشة -->
+  <div id="chatInquiries" class="hidden">
+    <h2 class="section-title">استفسارات الدردشة</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>رقم الهاتف</th>
+            <th>البريد الإلكتروني</th>
+            <th>الرسالة</th>
+            <th>تاريخ الإرسال</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="chatInquiriesTable"></tbody>
+      </table>
+    </div>
   </div>
-</div>
+
   <!-- إرسال البريد -->
   <div id="send" class="hidden">
     <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
@@ -313,7 +355,7 @@
         </div>
         
         <div>
-          <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+          <label class="block text-gray-700 mb-2">البريد الإlectronي</label>
           <input id="sendEmail" placeholder="أدخل البريد الإلكتروني" required>
         </div>
         
@@ -333,8 +375,13 @@
 
 <script>
 function showSection(id){
-  ['requests','results','reservations','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
+  ['requests','results','reservations','chatInquiries','send'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+  
+  // عند عرض قسم استفسارات الدردشة، قم بتحميل البيانات
+  if (id === 'chatInquiries') {
+    loadChatInquiries();
+  }
 }
 
 function logout(){ window.location.href = '/login.html'; }
@@ -345,23 +392,24 @@ async function loadRequests(){
   const data = await res.json();
   const tbody = document.getElementById('requestsTable');
   tbody.innerHTML = '';
-data.requests.forEach(r => {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${r.nationalId || 'N/A'}</td>
-    <td>${r.seatNumber}</td>
-    <td>${r.phone}</td>
-    <td>${r.email}</td>
-    <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
-    <td>${new Date(r.created_at).toLocaleString()}</td>
-    <td>
-      <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
-        <i class="fas fa-trash"></i> حذف
-      </button>
-    </td>
-  `;
-  tbody.appendChild(tr);
-});
+  
+  data.requests.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.nationalId || 'N/A'}</td>
+      <td>${r.seatNumber}</td>
+      <td>${r.phone}</td>
+      <td>${r.email}</td>
+      <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
+      <td>${new Date(r.created_at).toLocaleString()}</td>
+      <td>
+        <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 // تحميل النتائج
@@ -399,7 +447,7 @@ async function loadReservations(){
       <td>${reservation.phone}</td>
       <td>${reservation.email}</td>
       <td>${reservation.senderPhone || 'غير متوفر'}</td>
-<td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
+      <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
       <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
       <td>
         <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
@@ -450,45 +498,61 @@ async function openResult(seatNumber){
   loadRequests();
   loadResults();
 }
+
+// تحميل استفسارات الدردشة
 async function loadChatInquiries() {
   try {
-    const res = await fetch('/api/chat-inquiries');
-    const data = await res.json();
-    const tbody = document.getElementById('chatInquiriesTable');
-    tbody.innerHTML = '';
-    (data.inquiries || []).forEach(item => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item.message}</td>
-        <td>${item.created_at ? new Date(item.created_at).toLocaleString() : ''}</td>
-        <td>${item.status || 'new'}</td>
+    const response = await fetch('/api/chat-inquiries');
+    const data = await response.json();
+    
+    const inquiriesTable = document.getElementById('chatInquiriesTable');
+    inquiriesTable.innerHTML = '';
+    
+    data.inquiries.forEach(inquiry => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${inquiry.userName || 'غير معروف'}</td>
+        <td>${inquiry.userPhone || 'غير معروف'}</td>
+        <td>${inquiry.userEmail || 'غير معروف'}</td>
+        <td>${inquiry.message}</td>
+        <td>${new Date(inquiry.created_at).toLocaleString('ar-EG')}</td>
         <td>
-          <button class="action-btn delete-btn" onclick="deleteChatInquiry('${item.id}')">
-            <i class="fas fa-trash"></i> حذف
-          </button>
+          <span class="status-badge ${inquiry.status}">${inquiry.status === 'new' ? 'جديد' : 'مقروء'}</span>
+        </td>
+        <td>
+          <button onclick="markAsRead('${inquiry.id}')" class="btn-read">تم القراءة</button>
+          <button onclick="deleteInquiry('${inquiry.id}')" class="btn-delete">حذف</button>
         </td>
       `;
-      tbody.appendChild(tr);
+      inquiriesTable.appendChild(row);
     });
-  } catch(e) {
-    console.error('Error loading chat inquiries:', e);
+  } catch (error) {
+    console.error('Error loading inquiries:', error);
+  }
+}
+
+// تمييز الاستفسار كمقروء
+async function markAsRead(id) {
+  try {
+    await fetch(`/api/chat-inquiries/${id}/read`, { method: 'PUT' });
+    loadChatInquiries(); // إعادة تحميل البيانات
+  } catch (error) {
+    console.error('Error marking as read:', error);
   }
 }
 
 // حذف استفسار
-async function deleteChatInquiry(id){
-  if(confirm('هل أنت متأكد من حذف هذا الاستفسار؟')){
+async function deleteInquiry(id) {
+  if (confirm('هل أنت متأكد من حذف هذا الاستفسار؟')) {
     try {
-      const res = await fetch(`/api/chat-inquiries/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if(data.success) loadChatInquiries();
-      else alert('حدث خطأ أثناء الحذف');
-    } catch(e){
-      console.error(e);
-      alert('حدث خطأ أثناء الحذف');
+      await fetch(`/api/chat-inquiries/${id}`, { method: 'DELETE' });
+      loadChatInquiries(); // إعادة تحميل البيانات
+    } catch (error) {
+      console.error('Error deleting inquiry:', error);
     }
   }
 }
+
 // إرسال البريد مباشرة
 function sendEmailPrompt(seatNumber){
   const email = prompt('البريد الإلكتروني:');
@@ -504,16 +568,21 @@ function sendEmailPrompt(seatNumber){
 }
 
 // عند تحميل الصفحة
+showSection('requests');
 loadRequests();
 loadResults();
 loadReservations();
 
 // تحديث دوري
-setInterval(()=>{
+setInterval(() => {
   loadRequests();
   loadResults();
   loadReservations();
-  loadChatInquiries();
+  
+  // إذا كان قسم استفسارات الدردشة مفتوحًا، قم بتحديثه أيضًا
+  if (!document.getElementById('chatInquiries').classList.contains('hidden')) {
+    loadChatInquiries();
+  }
 }, 10000);
 
 </script>
