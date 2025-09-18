@@ -5,6 +5,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const admin = require('firebase-admin');
+const jwt = require('jsonwebtoken'); // ✅ إضافة JWT
 require('dotenv').config();
 
 // ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
@@ -34,6 +35,21 @@ let transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS
   }
 });
+
+// ✅ Middleware للتحقق من JWT
+function authenticateAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+  const token = authHeader.split(' ')[1]; // "Bearer TOKEN"
+  if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ success: false, message: 'Forbidden' });
+    req.admin = decoded;
+    next();
+  });
+}
 
 // دوال إشعارات
 async function sendEmailNotification(subject, text) {
@@ -71,12 +87,11 @@ async function sendTelegramNotification(message) {
 // ----------------- Routes -----------------
 
 // ----------------- API الطلبات -----------------
-app.get('/api/requests', async (req, res) => {
+app.get('/api/requests', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
     const requests = snap.docs.map(doc => {
       const data = doc.data();
-      // إذا فيه سكرين تحويل، حوّله لرابط كامل
       if (data.screenshot && data.screenshot !== '') {
         data.screenshot = `/uploads/${data.screenshot}`;
       } else {
@@ -145,7 +160,6 @@ app.post('/reserve', async (req, res) => {
       return res.status(400).send('البيانات غير مكتملة');
     }
 
-    // التحقق من وجود ملف سكرين شوت
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -160,8 +174,8 @@ app.post('/reserve', async (req, res) => {
       nationalId,
       phone,
       email,
-      senderPhone, // إضافة الرقم المحول
-      screenshot: filename, // إضافة صورة التحويل
+      senderPhone,
+      screenshot: filename,
       reserved_at: new Date().toISOString()
     };
 
@@ -182,16 +196,17 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
-// تسجيل الدخول للادمن
+// تسجيل الدخول للادمن => توليد JWT
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    return res.redirect('/dashboard.html');
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '2h' });
+    return res.json({ success: true, token });
   }
-  res.send('خطأ في تسجيل الدخول');
+  res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
 
-// التحقق من النتيجة للطالب - الإصدار المصحح
+// ✅ التحقق من النتيجة للطالب
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
@@ -200,33 +215,29 @@ app.post('/api/check-result', async (req, res) => {
     const snap = await requestsRef.where('phone', '==', phone).get();
 
     if (snap.empty) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد' 
+      return res.status(404).json({
+        success: false,
+        message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد'
       });
     }
 
     const requestDoc = snap.docs[0];
     const requestData = requestDoc.data();
 
-    // التحقق إذا تم الدفع
     if (!requestData.paid) {
-      return res.status(402).json({ 
-        success: false, 
-        message: 'لم يتم الدفع بعد' 
+      return res.status(402).json({
+        success: false,
+        message: 'لم يتم الدفع بعد'
       });
     }
 
-    // إذا كانت النتيجة مخزنة في حقل result
     if (requestData.result) {
       return res.json({
         success: true,
         result: requestData.result
       });
     }
-    
-    // إذا كانت البيانات مخزنة مباشرة في الطلب (وهذا هو الأرجح بناءً على البيانات)
-    // إرجاع بيانات النتيجة مباشرة من الطلب
+
     res.json({
       success: true,
       result: {
@@ -246,14 +257,15 @@ app.post('/api/check-result', async (req, res) => {
 
   } catch (error) {
     console.error('Error in /api/check-result:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'حدث خطأ في الخادم: ' + error.message 
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ في الخادم: ' + error.message
     });
   }
 });
-// فتح نتيجة
-app.post('/api/open-result', async (req, res) => {
+
+// فتح نتيجة (إدارة فقط)
+app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   const { seatNumber } = req.body;
   try {
     const requestsRef = db.collection('requests');
@@ -281,58 +293,31 @@ app.post('/api/open-result', async (req, res) => {
   }
 });
 
-// إضافة route لفحص البيانات (لأغراض التصحيح فقط)
-app.get('/api/debug-requests', async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      return { id: doc.id, ...doc.data() };
-    });
-    
-    console.log('جميع الطلبات:', JSON.stringify(requests, null, 2));
-    res.json({ requests });
-  } catch (error) {
-    console.error('Error in /api/debug-requests:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
-  if(!message) return res.json({ success: false, message: 'الرسالة فارغة' });
+  if (!message) return res.json({ success: false, message: 'الرسالة فارغة' });
 
   try {
     const newChatInquiry = {
       message,
       userData: userData || {},
       created_at: new Date().toISOString(),
-      status: 'new' // للحالة: جديد / مقروء
+      status: 'new'
     };
 
-    // حفظ في Firestore
     const docRef = await db.collection('chat_inquiries').add(newChatInquiry);
 
-    // إرسال إشعار للادمن (بريد وTelegram) مع بيانات المستخدم
-    const emailText = `استفسار جديد من الدردشة\n\nالاسم: ${userData.name}\nالهاتف: ${userData.phone}\nالبريد: ${userData.email}\n\nالرسالة: ${message}`;
-    
+    // إرسال إشعار للادمن
     const telegramMessage = `
 <b>استفسار جديد من الدردشة:</b>
-👤 <b>الاسم:</b> ${userData.name}
-📞 <b>الهاتف:</b> ${userData.phone}
-📧 <b>البريد:</b> ${userData.email}
+👤 <b>الاسم:</b> ${userData.name || "غير معروف"}
+📞 <b>الهاتف:</b> ${userData.phone || "غير معروف"}
+📧 <b>البريد:</b> ${userData.email || "غير معروف"}
 
 💬 <b>الرسالة:</b>
 ${message}
     `;
-
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: process.env.NOTIFICATION_EMAIL,
-      subject: 'استفسار جديد من الدردشة',
-      text: emailText
-    });
-
     await sendTelegramNotification(telegramMessage);
 
     res.json({ success: true, id: docRef.id });
@@ -342,16 +327,14 @@ ${message}
   }
 });
 
-// ================= APIs للداشبورد =================
-// جلب كل النتائج
-// جلب الاستفسارات للادمن
-app.get('/api/chat-inquiries', async (req, res) => {
+// ========== APIs إدارية (محميّة بـ JWT) ==========
+app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   try {
-    const snap = await db.collection('chat_inquiries').orderBy('created_at','desc').get();
+    const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
     const inquiries = snap.docs.map(doc => {
       const data = doc.data();
-      return { 
-        id: doc.id, 
+      return {
+        id: doc.id,
         message: data.message,
         userName: data.userData?.name || 'غير معروف',
         userPhone: data.userData?.phone || 'غير معروف',
@@ -361,34 +344,30 @@ app.get('/api/chat-inquiries', async (req, res) => {
       };
     });
     res.json({ inquiries });
-  } catch(error){
-    res.status(500).json({ success:false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// حذف استفسار
-app.delete('/api/chat-inquiries/:id', async (req, res) => {
+app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).delete();
     res.json({ success: true });
-  } catch(error){
-    res.status(500).json({ success:false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// تحديث حالة الاستفسار كمقروء
-app.put('/api/chat-inquiries/:id/read', async (req, res) => {
+app.put('/api/chat-inquiries/:id/read', authenticateAdmin, async (req, res) => {
   try {
-    await db.collection('chat_inquiries').doc(req.params.id).update({
-      status: 'read'
-    });
+    await db.collection('chat_inquiries').doc(req.params.id).update({ status: 'read' });
     res.json({ success: true });
-  } catch(error){
-    res.status(500).json({ success:false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-app.get('/api/results', async (req, res) => {
+app.get('/api/results', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('results').get();
     const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -398,8 +377,7 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
-// جلب كل الحجوزات
-app.get('/api/reservations', async (req, res) => {
+app.get('/api/reservations', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
     const reservations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -409,8 +387,7 @@ app.get('/api/reservations', async (req, res) => {
   }
 });
 
-// حذف حجز
-app.delete('/api/reservations/:id', async (req, res) => {
+app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
     res.json({ success: true });
@@ -419,8 +396,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
   }
 });
 
-// حذف طلب دفع
-app.delete('/api/requests/:id', async (req, res) => {
+app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
     res.json({ success: true });
