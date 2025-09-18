@@ -6,38 +6,41 @@ const nodemailer = require('nodemailer');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-// ✅ Firebase config
+// ✅ Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
-
 const db = admin.firestore();
 
+// ✅ Express
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cookieParser());
-app.use(express.static('public'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(fileUpload());
-
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// ✅ إعداد البريد
-let transporter = nodemailer.createTransport({
+// ✅ Static files
+app.use('/uploads', express.static(uploadsDir));
+app.use(express.static('public'));
+
+// ✅ Nodemailer
+const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
 });
 
-// ✅ Middleware للتحقق من JWT من الكوكيز
+// ================= Middleware =================
 function authenticateAdmin(req, res, next) {
-  const token = req.cookies.admin_token;
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
@@ -47,202 +50,191 @@ function authenticateAdmin(req, res, next) {
   });
 }
 
-// ----------------- Auth -----------------
+// ================= Helper functions =================
+async function sendEmailNotification(subject, text) {
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: process.env.NOTIFICATION_EMAIL,
+      subject,
+      text
+    });
+  } catch (err) {
+    console.error('Email error:', err);
+  }
+}
 
+async function sendTelegramNotification(message) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+  try {
+    await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'HTML'
+    });
+  } catch (err) {
+    console.error('Telegram error:', err.message);
+  }
+}
+
+// ================= Routes =================
+
+// ======== Admin login ========
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '2h' });
-    res.cookie("admin_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 2 * 60 * 60 * 1000
-    });
-    return res.redirect("/dashboard.html");
+    return res.json({ success: true, token });
   }
-  res.status(401).send("خطأ في تسجيل الدخول");
+  res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
 
-// ----------------- Routes -----------------
+// ======== Protect dashboard.html ========
+app.get('/dashboard.html', authenticateAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
 
-// ✅ طلبات الدفع
+// ======== Pay route ========
 app.post('/pay', async (req, res) => {
   try {
-    const { name, phone, email } = req.body;
-    let screenshotName = '';
-    if (req.files && req.files.screenshot) {
-      const screenshot = req.files.screenshot;
-      screenshotName = `${Date.now()}_${screenshot.name}`;
-      await screenshot.mv(path.join(uploadsDir, screenshotName));
-    }
+    const { nationalId, seatNumber, phone, email } = req.body;
+    if (!req.files || !req.files.screenshot) return res.status(400).send('يجب رفع سكرين التحويل');
 
-    const newRequest = { name, phone, email, screenshot: screenshotName, status: 'pending', createdAt: new Date() };
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    const uploadPath = path.join(uploadsDir, filename);
+    await screenshot.mv(uploadPath);
+
+    const newRequest = {
+      nationalId, seatNumber, phone, email,
+      screenshot: filename, paid: false,
+      created_at: new Date().toISOString()
+    };
+
     await db.collection('requests').add(newRequest);
+    await sendEmailNotification('طلب دفع جديد', JSON.stringify(newRequest, null, 2));
+    await sendTelegramNotification(
+      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${phone}\nالبريد: ${email}`
+    );
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
-
-    setImmediate(async () => {
-      try {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER,
-          to: process.env.ADMIN_EMAIL,
-          subject: "طلب دفع جديد",
-          text: `اسم: ${name}\nهاتف: ${phone}\nبريد: ${email}`
-        });
-
-        await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: `طلب دفع جديد:\nالاسم: ${name}\nالهاتف: ${phone}\nالبريد: ${email}`
-        });
-      } catch (err) {
-        console.error("Notification error:", err.message);
-      }
-    });
-
-  } catch (error) {
-    res.status(500).send("حدث خطأ أثناء تسجيل الطلب");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('حدث خطأ في الخادم');
   }
 });
 
-// ✅ الحجز
+// ======== Reserve route ========
 app.post('/reserve', async (req, res) => {
   try {
-    const { name, phone, email } = req.body;
-    const newReservation = { name, phone, email, createdAt: new Date() };
+    const { nationalId, phone, email, senderPhone } = req.body;
+    if (!nationalId || !phone || !email || !senderPhone) return res.status(400).send('البيانات غير مكتملة');
+    if (!req.files || !req.files.screenshot) return res.status(400).send('يجب رفع سكرين التحويل');
+
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    await screenshot.mv(path.join(uploadsDir, filename));
+
+    const newReservation = {
+      nationalId, phone, email, senderPhone,
+      screenshot: filename, reserved_at: new Date().toISOString()
+    };
+
     await db.collection('reservations').add(newReservation);
+    await sendEmailNotification('طلب حجز جديد', JSON.stringify(newReservation, null, 2));
+    await sendTelegramNotification(
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
+    );
 
-    res.send('تم تسجيل حجزك بنجاح.');
+    res.send('تم تسجيل الحجز بنجاح.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('حدث خطأ أثناء معالجة الحجز');
+  }
+});
 
-    setImmediate(async () => {
-      try {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER,
-          to: process.env.ADMIN_EMAIL,
-          subject: "حجز جديد",
-          text: `اسم: ${name}\nهاتف: ${phone}\nبريد: ${email}`
-        });
+// ======== Student check result ========
+app.post('/api/check-result', async (req, res) => {
+  const { phone } = req.body;
+  try {
+    const snap = await db.collection('requests').where('phone', '==', phone).get();
+    if (snap.empty) return res.status(404).json({ success: false, message: 'لم يتم العثور على نتيجة' });
 
-        await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: `حجز جديد:\nالاسم: ${name}\nالهاتف: ${phone}\nالبريد: ${email}`
-        });
-      } catch (err) {
-        console.error("Notification error:", err.message);
+    const requestData = snap.docs[0].data();
+    if (!requestData.paid) return res.status(402).json({ success: false, message: 'لم يتم الدفع بعد' });
+
+    res.json({
+      success: true,
+      result: requestData.result || {
+        name: requestData.name || "غير متوفر",
+        seatNumber: requestData.seatNumber || "غير متوفر",
+        stage: requestData.stage || "غير متوفر",
+        gradeLevel: requestData.gradeLevel || "غير متوفر",
+        schoolName: requestData.schoolName || "غير متوفر",
+        notes: requestData.notes || "لا توجد",
+        mainSubjects: requestData.mainSubjects || [],
+        additionalSubjects: requestData.additionalSubjects || [],
+        totalScore: requestData.totalScore || 0,
+        totalOutOf: requestData.totalOutOf || 0,
+        percentage: requestData.percentage || 0
       }
     });
-
-  } catch (error) {
-    res.status(500).send("حدث خطأ أثناء تسجيل الحجز");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
   }
 });
 
-// ✅ فحص النتيجة
-app.post('/check-result', async (req, res) => {
-  try {
-    const { seatNumber } = req.body;
-    const result = await db.collection('results').doc(seatNumber).get();
-    if (!result.exists) return res.status(404).send("لا توجد نتيجة لهذا الرقم");
-    res.json(result.data());
-  } catch (error) {
-    res.status(500).send("حدث خطأ أثناء البحث عن النتيجة");
-  }
-});
-
-// ✅ فتح النتيجة
-app.post('/open-result', async (req, res) => {
-  try {
-    const { seatNumber } = req.body;
-    const resultRef = db.collection('results').doc(seatNumber);
-    const result = await resultRef.get();
-    if (!result.exists) return res.status(404).send("لا توجد نتيجة لهذا الرقم");
-    await resultRef.update({ opened: true });
-    res.json({ success: true, data: result.data() });
-  } catch (error) {
-    res.status(500).send("حدث خطأ أثناء فتح النتيجة");
-  }
-});
-
-// ✅ رسائل الاستفسارات
-app.post('/api/chat-inquiries', async (req, res) => {
-  try {
-    const { name, phone, email, message } = req.body;
-    const newInquiry = { name, phone, email, message, createdAt: new Date() };
-    await db.collection('inquiries').add(newInquiry);
-
-    res.send("تم استلام استفسارك بنجاح.");
-
-    setImmediate(async () => {
-      try {
-        await transporter.sendMail({
-          from: process.env.SMTP_USER,
-          to: process.env.ADMIN_EMAIL,
-          subject: "استفسار جديد",
-          text: `اسم: ${name}\nهاتف: ${phone}\nبريد: ${email}\nرسالة: ${message}`
-        });
-
-        await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: `استفسار جديد:\nالاسم: ${name}\nالهاتف: ${phone}\nالبريد: ${email}\nالرسالة: ${message}`
-        });
-      } catch (err) {
-        console.error("Notification error:", err.message);
-      }
-    });
-
-  } catch (error) {
-    res.status(500).send("حدث خطأ أثناء إرسال الاستفسار");
-  }
-});
-
-// ✅ APIs للإدارة (محميه)
+// ======== Admin APIs (protected) ========
 app.get('/api/results', authenticateAdmin, async (req, res) => {
-  try {
-    const snap = await db.collection('results').get();
-    const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ results });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.get('/api/reservations', authenticateAdmin, async (req, res) => {
-  try {
-    const snap = await db.collection('reservations').get();
-    const reservations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ reservations });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  const snap = await db.collection('results').get();
+  res.json({ results: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
 });
 
 app.get('/api/requests', authenticateAdmin, async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      const data = doc.data();
-      if (data.screenshot && data.screenshot !== '') {
-        data.screenshot = `/uploads/${data.screenshot}`;
-      } else {
-        data.screenshot = null;
-      }
-      return { id: doc.id, ...data };
-    });
-    res.json({ requests });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  const snap = await db.collection('requests').get();
+  res.json({ requests: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
 });
 
-app.get('/api/inquiries', authenticateAdmin, async (req, res) => {
-  try {
-    const snap = await db.collection('inquiries').get();
-    const inquiries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json({ inquiries });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+app.get('/api/reservations', authenticateAdmin, async (req, res) => {
+  const snap = await db.collection('reservations').get();
+  res.json({ reservations: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
 });
 
-// ----------------- Start -----------------
+app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
+  const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
+  res.json({ inquiries: snap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      message: data.message,
+      userName: data.userData?.name || 'غير معروف',
+      userPhone: data.userData?.phone || 'غير معروف',
+      userEmail: data.userData?.email || 'غير معروف',
+      created_at: data.created_at,
+      status: data.status
+    };
+  })});
+});
+
+// Delete routes
+app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
+  await db.collection('requests').doc(req.params.id).delete();
+  res.json({ success: true });
+});
+
+app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
+  await db.collection('reservations').doc(req.params.id).delete();
+  res.json({ success: true });
+});
+
+app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
+  await db.collection('chat_inquiries').doc(req.params.id).delete();
+  res.json({ success: true });
+});
+
+// ============ Start server ============
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
