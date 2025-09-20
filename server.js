@@ -36,16 +36,35 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-// ✅ Middleware للتحقق من JWT
+// ✅ Middleware للتحقق من JWT - معدل
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers['authorization'];
-  if (!authHeader) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  
+  if (!authHeader) {
+    console.log('لم يتم إرسال token');
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
 
   const token = authHeader.split(' ')[1]; // "Bearer TOKEN"
-  if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  
+  if (!token) {
+    console.log('صيغة Authorization header غير صحيحة');
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (err) {
+      console.log('Token verification failed:', err.message);
+      
+      if (err.name === 'TokenExpiredError') {
+        return res.status(403).json({ success: false, message: 'Token منتهي الصلاحية' });
+      } else if (err.name === 'JsonWebTokenError') {
+        return res.status(403).json({ success: false, message: 'Token غير صالح' });
+      } else {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+      }
+    }
+    
     req.admin = decoded;
     next();
   });
@@ -125,10 +144,13 @@ app.post('/pay', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
+    // تنظيف رقم الهاتف قبل الحفظ
+    const cleanPhone = phone.replace(/\D/g, '');
+
     const newRequest = {
       nationalId,
       seatNumber,
-      phone,
+      phone: cleanPhone, // حفظ رقم الهاتف بعد التنظيف
       email,
       screenshot: filename,
       paid: false,
@@ -142,7 +164,7 @@ app.post('/pay', async (req, res) => {
       `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${phone}\nالبريد: ${email}`
+      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}`
     );
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
@@ -170,11 +192,15 @@ app.post('/reserve', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
+    // تنظيف أرقام الهواتف قبل الحفظ
+    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanSenderPhone = senderPhone.replace(/\D/g, '');
+
     const newReservation = {
       nationalId,
-      phone,
+      phone: cleanPhone,
       email,
-      senderPhone,
+      senderPhone: cleanSenderPhone,
       screenshot: filename,
       reserved_at: new Date().toISOString()
     };
@@ -186,7 +212,7 @@ app.post('/reserve', async (req, res) => {
       `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${phone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
     );
 
     res.send('تم تسجيل الحجز بنجاح.');
@@ -200,8 +226,13 @@ app.post('/reserve', async (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '2h' });
-    return res.json({ success: true, token });
+    // زيادة مدة الصلاحية إلى 24 ساعة
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ 
+      success: true, 
+      token,
+      expiresIn: '24h'
+    });
   }
   res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
@@ -267,10 +298,19 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
-    // إذا لم تكن هناك نتيجة لكن تم الدفع
-    return res.status(200).json({
-      success: false,
-      message: 'تم الدفع ولكن النتيجة غير متاحة بعد، يرجى المحاولة لاحقاً'
+    // إذا لم تكن هناك نتيجة لكن تم الدفع - عرض البيانات الأساسية فقط
+    return res.json({
+      success: true,
+      partialResult: true,
+      result: {
+        name: requestData.name || "غير متوفر",
+        seatNumber: requestData.seatNumber || "غير متوفر",
+        stage: requestData.stage || "غير متوفر",
+        gradeLevel: requestData.gradeLevel || "غير متوفر",
+        schoolName: requestData.schoolName || "غير متوفر",
+        notes: requestData.notes || "لا توجد",
+        message: "تم الدفع بنجاح، جاري تحضير النتيجة الكاملة"
+      }
     });
 
   } catch (error) {
@@ -296,7 +336,9 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     if (seatNumber) {
       requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
     } else if (phone) {
-      requestSnap = await requestsRef.where('phone', '==', phone).get();
+      // تنظيف رقم الهاتف للبحث
+      const cleanPhone = phone.replace(/\D/g, '');
+      requestSnap = await requestsRef.where('phone', '==', cleanPhone).get();
     } else {
       return res.json({ 
         success: false, 
@@ -371,6 +413,7 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     });
   }
 });
+
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
