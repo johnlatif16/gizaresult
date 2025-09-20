@@ -282,35 +282,93 @@ app.post('/api/check-result', async (req, res) => {
   }
 });
 
-// فتح نتيجة (إدارة فقط)
+// ✅ فتح نتيجة (إدارة فقط) - الإصدار المحسّن
 app.post('/api/open-result', authenticateAdmin, async (req, res) => {
-  const { seatNumber } = req.body;
+  const { seatNumber, phone } = req.body;
+  
   try {
     const requestsRef = db.collection('requests');
     const resultsRef = db.collection('results');
-
-    const requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
-    const resultSnap = await resultsRef.where('seatNumber', '==', seatNumber).get();
-
-    if (requestSnap.empty || resultSnap.empty) {
-      return res.json({ success: false, message: 'طلب أو نتيجة غير موجودة' });
+    
+    let requestQuery, resultQuery;
+    
+    // البحث برقم الجلوس أولاً
+    if (seatNumber) {
+      requestQuery = requestsRef.where('seatNumber', '==', seatNumber);
+      resultQuery = resultsRef.where('seatNumber', '==', seatNumber);
+    } 
+    // إذا لم يتم تقديم رقم الجلوس، البحث برقم الهاتف
+    else if (phone) {
+      requestQuery = requestsRef.where('phone', '==', phone);
     }
-
+    else {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'يجب تقديم رقم الجلوس أو رقم الهاتف' 
+      });
+    }
+    
+    // تنفيذ queries
+    const requestSnap = await requestQuery.get();
+    
+    if (requestSnap.empty) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'لم يتم العثور على الطلب' 
+      });
+    }
+    
     const requestDoc = requestSnap.docs[0];
+    const requestData = requestDoc.data();
+    
+    // إذا لم يتم تقديم seatNumber ولكن تم البحث بالهاتف
+    if (!seatNumber && phone) {
+      resultQuery = resultsRef.where('seatNumber', '==', requestData.seatNumber);
+    }
+    
+    const resultSnap = await resultQuery.get();
+    
+    if (resultSnap.empty) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'لم يتم العثور على النتيجة' 
+      });
+    }
+    
     const resultDoc = resultSnap.docs[0];
-
+    const resultData = resultDoc.data();
+    
+    // تحديث الطلب ببيانات النتيجة
     await requestDoc.ref.update({
       paid: true,
-      result: resultDoc.data()
+      result: resultData,
+      name: resultData.name || requestData.name,
+      seatNumber: resultData.seatNumber || requestData.seatNumber,
+      stage: resultData.stage,
+      gradeLevel: resultData.gradeLevel,
+      schoolName: resultData.schoolName,
+      notes: resultData.notes,
+      mainSubjects: resultData.mainSubjects,
+      additionalSubjects: resultData.additionalSubjects,
+      totalScore: resultData.totalScore,
+      totalOutOf: resultData.totalOutOf,
+      percentage: resultData.percentage,
+      openedAt: new Date().toISOString()
     });
-
-    res.json({ success: true });
+    
+    res.json({ 
+      success: true,
+      message: 'تم فتح النتيجة بنجاح'
+    });
+    
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error('Error in /api/open-result:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'حدث خطأ في الخادم: ' + error.message 
+    });
   }
 });
-
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
