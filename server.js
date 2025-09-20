@@ -282,66 +282,66 @@ app.post('/api/check-result', async (req, res) => {
   }
 });
 
-// ✅ فتح نتيجة (إدارة فقط) - الإصدار المحسّن
+// ✅ فتح نتيجة (إدارة فقط) - الإصدار المعدل
 app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   const { seatNumber, phone } = req.body;
-  
+
   try {
     const requestsRef = db.collection('requests');
     const resultsRef = db.collection('results');
+
+    let requestSnap;
     
-    let requestQuery, resultQuery;
-    
-    // البحث برقم الجلوس أولاً
+    // البحث إما برقم الجلوس أو رقم الهاتف
     if (seatNumber) {
-      requestQuery = requestsRef.where('seatNumber', '==', seatNumber);
-      resultQuery = resultsRef.where('seatNumber', '==', seatNumber);
-    } 
-    // إذا لم يتم تقديم رقم الجلوس، البحث برقم الهاتف
-    else if (phone) {
-      requestQuery = requestsRef.where('phone', '==', phone);
-    }
-    else {
-      return res.status(400).json({ 
+      requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
+    } else if (phone) {
+      requestSnap = await requestsRef.where('phone', '==', phone).get();
+    } else {
+      return res.json({ 
         success: false, 
-        message: 'يجب تقديم رقم الجلوس أو رقم الهاتف' 
+        message: 'يجب إدخال رقم الجلوس أو رقم الهاتف' 
       });
     }
-    
-    // تنفيذ queries
-    const requestSnap = await requestQuery.get();
-    
+
     if (requestSnap.empty) {
-      return res.status(404).json({ 
+      return res.json({ 
         success: false, 
         message: 'لم يتم العثور على الطلب' 
       });
     }
-    
+
     const requestDoc = requestSnap.docs[0];
     const requestData = requestDoc.data();
     
-    // إذا لم يتم تقديم seatNumber ولكن تم البحث بالهاتف
-    if (!seatNumber && phone) {
-      resultQuery = resultsRef.where('seatNumber', '==', requestData.seatNumber);
-    }
+    // إذا تم البحث برقم الهاتف، نستخدم رقم الجلوس من الطلب للبحث في النتائج
+    const targetSeatNumber = seatNumber || requestData.seatNumber;
     
-    const resultSnap = await resultQuery.get();
-    
-    if (resultSnap.empty) {
-      return res.status(404).json({ 
+    if (!targetSeatNumber) {
+      return res.json({ 
         success: false, 
-        message: 'لم يتم العثور على النتيجة' 
+        message: 'لا يوجد رقم جلوس في بيانات الطلب' 
       });
     }
-    
+
+    // البحث عن النتيجة باستخدام رقم الجلوس
+    const resultSnap = await resultsRef.where('seatNumber', '==', targetSeatNumber).get();
+
+    if (resultSnap.empty) {
+      return res.json({ 
+        success: false, 
+        message: 'لم يتم العثور على النتيجة لرقم الجلوس: ' + targetSeatNumber 
+      });
+    }
+
     const resultDoc = resultSnap.docs[0];
     const resultData = resultDoc.data();
-    
+
     // تحديث الطلب ببيانات النتيجة
     await requestDoc.ref.update({
       paid: true,
       result: resultData,
+      // نسخ البيانات المهمة للنتيجة
       name: resultData.name || requestData.name,
       seatNumber: resultData.seatNumber || requestData.seatNumber,
       stage: resultData.stage,
@@ -355,12 +355,14 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
       percentage: resultData.percentage,
       openedAt: new Date().toISOString()
     });
+
+    console.log('تم فتح النتيجة بنجاح لرقم الجلوس:', targetSeatNumber);
     
     res.json({ 
       success: true,
-      message: 'تم فتح النتيجة بنجاح'
+      message: 'تم فتح النتيجة بنجاح للطالب: ' + (resultData.name || 'غير معروف')
     });
-    
+
   } catch (error) {
     console.error('Error in /api/open-result:', error);
     res.status(500).json({ 
