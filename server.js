@@ -206,23 +206,51 @@ app.post('/login', (req, res) => {
   res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
 
-// ✅ التحقق من النتيجة للطالب
+// ✅ التحقق من النتيجة للطالب - الإصدار المحسّن
 app.post('/api/check-result', async (req, res) => {
   const { phone } = req.body;
 
   try {
-    const requestsRef = db.collection('requests');
-    const snap = await requestsRef.where('phone', '==', phone).get();
+    // تنظيف رقم الهاتف لإزالة أي مسافات أو رموز
+    const cleanPhone = phone.replace(/\D/g, '');
 
+    const requestsRef = db.collection('requests');
+    let requestDoc = null;
+    let requestData = null;
+    
+    // البحث بعدة طرق لضمان العثور على الطلب
+    let snap = await requestsRef.where('phone', '==', cleanPhone).get();
+    
+    // إذا لم يتم العثور، جرب البحث بالرقم الأصلي
     if (snap.empty) {
+      snap = await requestsRef.where('phone', '==', phone).get();
+    }
+
+    // إذا لم يتم العثور بعد، جرب البحث بأي شكل من أشكال الهاتف
+    if (snap.empty) {
+      const allRequests = await requestsRef.get();
+      const filteredDocs = allRequests.docs.filter(doc => {
+        const data = doc.data();
+        const requestPhone = data.phone || '';
+        const cleanRequestPhone = requestPhone.replace(/\D/g, '');
+        return cleanRequestPhone.includes(cleanPhone) || cleanPhone.includes(cleanRequestPhone);
+      });
+      
+      if (filteredDocs.length > 0) {
+        requestDoc = filteredDocs[0];
+        requestData = requestDoc.data();
+      }
+    } else {
+      requestDoc = snap.docs[0];
+      requestData = requestDoc.data();
+    }
+
+    if (!requestData) {
       return res.status(404).json({
         success: false,
         message: 'لم يتم العثور على نتيجة لهذا الرقم أو لم يتم الدفع بعد'
       });
     }
-
-    const requestDoc = snap.docs[0];
-    const requestData = requestDoc.data();
 
     if (!requestData.paid) {
       return res.status(402).json({
@@ -231,6 +259,7 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
+    // إذا كانت النتيجة موجودة ومفتوحة
     if (requestData.result) {
       return res.json({
         success: true,
@@ -238,21 +267,10 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      result: {
-        name: requestData.name || "غير متوفر",
-        seatNumber: requestData.seatNumber || "غير متوفر",
-        stage: requestData.stage || "غير متوفر",
-        gradeLevel: requestData.gradeLevel || "غير متوفر",
-        schoolName: requestData.schoolName || "غير متوفر",
-        notes: requestData.notes || "لا توجد",
-        mainSubjects: requestData.mainSubjects || [],
-        additionalSubjects: requestData.additionalSubjects || [],
-        totalScore: requestData.totalScore || 0,
-        totalOutOf: requestData.totalOutOf || 0,
-        percentage: requestData.percentage || 0
-      }
+    // إذا لم تكن هناك نتيجة لكن تم الدفع
+    return res.status(200).json({
+      success: false,
+      message: 'تم الدفع ولكن النتيجة غير متاحة بعد، يرجى المحاولة لاحقاً'
     });
 
   } catch (error) {
