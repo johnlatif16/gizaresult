@@ -222,6 +222,56 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
+// ✅ API جديدة للحجز عن طريق التليفون
+app.post('/api/reserve-by-phone', async (req, res) => {
+  try {
+    const { nationalId, phone, email, senderPhone } = req.body;
+    if (!nationalId || !phone || !email || !senderPhone) {
+      return res.status(400).json({ success: false, message: 'البيانات غير مكتملة' });
+    }
+
+    if (!req.files || !req.files.screenshot) {
+      return res.status(400).json({ success: false, message: 'يجب رفع سكرين التحويل' });
+    }
+
+    const screenshot = req.files.screenshot;
+    const filename = Date.now() + path.extname(screenshot.name);
+    const uploadPath = path.join(uploadsDir, filename);
+
+    await screenshot.mv(uploadPath);
+
+    // تنظيف أرقام الهواتف قبل الحفظ
+    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanSenderPhone = senderPhone.replace(/\D/g, '');
+
+    const newReservation = {
+      nationalId,
+      phone: cleanPhone,
+      email,
+      senderPhone: cleanSenderPhone,
+      screenshot: filename,
+      reserved_at: new Date().toISOString(),
+      method: 'phone' // ✅ عشان نفرق انه حجز بالتليفون
+    };
+
+    await db.collection('reservations').add(newReservation);
+
+    // إشعارات
+    await sendEmailNotification(
+      '📞 طلب حجز جديد عن طريق التليفون',
+      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
+    );
+    await sendTelegramNotification(
+      `<b>📞 طلب حجز جديد عن طريق التليفون:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
+    );
+
+    res.json({ success: true, message: 'تم تسجيل الحجز بنجاح.' });
+  } catch (error) {
+    console.error('Error in /api/reserve-by-phone:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ أثناء معالجة الحجز' });
+  }
+});
+
 // تسجيل الدخول للادمن => توليد JWT
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
