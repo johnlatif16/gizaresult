@@ -164,7 +164,7 @@ app.post('/pay', async (req, res) => {
       `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}`
+      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${senderPhone}`
     );
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
