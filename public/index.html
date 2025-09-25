@@ -86,6 +86,23 @@
     box-shadow: 0 6px 12px rgba(42, 171, 238, 0.3);
   }
   
+  /* زر التطبيق الجديد */
+  .btn-app {
+    background: linear-gradient(to right, #FF6B6B, #FF8E53);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(255, 107, 107, 0.2);
+  }
+  
+  .btn-app:hover {
+    background: linear-gradient(to right, #FF8E53, #FF6B6B);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
+  }
+  
   .alert-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -229,7 +246,7 @@
       padding: 16px;
     }
     
-    .btn-primary, .btn-secondary, .btn-telegram {
+    .btn-primary, .btn-secondary, .btn-telegram, .btn-app {
       width: 100%;
       margin-bottom: 10px;
     }
@@ -422,13 +439,12 @@
         <i class="fab fa-telegram-plane"></i>
         حجز عبر التيليجرام
       </a>
-
-<div class="text-center my-6">
-  <a href="https://apkpure.com/gizaresult/com.example.giza_result_app" target="_blank" 
-     class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition">
-    📲 الحجز عبر التطبيق
-  </a>
-</div>
+      
+      <!-- زر حجز عبر التطبيق الجديد -->
+      <button onclick="openApp()" class="btn-app text-center">
+        <i class="fas fa-mobile-alt"></i>
+        حجز عبر التطبيق
+      </button>
       
       <button onclick="showReservation()" class="btn-secondary">
         <i class="fas fa-globe"></i>
