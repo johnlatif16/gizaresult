@@ -156,8 +156,8 @@ app.post('/pay', async (req, res) => {
       email,
       screenshot: filename,
       paid: false,
-      created_at: new Date().toISOString(),
-      orderId: orderId || null // ✅ إضافة orderId
+      orderId: orderId || null, // إضافة orderId
+      created_at: new Date().toISOString()
     };
 
     await db.collection('requests').add(newRequest);
@@ -177,7 +177,7 @@ app.post('/pay', async (req, res) => {
   }
 });
 
-// الحجز التقليدي
+// الحجز
 app.post('/reserve', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone, orderId } = req.body;
@@ -205,9 +205,8 @@ app.post('/reserve', async (req, res) => {
       email,
       senderPhone: cleanSenderPhone,
       screenshot: filename,
-      reserved_at: new Date().toISOString(),
-      method: 'traditional', // ✅ تمييز النوع
-      orderId: orderId || null // ✅ إضافة orderId
+      orderId: orderId || null, // إضافة orderId
+      reserved_at: new Date().toISOString()
     };
 
     await db.collection('reservations').add(newReservation);
@@ -255,9 +254,9 @@ app.post('/api/reserve-by-phone', async (req, res) => {
       email,
       senderPhone: cleanSenderPhone,
       screenshot: filename,
+      orderId: orderId || null, // إضافة orderId
       reserved_at: new Date().toISOString(),
-      method: 'phone', // ✅ عشان نفرق انه حجز بالتليفون
-      orderId: orderId || null // ✅ إضافة orderId
+      method: 'phone' // ✅ عشان نفرق انه حجز بالتليفون
     };
 
     await db.collection('reservations').add(newReservation);
@@ -457,28 +456,6 @@ ${message}
 });
 
 // ========== APIs إدارية (محميّة بـ JWT) ==========
-
-// ✅ API لطلبات الدفع (محمي)
-app.get('/api/requests', authenticateAdmin, async (req, res) => {
-  try {
-    const snap = await db.collection('requests').get();
-    const requests = snap.docs.map(doc => {
-      const data = doc.data();
-      if (data.screenshot && data.screenshot !== '') {
-        data.screenshot = `/uploads/${data.screenshot}`;
-      } else {
-        data.screenshot = null;
-      }
-      return { id: doc.id, ...data };
-    });
-    res.json({ requests });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ✅ API للاستفسارات (محمي)
 app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
@@ -500,7 +477,6 @@ app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API لحذف الاستفسارات (محمي)
 app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).delete();
@@ -510,7 +486,6 @@ app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API لتحديث حالة الاستفسار (محمي)
 app.put('/api/chat-inquiries/:id/read', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).update({ status: 'read' });
@@ -520,7 +495,6 @@ app.put('/api/chat-inquiries/:id/read', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API للنتائج (محمي)
 app.get('/api/results', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -531,7 +505,6 @@ app.get('/api/results', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API للحجوزات (محمي)
 app.get('/api/reservations', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
@@ -542,7 +515,6 @@ app.get('/api/reservations', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API لحذف الحجوزات (محمي)
 app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -552,7 +524,6 @@ app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API لحذف الطلبات (محمي)
 app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -562,7 +533,7 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ✅ API للدفع عبر OPay
+// ========== APIs OPay ==========
 app.post('/api/opay-pay', async (req, res) => {
   try {
     const { amount, description, orderId } = req.body;
@@ -590,7 +561,6 @@ app.post('/api/opay-pay', async (req, res) => {
   }
 });
 
-// ✅ Webhook لاستقبال تحديثات الدفع من OPay
 app.post('/api/opay-webhook', async (req, res) => {
   try {
     const { order_id, status, transaction_id } = req.body;
@@ -598,8 +568,11 @@ app.post('/api/opay-webhook', async (req, res) => {
     if (status === "SUCCESS") {
       // تحديث حالة الطلب في Firestore
       const requestsRef = db.collection('requests');
-      const snap = await requestsRef.where('orderId', '==', order_id).get();
-
+      const reservationsRef = db.collection('reservations');
+      
+      // البحث في الطلبات أولاً
+      let snap = await requestsRef.where('orderId', '==', order_id).get();
+      
       if (!snap.empty) {
         const requestDoc = snap.docs[0];
         await requestDoc.ref.update({
@@ -611,6 +584,22 @@ app.post('/api/opay-webhook', async (req, res) => {
 
         await sendEmailNotification("تم الدفع بنجاح", `تم الدفع عبر OPay للطلب: ${order_id}`);
         await sendTelegramNotification(`✅ تم الدفع عبر OPay للطلب: ${order_id}`);
+      } else {
+        // البحث في الحجوزات
+        snap = await reservationsRef.where('orderId', '==', order_id).get();
+        
+        if (!snap.empty) {
+          const reservationDoc = snap.docs[0];
+          await reservationDoc.ref.update({
+            paid: true,
+            paymentMethod: "OPay",
+            transactionId: transaction_id,
+            paidAt: new Date().toISOString()
+          });
+
+          await sendEmailNotification("تم الدفع بنجاح للحجز", `تم الدفع عبر OPay للحجز: ${order_id}`);
+          await sendTelegramNotification(`✅ تم الدفع عبر OPay للحجز: ${order_id}`);
+        }
       }
     }
 
@@ -618,6 +607,149 @@ app.post('/api/opay-webhook', async (req, res) => {
   } catch (error) {
     console.error("OPay webhook error:", error.message);
     res.status(500).send("Error");
+  }
+});
+
+// ========== API للتحقق من حالة الدفع ==========
+app.get('/api/check-payment-status', async (req, res) => {
+  const { orderId } = req.query;
+  
+  try {
+    const requestsRef = db.collection('requests');
+    const reservationsRef = db.collection('reservations');
+    
+    // البحث في الطلبات أولاً
+    let snap = await requestsRef.where('orderId', '==', orderId).get();
+    
+    if (!snap.empty) {
+      const requestDoc = snap.docs[0];
+      const requestData = requestDoc.data();
+      
+      return res.json({
+        status: requestData.paid ? 'SUCCESS' : 'PENDING',
+        orderId: orderId,
+        type: 'request'
+      });
+    }
+    
+    // إذا لم يوجد في الطلبات، البحث في الحجوزات
+    snap = await reservationsRef.where('orderId', '==', orderId).get();
+    
+    if (!snap.empty) {
+      const reservationDoc = snap.docs[0];
+      const reservationData = reservationDoc.data();
+      
+      return res.json({
+        status: reservationData.paid ? 'SUCCESS' : 'PENDING',
+        orderId: orderId,
+        type: 'reservation'
+      });
+    }
+    
+    // إذا لم يوجد الطلب
+    res.json({
+      status: 'NOT_FOUND',
+      orderId: orderId
+    });
+    
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      message: error.message
+    });
+  }
+});
+
+// ========== APIs إضافية محمية بـ JWT ==========
+app.get('/api/orders', authenticateAdmin, async (req, res) => {
+  try {
+    // جلب جميع الطلبات مع orderId
+    const requestsSnap = await db.collection('requests').where('orderId', '!=', null).get();
+    const reservationsSnap = await db.collection('reservations').where('orderId', '!=', null).get();
+    
+    const orders = [];
+    
+    requestsSnap.docs.forEach(doc => {
+      const data = doc.data();
+      orders.push({
+        id: doc.id,
+        type: 'request',
+        orderId: data.orderId,
+        nationalId: data.nationalId,
+        phone: data.phone,
+        paid: data.paid || false,
+        createdAt: data.created_at,
+        ...data
+      });
+    });
+    
+    reservationsSnap.docs.forEach(doc => {
+      const data = doc.data();
+      orders.push({
+        id: doc.id,
+        type: 'reservation',
+        orderId: data.orderId,
+        nationalId: data.nationalId,
+        phone: data.phone,
+        paid: data.paid || false,
+        createdAt: data.reserved_at,
+        ...data
+      });
+    });
+    
+    // ترتيب حسب التاريخ
+    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    res.json({ orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API لتحديث حالة الدفع يدوياً (للاستخدام في حالة وجود مشاكل في webhook)
+app.put('/api/orders/:orderId/mark-paid', authenticateAdmin, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { transactionId } = req.body;
+    
+    const requestsRef = db.collection('requests');
+    const reservationsRef = db.collection('reservations');
+    
+    // البحث في الطلبات أولاً
+    let snap = await requestsRef.where('orderId', '==', orderId).get();
+    
+    if (!snap.empty) {
+      const requestDoc = snap.docs[0];
+      await requestDoc.ref.update({
+        paid: true,
+        paymentMethod: "Manual",
+        transactionId: transactionId || 'manual',
+        paidAt: new Date().toISOString()
+      });
+    } else {
+      // البحث في الحجوزات
+      snap = await reservationsRef.where('orderId', '==', orderId).get();
+      
+      if (!snap.empty) {
+        const reservationDoc = snap.docs[0];
+        await reservationDoc.ref.update({
+          paid: true,
+          paymentMethod: "Manual",
+          transactionId: transactionId || 'manual',
+          paidAt: new Date().toISOString()
+        });
+      } else {
+        return res.status(404).json({ success: false, message: 'لم يتم العثور على الطلب' });
+      }
+    }
+    
+    await sendEmailNotification("تم تحديث حالة الدفع يدوياً", `تم تحديث حالة الدفع للطلب: ${orderId}`);
+    await sendTelegramNotification(`✅ تم تحديث حالة الدفع يدوياً للطلب: ${orderId}`);
+    
+    res.json({ success: true, message: 'تم تحديث حالة الدفع بنجاح' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
