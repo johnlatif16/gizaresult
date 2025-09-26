@@ -5,10 +5,9 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const admin = require('firebase-admin');
-const jwt = require('jsonwebtoken'); // ✅ إضافة JWT
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
 admin.initializeApp({
@@ -27,18 +26,16 @@ app.use(fileUpload());
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// إعداد البريد
 let transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587
+  secure: process.env.SMTP_SECURE === "true",
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
   }
 });
 
-// ✅ Middleware للتحقق من JWT - معدل
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers['authorization'];
   
@@ -47,7 +44,7 @@ function authenticateAdmin(req, res, next) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  const token = authHeader.split(' ')[1]; // "Bearer TOKEN"
+  const token = authHeader.split(' ')[1];
   
   if (!token) {
     console.log('صيغة Authorization header غير صحيحة');
@@ -72,7 +69,6 @@ function authenticateAdmin(req, res, next) {
   });
 }
 
-// دوال إشعارات
 async function sendEmailNotification(subject, text) {
   try {
     await transporter.sendMail({
@@ -105,9 +101,6 @@ async function sendTelegramNotification(message) {
   }
 }
 
-// ----------------- Routes -----------------
-
-// ----------------- API الطلبات -----------------
 app.get('/api/requests', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
@@ -127,12 +120,10 @@ app.get('/api/requests', authenticateAdmin, async (req, res) => {
   }
 });
 
-// صفحة الدفع
 app.get('/pay', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pay.html'));
 });
 
-// رفع طلب الدفع
 app.post('/pay', async (req, res) => {
   try {
     const { nationalId, seatNumber, phone, email, orderId } = req.body;
@@ -146,17 +137,16 @@ app.post('/pay', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
-    // تنظيف رقم الهاتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
 
     const newRequest = {
       nationalId,
       seatNumber,
-      phone: cleanPhone, // حفظ رقم الهاتف بعد التنظيف
+      phone: cleanPhone,
       email,
       screenshot: filename,
       paid: false,
-      orderId: orderId || null, // إضافة orderId
+      orderId: orderId || null,
       created_at: new Date().toISOString()
     };
 
@@ -177,7 +167,6 @@ app.post('/pay', async (req, res) => {
   }
 });
 
-// الحجز
 app.post('/reserve', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone, orderId } = req.body;
@@ -195,7 +184,6 @@ app.post('/reserve', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
-    // تنظيف أرقام الهواتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
     const cleanSenderPhone = senderPhone.replace(/\D/g, '');
 
@@ -205,7 +193,7 @@ app.post('/reserve', async (req, res) => {
       email,
       senderPhone: cleanSenderPhone,
       screenshot: filename,
-      orderId: orderId || null, // إضافة orderId
+      orderId: orderId || null,
       reserved_at: new Date().toISOString()
     };
 
@@ -226,7 +214,6 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
-// ✅ API جديدة للحجز عن طريق التليفون مع orderId
 app.post('/api/reserve-by-phone', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone, orderId } = req.body;
@@ -244,7 +231,6 @@ app.post('/api/reserve-by-phone', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
-    // تنظيف أرقام الهواتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
     const cleanSenderPhone = senderPhone.replace(/\D/g, '');
 
@@ -254,14 +240,13 @@ app.post('/api/reserve-by-phone', async (req, res) => {
       email,
       senderPhone: cleanSenderPhone,
       screenshot: filename,
-      orderId: orderId || null, // إضافة orderId
+      orderId: orderId || null,
       reserved_at: new Date().toISOString(),
-      method: 'phone' // ✅ عشان نفرق انه حجز بالتليفون
+      method: 'phone'
     };
 
     await db.collection('reservations').add(newReservation);
 
-    // إشعارات
     await sendEmailNotification(
       '📞 طلب حجز جديد عن طريق التليفون',
       `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
@@ -277,11 +262,9 @@ app.post('/api/reserve-by-phone', async (req, res) => {
   }
 });
 
-// تسجيل الدخول للادمن => توليد JWT
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    // زيادة مدة الصلاحية إلى 24 ساعة
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '24h' });
     return res.json({ 
       success: true, 
@@ -292,7 +275,6 @@ app.post('/login', (req, res) => {
   res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
 
-// ✅ التحقق من النتيجة للطالب (إصدار محسّن)
 app.post('/api/check-result', async (req, res) => {
   const { phone, seatNumber } = req.body;
 
@@ -300,7 +282,6 @@ app.post('/api/check-result', async (req, res) => {
     const requestsRef = db.collection('requests');
     let query = requestsRef.where('phone', '==', phone);
     
-    // إضافة البحث برقم الجلوس إذا كان متوفراً
     if (seatNumber) {
       query = requestsRef.where('seatNumber', '==', seatNumber);
     }
@@ -324,7 +305,6 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
-    // إذا كانت النتيجة مخزنة مباشرة في الطلب
     if (requestData.result) {
       return res.json({
         success: true,
@@ -332,7 +312,6 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
-    // إذا كانت النتيجة في مجموعة منفصلة (results)
     if (requestData.seatNumber) {
       const resultsRef = db.collection('results');
       const resultSnap = await resultsRef.where('seatNumber', '==', requestData.seatNumber).get();
@@ -341,7 +320,6 @@ app.post('/api/check-result', async (req, res) => {
         const resultDoc = resultSnap.docs[0];
         const resultData = resultDoc.data();
         
-        // تحديث الطلب بتفاصيل النتيجة
         await requestDoc.ref.update({
           result: resultData
         });
@@ -367,7 +345,6 @@ app.post('/api/check-result', async (req, res) => {
   }
 });
 
-// ✅ فتح نتيجة (إدارة فقط) - إصدار محسّن
 app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   const { seatNumber } = req.body;
   
@@ -375,7 +352,6 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     const requestsRef = db.collection('requests');
     const resultsRef = db.collection('results');
 
-    // البحث عن الطلب باستخدام رقم الجلوس
     const requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
     
     if (requestSnap.empty) {
@@ -387,7 +363,6 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
 
     const requestDoc = requestSnap.docs[0];
     
-    // البحث عن النتيجة باستخدام رقم الجلوس
     const resultSnap = await resultsRef.where('seatNumber', '==', seatNumber).get();
     
     if (resultSnap.empty) {
@@ -400,7 +375,6 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     const resultDoc = resultSnap.docs[0];
     const resultData = resultDoc.data();
 
-    // تحديث الطلب بحالة الدفع والنتيجة
     await requestDoc.ref.update({
       paid: true,
       result: resultData,
@@ -421,7 +395,6 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   }
 });
 
-// إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
   if (!message) return res.json({ success: false, message: 'الرسالة فارغة' });
@@ -436,7 +409,6 @@ app.post('/api/send-admin-message', async (req, res) => {
 
     const docRef = await db.collection('chat_inquiries').add(newChatInquiry);
 
-    // إرسال إشعار للادمن
     const telegramMessage = `
 <b>استفسار جديد من الدردشة:</b>
 👤 <b>الاسم:</b> ${userData.name || "غير معروف"}
@@ -455,7 +427,6 @@ ${message}
   }
 });
 
-// ========== APIs إدارية (محميّة بـ JWT) ==========
 app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
@@ -533,13 +504,11 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ========== APIs OPay ==========
-// ========== APIs OPay - الإصدار المصحح ==========
+// ========== APIs OPay - الإصدار النهائي ==========
 app.post('/api/opay-pay', async (req, res) => {
   try {
     const { amount, description, orderId } = req.body;
 
-    // التحقق من وجود البيانات المطلوبة
     if (!amount || !description || !orderId) {
       return res.status(400).json({ 
         success: false, 
@@ -547,131 +516,144 @@ app.post('/api/opay-pay', async (req, res) => {
       });
     }
 
-    // التحقق من تكوين OPay
     if (!process.env.OPAY_MERCHANT_ID || !process.env.OPAY_API_KEY) {
-      console.error('تكوين OPay غير مكتمل');
+      console.error('❌ تكوين OPay غير مكتمل');
       return res.status(500).json({ 
         success: false, 
         message: 'تكوين نظام الدفع غير مكتمل' 
       });
     }
 
-    // استخدام بيانات اختبار إذا كانت في وضع التطوير
     const isDevelopment = process.env.NODE_ENV === 'development';
     
     if (isDevelopment) {
-      // في وضع التطوير، نعيد رابط وهمي للاختبار
       console.log('وضع التطوير - إنشاء جلسة دفع وهمية');
       return res.json({ 
         success: true, 
-        paymentUrl: `https://gizaresult-production.up.railway.app/payment-test?orderId=${orderId}&amount=${amount}`,
+        paymentUrl: `/?status=test&orderId=${orderId}&amount=${amount}`,
         isTest: true
       });
     }
 
-    // في حالة الإنتاج - الاتصال بـ OPay الحقيقي
+    console.log('🚀 بدء عملية دفع حقيقية عبر OPay:', { orderId, amount, description });
+
+    const baseUrl = process.env.OPAY_CALLBACK_URL.replace('/api/opay-webhook', '');
+    const callbackUrl = `${baseUrl}/api/opay-webhook`;
+    const returnUrl = `${baseUrl}/?status=success&orderId=${orderId}`;
+    const cancelUrl = `${baseUrl}/?status=cancel&orderId=${orderId}`;
+
     const opayRequest = {
-      merchant_id: process.env.OPAY_MERCHANT_ID,
-      order_id: orderId,
-      amount: amount,
-      currency: "EGP", // تغيير من ETB إلى EGP (جنيه مصري)
+      merchantId: process.env.OPAY_MERCHANT_ID,
+      orderId: orderId,
+      amount: amount.toString(),
+      currency: "EGP",
       description: description,
-      callback_url: process.env.OPAY_CALLBACK_URL,
-      return_url: process.env.OPAY_CALLBACK_URL // إضافة return_url
+      callbackUrl: callbackUrl,
+      returnUrl: returnUrl,
+      cancelUrl: cancelUrl,
+      customer: {
+        email: "customer@example.com",
+        name: "Customer"
+      }
     };
 
-    console.log('إرسال طلب إلى OPay:', opayRequest);
+    console.log('📤 إرسال طلب إلى OPay:', opayRequest);
 
-    const opayResponse = await axios.post("https://api.opaycheckout.com/api/v1/international/cashier/create", opayRequest, {
-      headers: {
-        Authorization: `Bearer ${process.env.OPAY_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      timeout: 10000 // timeout 10 ثواني
-    });
+    const opayResponse = await axios.post(
+      "https://api.opaycheckout.com/api/v1/international/cashier/create", 
+      opayRequest, 
+      {
+        headers: {
+          "Authorization": `Bearer ${process.env.OPAY_API_KEY}`,
+          "Content-Type": "application/json",
+          "MerchantId": process.env.OPAY_MERCHANT_ID
+        },
+        timeout: 15000
+      }
+    );
 
-    console.log('استجابة OPay:', opayResponse.data);
+    console.log('📥 استجابة OPay:', opayResponse.data);
 
-    if (opayResponse.data && opayResponse.data.data && opayResponse.data.data.cashierUrl) {
-      res.json({ 
-        success: true, 
-        paymentUrl: opayResponse.data.data.cashierUrl 
-      });
+    if (opayResponse.data && opayResponse.data.code === '00000') {
+      if (opayResponse.data.data && opayResponse.data.data.cashierUrl) {
+        res.json({ 
+          success: true, 
+          paymentUrl: opayResponse.data.data.cashierUrl,
+          orderId: orderId
+        });
+      } else {
+        throw new Error('رابط الدفع غير متوفر في استجابة OPay');
+      }
     } else {
-      throw new Error('استجابة غير متوقعة من OPay');
+      throw new Error(opayResponse.data.message || `خطأ من OPay: ${opayResponse.data.code}`);
     }
 
   } catch (error) {
-    console.error("Error creating OPay payment:", error.response?.data || error.message);
+    console.error("❌ خطأ في إنشاء عملية الدفع عبر OPay:", error.message);
     
-    // إعادة رسالة خطأ أكثر وضوحاً
-    let errorMessage = 'فشل في إنشاء جلسة الدفع';
+    let errorMessage = 'فشل في الاتصال بنظام الدفع';
     
     if (error.response) {
-      // خطأ من API OPay
-      errorMessage = `خطأ من نظام الدفع: ${error.response.data?.message || error.response.statusText}`;
-    } else if (error.code === 'ECONNABORTED') {
-      errorMessage = 'انتهت مهلة الاتصال بنظام الدفع';
+      const opayError = error.response.data;
+      errorMessage = `خطأ من نظام الدفع: ${opayError.message || `كود الخطأ: ${opayError.code}`}`;
     }
     
     res.status(500).json({ 
       success: false, 
-      message: errorMessage,
-      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: errorMessage
     });
   }
 });
 
 app.post('/api/opay-webhook', async (req, res) => {
   try {
-    const { order_id, status, transaction_id } = req.body;
-
-    if (status === "SUCCESS") {
-      // تحديث حالة الطلب في Firestore
+    console.log('🔔 استلام ويب هوك من OPay:', req.body);
+    
+    const { orderId, status, transactionId, amount } = req.body;
+    
+    if (status === "SUCCESS" || status === "success") {
       const requestsRef = db.collection('requests');
       const reservationsRef = db.collection('reservations');
       
-      // البحث في الطلبات أولاً
-      let snap = await requestsRef.where('orderId', '==', order_id).get();
+      let snap = await requestsRef.where('orderId', '==', orderId).get();
       
       if (!snap.empty) {
         const requestDoc = snap.docs[0];
         await requestDoc.ref.update({
           paid: true,
           paymentMethod: "OPay",
-          transactionId: transaction_id,
-          paidAt: new Date().toISOString()
+          transactionId: transactionId,
+          paidAt: new Date().toISOString(),
+          amount: amount
         });
-
-        await sendEmailNotification("تم الدفع بنجاح", `تم الدفع عبر OPay للطلب: ${order_id}`);
-        await sendTelegramNotification(`✅ تم الدفع عبر OPay للطلب: ${order_id}`);
+        console.log('✅ تم تحديث حالة الطلب:', orderId);
       } else {
-        // البحث في الحجوزات
-        snap = await reservationsRef.where('orderId', '==', order_id).get();
+        snap = await reservationsRef.where('orderId', '==', orderId).get();
         
         if (!snap.empty) {
           const reservationDoc = snap.docs[0];
           await reservationDoc.ref.update({
             paid: true,
             paymentMethod: "OPay",
-            transactionId: transaction_id,
-            paidAt: new Date().toISOString()
+            transactionId: transactionId,
+            paidAt: new Date().toISOString(),
+            amount: amount
           });
-
-          await sendEmailNotification("تم الدفع بنجاح للحجز", `تم الدفع عبر OPay للحجز: ${order_id}`);
-          await sendTelegramNotification(`✅ تم الدفع عبر OPay للحجز: ${order_id}`);
+          console.log('✅ تم تحديث حالة الحجز:', orderId);
         }
       }
+      
+      await sendEmailNotification("تم الدفع بنجاح عبر OPay", `تم الدفع للطلب: ${orderId}`);
+      await sendTelegramNotification(`✅ تم الدفع بنجاح عبر OPay: ${orderId}`);
     }
-
+    
     res.status(200).send("OK");
   } catch (error) {
-    console.error("OPay webhook error:", error.message);
+    console.error("❌ خطأ في معالجة ويب هوك OPay:", error);
     res.status(500).send("Error");
   }
 });
 
-// ========== API للتحقق من حالة الدفع ==========
 app.get('/api/check-payment-status', async (req, res) => {
   const { orderId } = req.query;
   
@@ -679,7 +661,6 @@ app.get('/api/check-payment-status', async (req, res) => {
     const requestsRef = db.collection('requests');
     const reservationsRef = db.collection('reservations');
     
-    // البحث في الطلبات أولاً
     let snap = await requestsRef.where('orderId', '==', orderId).get();
     
     if (!snap.empty) {
@@ -693,7 +674,6 @@ app.get('/api/check-payment-status', async (req, res) => {
       });
     }
     
-    // إذا لم يوجد في الطلبات، البحث في الحجوزات
     snap = await reservationsRef.where('orderId', '==', orderId).get();
     
     if (!snap.empty) {
@@ -707,7 +687,6 @@ app.get('/api/check-payment-status', async (req, res) => {
       });
     }
     
-    // إذا لم يوجد الطلب
     res.json({
       status: 'NOT_FOUND',
       orderId: orderId
@@ -722,10 +701,8 @@ app.get('/api/check-payment-status', async (req, res) => {
   }
 });
 
-// ========== APIs إضافية محمية بـ JWT ==========
 app.get('/api/orders', authenticateAdmin, async (req, res) => {
   try {
-    // جلب جميع الطلبات مع orderId
     const requestsSnap = await db.collection('requests').where('orderId', '!=', null).get();
     const reservationsSnap = await db.collection('reservations').where('orderId', '!=', null).get();
     
@@ -759,7 +736,6 @@ app.get('/api/orders', authenticateAdmin, async (req, res) => {
       });
     });
     
-    // ترتيب حسب التاريخ
     orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
     res.json({ orders });
@@ -768,7 +744,6 @@ app.get('/api/orders', authenticateAdmin, async (req, res) => {
   }
 });
 
-// API لتحديث حالة الدفع يدوياً (للاستخدام في حالة وجود مشاكل في webhook)
 app.put('/api/orders/:orderId/mark-paid', authenticateAdmin, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -777,7 +752,6 @@ app.put('/api/orders/:orderId/mark-paid', authenticateAdmin, async (req, res) =>
     const requestsRef = db.collection('requests');
     const reservationsRef = db.collection('reservations');
     
-    // البحث في الطلبات أولاً
     let snap = await requestsRef.where('orderId', '==', orderId).get();
     
     if (!snap.empty) {
@@ -789,7 +763,6 @@ app.put('/api/orders/:orderId/mark-paid', authenticateAdmin, async (req, res) =>
         paidAt: new Date().toISOString()
       });
     } else {
-      // البحث في الحجوزات
       snap = await reservationsRef.where('orderId', '==', orderId).get();
       
       if (!snap.empty) {
@@ -814,7 +787,10 @@ app.put('/api/orders/:orderId/mark-paid', authenticateAdmin, async (req, res) =>
   }
 });
 
-// ==============================================
+// صفحة الرئيسية مع دعم callback
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
