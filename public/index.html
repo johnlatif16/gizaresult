@@ -768,7 +768,7 @@ function generateOrderId(prefix = 'order') {
     return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// دالة لمعالجة الدفع عبر OPay
+// دالة لمعالجة الدفع عبر OPay - الإصدار المصحح
 async function processOpayPayment(formData, isReservation = false) {
     try {
         // إنشاء orderId فريد
@@ -785,6 +785,8 @@ async function processOpayPayment(formData, isReservation = false) {
         const amount = 25; // المبلغ الثابت 25 جنيهاً
         const description = isReservation ? 'حجز نتيجة مسبق' : 'دفع للاستعلام عن النتيجة';
         
+        console.log('بدء عملية الدفع:', { orderId, amount, description });
+        
         // طلب إنشاء جلسة دفع من OPay
         const response = await fetch('/api/opay-pay', {
             method: 'POST',
@@ -800,7 +802,18 @@ async function processOpayPayment(formData, isReservation = false) {
         
         const data = await response.json();
         
+        console.log('استجابة API الدفع:', data);
+        
+        if (!response.ok) {
+            throw new Error(data.message || `خطأ في السيرفر: ${response.status}`);
+        }
+        
         if (data.success && data.paymentUrl) {
+            // إذا كان رابط اختبار، نعرض رسالة مختلفة
+            if (data.isTest) {
+                alert('وضع التطوير: هذا رابط اختبار للدفع');
+            }
+            
             // فتح نافذة الدفع
             const paymentWindow = window.open(data.paymentUrl, '_blank', 'width=600,height=700');
             
@@ -812,7 +825,7 @@ async function processOpayPayment(formData, isReservation = false) {
                 throw new Error('تم منع فتح نافذة الدفع. يرجى السماح بالنوافذ المنبثقة لهذا الموقع.');
             }
         } else {
-            throw new Error('فشل في إنشاء جلسة الدفع');
+            throw new Error(data.message || 'فشل في إنشاء جلسة الدفع');
         }
     } catch (error) {
         console.error('خطأ في عملية الدفع:', error);
