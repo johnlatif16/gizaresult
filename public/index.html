@@ -86,7 +86,6 @@
     box-shadow: 0 6px 12px rgba(42, 171, 238, 0.3);
   }
   
-  /* زر التطبيق الجديد */
   .btn-app {
     background: linear-gradient(to right, #FF6B6B, #FF8E53);
     color: white;
@@ -252,7 +251,6 @@
     }
   }
 
-  /* تنسيقات الطباعة */
   @media print {
     body * {
       visibility: hidden;
@@ -284,7 +282,6 @@
     }
   }
 
-  /* تنسيقات النتيجة القابلة للطباعة */
   .result-header {
     text-align: center;
     margin-bottom: 20px;
@@ -320,7 +317,6 @@
     margin: 20px 0;
   }
 
-  /* نافذة الطباعة */
   .print-window {
     display: none;
     position: fixed;
@@ -372,7 +368,6 @@
     top: -9999px;
   }
 
-  /* تنسيقات الدردشة */
   #chatbot input {
     font-family: 'Tajawal', sans-serif;
     direction: rtl;
@@ -391,16 +386,13 @@
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
 
 <div class="container max-w-4xl mx-auto">
-  <!-- الهيدر -->
   <header class="text-center my-8">
     <i class="fas fa-graduation-cap header-icon"></i>
     <h1 class="text-4xl font-bold mb-2 text-gray-800">نتيجتك</h1>
     <p class="text-lg text-gray-600">موقع الاستعلام عن نتائج الامتحانات</p>
     <p class="text-lg text-gray-600">هذا الموقع تانية ثانوي فقط بمحافظة الجيزة</p>
-    <h1>الموقع يتم تحديثه الان برجاء عدم الدفع</h1>
   </header>
 
-  <!-- التنبيهات على شكل شبكة -->
   <div class="alert-grid">
     <div class="alert-box alert-danger">
       <i class="fas fa-exclamation-triangle alert-icon"></i>
@@ -426,7 +418,6 @@
     </div>
   </div>
 
-  <!-- أزرار حجز النتيجة -->
   <div class="card p-6 mb-6">
     <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">
       <i class="fas fa-ticket-alt"></i>
@@ -440,12 +431,10 @@
         حجز عبر التيليجرام
       </a>
       
-<!-- زر حجز عبر التطبيق الجديد -->
-<button onclick="window.location.href='https://apkpure.com/gizaresult/com.example.giza_result_app'" class="btn-app text-center">
-  <i class="fas fa-mobile-alt"></i>
-  حجز عبر التطبيق
-</button>
-
+      <button onclick="window.location.href='https://apkpure.com/gizaresult/com.example.giza_result_app'" class="btn-app text-center">
+        <i class="fas fa-mobile-alt"></i>
+        حجز عبر التطبيق
+      </button>
       
       <button onclick="showReservation()" class="btn-secondary">
         <i class="fas fa-globe"></i>
@@ -454,52 +443,47 @@
     </div>
   </div>
 
-<!-- قسم حجز النتيجة عبر الموقع -->
-<div class="card p-6 mb-6 hidden" id="reservation">
-  <h2 class="text-2xl font-semibold mb-4 text-gray-800">
-    <i class="fas fa-globe"></i>
-    حجز النتيجة عبر الموقع
-  </h2>
-  
-  <form id="reservationForm" class="space-y-4">
-    <div>
-      <label class="block text-gray-700 mb-2">الرقم القومي</label>
-      <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-3 border rounded-lg">
-    </div>
+  <div class="card p-6 mb-6 hidden" id="reservation">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">
+      <i class="fas fa-globe"></i>
+      حجز النتيجة عبر الموقع
+    </h2>
     
-    <div>
-      <label class="block text-gray-700 mb-2">رقم الهاتف</label>
-      <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-3 border rounded-lg">
-    </div>
-    
-    <div>
-      <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-      <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-3 border rounded-lg">
-    </div>
-    
-    <!-- الحقول الجديدة المطلوبة -->
-    <div>
-      <label class="block text-gray-700 mb-2">رقم المحول (الرقم الذي تم التحويل منه)</label>
-      <input name="senderPhone" placeholder="أدخل رقم الهاتف المحول منه" required class="w-full p-3 border rounded-lg">
-    </div>
-    
-    <div>
-      <label class="block text-gray-700 mb-2">سكرين شوت التحويل</label>
-      <input type="file" name="screenshot" required class="file-input">
-    </div>
-    <!-- نهاية الحقول الجديدة -->
-    
-    <!-- حقل مخفي لتخزين orderId -->
-    <input type="hidden" name="orderId" id="reservationOrderId">
-    
-    <button type="submit" class="btn-primary w-full py-3">
-      <i class="fas fa-credit-card"></i>
-      الدفع عبر OPay وتأكيد الحجز
-    </button>
-  </form>
-</div>
+    <form id="reservationForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-2">الرقم القومي</label>
+        <input name="nationalId" placeholder="أدخل الرقم القومي" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">رقم الهاتف</label>
+        <input name="phone" placeholder="أدخل رقم الهاتف" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+        <input name="email" type="email" placeholder="أدخل البريد الإلكتروني" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">رقم المحول (الرقم الذي تم التحويل منه)</label>
+        <input name="senderPhone" placeholder="أدخل رقم الهاتف المحول منه" required class="w-full p-3 border rounded-lg">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 mb-2">سكرين شوت التحويل</label>
+        <input type="file" name="screenshot" required class="file-input">
+      </div>
+      
+      <input type="hidden" name="orderId" id="reservationOrderId">
+      
+      <button type="submit" class="btn-primary w-full py-3">
+        <i class="fas fa-credit-card"></i>
+        الدفع عبر OPay وتأكيد الحجز
+      </button>
+    </form>
+  </div>
 
-  <!-- الأزرار الرئيسية -->
   <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
     <button onclick="showPayment()" class="btn-primary">
       <i class="fas fa-money-bill-wave"></i>
@@ -511,7 +495,13 @@
     </button>
   </div>
 
-  <!-- قسم الدفع -->
+  <div class="flex justify-center mb-4">
+    <button onclick="checkRecentPayment()" class="btn-telegram">
+      <i class="fas fa-sync-alt"></i>
+      التحقق من آخر عملية دفع
+    </button>
+  </div>
+
   <div class="card p-6 mb-6 hidden" id="payment">
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">
       <i class="fas fa-credit-card"></i>
@@ -552,7 +542,6 @@
         <input type="file" name="screenshot" required class="file-input">
       </div>
       
-      <!-- حقل مخفي لتخزين orderId -->
       <input type="hidden" name="orderId" id="paymentOrderId">
       
       <button type="submit" class="btn-primary w-full py-3">
@@ -562,7 +551,6 @@
     </form>
   </div>
 
-  <!-- قسم الاستعلام -->
   <div class="card p-6 mb-6 hidden" id="check">
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">
       <i class="fas fa-search"></i>
@@ -581,13 +569,11 @@
       </button>
     </form>
 
-    <!-- نتائج الاستعلام -->
     <div id="resultContainer" class="mt-6 hidden">
       <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg text-center mb-6">
         <h3 class="text-xl font-bold">تهانينا! هذه هي نتيجتك</h3>
       </div>
       
-      <!-- النتيجة القابلة للطباعة -->
       <div id="printableResult">
         <div class="result-header">
           <h2>نتيجة الطالب</h2>
@@ -671,7 +657,6 @@
     </div>
   </div>
 
-  <!-- المميزات -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
     <div class="card p-4 text-center">
       <i class="fas fa-lock feature-icon"></i>
@@ -692,7 +677,6 @@
     </div>
   </div>
 
-  <!-- الفوتر -->
   <div class="footer text-center rounded-lg">
     <p>هذا الموقع غير تابع لأي جهة حكومية أو وزارة</p>
     <p class="mt-2">
@@ -703,14 +687,13 @@
     </p>
   </div>
 </div>
-<!-- زر فتح/غلق الدردشة -->
+
 <div id="chatbotToggle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
   <button onclick="toggleChatbot()" style="background:#3b82f6; color:white; border:none; padding:12px 20px; border-radius:50px; cursor:pointer; font-weight:bold;">
     💬 الدعم
   </button>
 </div>
 
-<!-- نافذة الدردشة المعدلة -->
 <div id="chatbot" style="position: fixed; bottom: 80px; right: 20px; width: 320px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display:none; flex-direction: column; overflow:hidden; z-index: 1000; font-family: 'Tajawal', sans-serif;">
   <div style="background:#3b82f6; color:white; padding:10px; font-weight:bold; text-align:center; cursor:pointer;" onclick="toggleChatbot()">
     دعم فني - أدخل بياناتك أولاً
@@ -721,7 +704,6 @@
     <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
   </div>
   
-  <!-- نموذج إدخال بيانات المستخدم -->
   <div id="userDataForm" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
     <input type="text" id="userName" placeholder="الاسم بالكامل" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
     <input type="tel" id="userPhone" placeholder="رقم التليفون" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
@@ -729,19 +711,13 @@
     <button id="submitUserData" style="padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">تأكيد البيانات</button>
   </div>
 </div>
-<!-- حاوية مخفية لإنشاء PDF -->
+
 <div id="pdf-container" style="position: absolute; left: -9999px; top: -9999px;"></div>
 
 <script>
 // متغير لتخزين النتيجة الحالية
 let currentResult = null;
-
-// متغيرات لتخزين بيانات المستخدم في الدردشة
-let userData = {
-  name: '',
-  phone: '',
-  email: ''
-};
+let userData = { name: '', phone: '', email: '' };
 
 function showPayment() {
   document.getElementById('payment').classList.remove('hidden');
@@ -761,43 +737,33 @@ function showReservation() {
   document.getElementById('check').classList.add('hidden');
 }
 
-// ========== دوال OPay الجديدة ==========
-
-// دالة لإنشاء orderId فريد
 function generateOrderId(prefix = 'order') {
     return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// دالة لمعالجة الدفع عبر OPay - الإصدار المصحح
+// دالة لمعالجة الدفع عبر OPay - الإصدار المحسن
 async function processOpayPayment(formData, isReservation = false) {
     try {
-        // إنشاء orderId فريد
         const orderId = generateOrderId(isReservation ? 'reserve' : 'pay');
         
-        // تعيين orderId في الحقل المخفي
         if (isReservation) {
             document.getElementById('reservationOrderId').value = orderId;
         } else {
             document.getElementById('paymentOrderId').value = orderId;
         }
         
-        // إعداد بيانات الدفع
-        const amount = 25; // المبلغ الثابت 25 جنيهاً
+        const amount = 25;
         const description = isReservation ? 'حجز نتيجة مسبق' : 'دفع للاستعلام عن النتيجة';
         
         console.log('بدء عملية الدفع:', { orderId, amount, description });
         
-        // طلب إنشاء جلسة دفع من OPay
+        // حفظ orderId للاستخدام لاحقاً
+        localStorage.setItem('lastOrderId', orderId);
+        
         const response = await fetch('/api/opay-pay', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: amount,
-                description: description,
-                orderId: orderId
-            })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ amount, description, orderId })
         });
         
         const data = await response.json();
@@ -809,16 +775,13 @@ async function processOpayPayment(formData, isReservation = false) {
         }
         
         if (data.success && data.paymentUrl) {
-            // إذا كان رابط اختبار، نعرض رسالة مختلفة
             if (data.isTest) {
                 alert('وضع التطوير: هذا رابط اختبار للدفع');
             }
             
-            // فتح نافذة الدفع
             const paymentWindow = window.open(data.paymentUrl, '_blank', 'width=600,height=700');
             
             if (paymentWindow) {
-                // بدء الاستعلام عن حالة الدفع
                 checkPaymentStatus(orderId, isReservation);
                 return true;
             } else {
@@ -834,10 +797,12 @@ async function processOpayPayment(formData, isReservation = false) {
     }
 }
 
-// دالة للاستعلام عن حالة الدفع
+// دالة للاستعلام عن حالة الدفع - الإصدار المحسن
 async function checkPaymentStatus(orderId, isReservation = false) {
     let attempts = 0;
-    const maxAttempts = 30; // 5 دقائق (30 * 10 ثواني)
+    const maxAttempts = 60;
+    
+    console.log('🔍 بدء تتبع حالة الدفع:', orderId);
     
     const checkInterval = setInterval(async () => {
         attempts++;
@@ -846,23 +811,18 @@ async function checkPaymentStatus(orderId, isReservation = false) {
             const response = await fetch(`/api/check-payment-status?orderId=${orderId}`);
             const data = await response.json();
             
+            console.log(`📊 محاولة ${attempts}:`, data);
+            
             if (data.status === 'SUCCESS') {
                 clearInterval(checkInterval);
+                console.log('✅ تم التأكد من الدفع بنجاح');
                 
-                // إذا نجح الدفع، إرسال النموذج
-                if (isReservation) {
-                    submitReservationForm();
-                } else {
-                    submitPaymentForm();
-                }
+                alert('✅ تم تأكيد الدفع بنجاح! يمكنك الآن الاستعلام عن نتيجتك.');
+                showCheck();
                 
-                alert('تم الدفع بنجاح! جاري معالجة طلبك...');
             } else if (data.status === 'FAILED') {
                 clearInterval(checkInterval);
-                alert('فشل عملية الدفع. يرجى المحاولة مرة أخرى.');
-            } else if (data.status === 'NOT_FOUND') {
-                // الطلب غير موجود، نستمر في المحاولة
-                console.log('الطلب غير موجود بعد، جاري المحاولة مرة أخرى...');
+                alert('❌ فشل عملية الدفع. يرجى المحاولة مرة أخرى.');
             }
         } catch (error) {
             console.error('خطأ في التحقق من حالة الدفع:', error);
@@ -870,12 +830,77 @@ async function checkPaymentStatus(orderId, isReservation = false) {
         
         if (attempts >= maxAttempts) {
             clearInterval(checkInterval);
-            alert('انتهت مهلة انتظار الدفع. يرجى التحقق من حالة الدفع يدوياً.');
+            console.log('⏰ انتهت مهلة تتبع الدفع');
+            
+            const shouldContinue = confirm('مازال جاري التأكد من الدفع. هل تريد متابعة الانتظار؟');
+            if (shouldContinue) {
+                checkPaymentStatus(orderId, isReservation);
+            } else {
+                alert('يمكنك الاستعلام لاحقاً باستخدام رقم هاتفك.');
+                showCheck();
+            }
         }
-    }, 10000); // التحقق كل 10 ثواني
+    }, 10000);
 }
 
-// دالة لإرسال نموذج الحجز بعد نجاح الدفع
+// التحقق من آخر عملية دفع
+async function checkRecentPayment() {
+    const lastOrderId = localStorage.getItem('lastOrderId');
+    
+    if (!lastOrderId) {
+        alert('❌ لا توجد عملية دفع حديثة للتحقق منها');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/check-payment-status?orderId=${lastOrderId}`);
+        const data = await response.json();
+        
+        if (data.status === 'SUCCESS') {
+            alert('✅ تم الدفع بنجاح! يمكنك الآن الاستعلام عن النتيجة.');
+            showCheck();
+        } else if (data.status === 'PENDING') {
+            alert('⏳ مازال جاري معالجة الدفع...');
+            checkPaymentStatus(lastOrderId);
+        } else {
+            alert('❌ لم يتم العثور على حالة الدفع');
+        }
+    } catch (error) {
+        alert('حدث خطأ أثناء التحقق من حالة الدفع');
+    }
+}
+
+// دالة لمعالجة نجاح الدفع
+function handlePaymentSuccess(orderId) {
+    alert('✅ تم الدفع بنجاح! جاري توجيهك...');
+    showCheck();
+}
+
+// دالة لمعالجة فشل الدفع
+function handlePaymentCancel(orderId) {
+    alert('❌ تم إلغاء عملية الدفع');
+}
+
+// دالة للتحقق إذا كانت الصفحة الحالية هي صفحة callback
+function checkIfCallbackPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const orderId = urlParams.get('orderId');
+    
+    if (status && orderId) {
+        if (status === 'success') {
+            handlePaymentSuccess(orderId);
+        } else if (status === 'cancel') {
+            handlePaymentCancel(orderId);
+        }
+    }
+}
+
+// تشغيل التحقق عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    checkIfCallbackPage();
+});
+
 async function submitReservationForm() {
     const form = document.getElementById('reservationForm');
     const formData = new FormData(form);
@@ -904,7 +929,6 @@ async function submitReservationForm() {
     }
 }
 
-// دالة لإرسال نموذج الدفع بعد نجاح الدفع
 async function submitPaymentForm() {
     const form = document.getElementById('paymentForm');
     const formData = new FormData(form);
@@ -928,14 +952,10 @@ async function submitPaymentForm() {
     }
 }
 
-// ========== نهاية دوال OPay ==========
-
-// معالجة استعلام النتيجة
 document.getElementById('checkForm').addEventListener('submit', async e => {
   e.preventDefault();
   const phone = document.getElementById('phoneInput').value;
 
-  // عرض رسالة تحميل
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const originalText = submitBtn.innerHTML;
   submitBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> جاري البحث...';
@@ -966,13 +986,11 @@ document.getElementById('checkForm').addEventListener('submit', async e => {
   }
 });
 
-// تعديل معالجة نموذج الحجز لاستخدام OPay
 document.getElementById('reservationForm').addEventListener('submit', async e => {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     
-    // التحقق من وجود ملف
     if (!formData.get('screenshot') || formData.get('screenshot').size === 0) {
         alert('يرجى رفع صورة إثبات التحويل');
         return;
@@ -984,7 +1002,6 @@ document.getElementById('reservationForm').addEventListener('submit', async e =>
     submitBtn.disabled = true;
     
     try {
-        // بدء عملية الدفع عبر OPay
         const paymentInitiated = await processOpayPayment(formData, true);
         
         if (!paymentInitiated) {
@@ -1000,7 +1017,6 @@ document.getElementById('reservationForm').addEventListener('submit', async e =>
     }
 });
 
-// تعديل معالجة نموذج الدفع لاستخدام OPay
 document.getElementById('paymentForm').addEventListener('submit', async e => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -1011,7 +1027,6 @@ document.getElementById('paymentForm').addEventListener('submit', async e => {
     submitBtn.disabled = true;
     
     try {
-        // بدء عملية الدفع عبر OPay
         const paymentInitiated = await processOpayPayment(formData, false);
         
         if (!paymentInitiated) {
@@ -1027,20 +1042,15 @@ document.getElementById('paymentForm').addEventListener('submit', async e => {
     }
 });
 
-// عرض النتيجة - الإصدار المحسن
 function displayResult(result) {
   if (!result || typeof result !== 'object') {
     alert('بيانات النتيجة غير صحيحة');
     return;
   }
 
-  console.log('النتيجة المستلمة:', result); // لأغراض التصحيح
-
-  // بيانات الطالب
   const infoDiv = document.getElementById('studentInfo');
   infoDiv.innerHTML = '';
   
-  // إضافة الحقول الديناميكية
   const fieldsToShow = [
     { key: 'name', label: 'اسم الطالب' },
     { key: 'seatNumber', label: 'رقم الجلوس' },
@@ -1058,7 +1068,6 @@ function displayResult(result) {
     }
   });
 
-  // المواد الأساسية
   const mainTbody = document.querySelector('#mainSubjectsTable tbody');
   mainTbody.innerHTML = '';
   
@@ -1076,7 +1085,6 @@ function displayResult(result) {
     mainTbody.innerHTML = '<tr><td colspan="3">لا توجد بيانات</td></tr>';
   }
 
-  // المواد الإضافية
   const addTbody = document.querySelector('#additionalSubjectsTable tbody');
   addTbody.innerHTML = '';
   
@@ -1094,7 +1102,6 @@ function displayResult(result) {
     addTbody.innerHTML = '<tr><td colspan="3">لا توجد بيانات</td></tr>';
   }
 
-  // الإجمالي والنسبة
   const totalScore = result.totalScore || 0;
   const totalOutOf = result.totalOutOf || 0;
   let percentage = result.percentage;
@@ -1111,17 +1118,14 @@ function displayResult(result) {
   currentResult = result;
 }
 
-// طباعة النتيجة
 function printResult() {
   if (!currentResult) {
     alert('لا توجد نتيجة للطباعة');
     return;
   }
 
-  // إنشاء نافذة طباعة جديدة
   const printWindow = window.open('', '_blank');
   
-  // محتوى HTML مخصص للطباعة
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
@@ -1162,12 +1166,6 @@ function printResult() {
           margin-bottom: 20px;
           padding-bottom: 15px;
           border-bottom: 2px solid #3b82f6;
-        }
-        .summary-box {
-          background-color: #f9fafb;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
         }
         .no-print {
           display: none !important;
@@ -1270,13 +1268,11 @@ function printResult() {
   
   printWindow.document.close();
   
-  // الانتظار حتى يتم تحميل المحتوى ثم التركيز على النافذة للطباعة
   setTimeout(() => {
     printWindow.focus();
   }, 500);
 }
 
-// حفظ النتيجة كPDF
 async function saveAsPDF() {
   if (!currentResult) {
     alert('لا توجد نتيجة لحفظها');
@@ -1284,7 +1280,6 @@ async function saveAsPDF() {
   }
 
   try {
-    // إنشاء عنصر مؤقت للطباعة
     const printableElement = document.createElement('div');
     printableElement.style.padding = '20px';
     printableElement.style.fontFamily = "'Tajawal', sans-serif";
@@ -1372,10 +1367,8 @@ async function saveAsPDF() {
       </div>
     `;
     
-    // إضافة العنصر إلى الجسم مؤقتاً
     document.getElementById('pdf-container').appendChild(printableElement);
     
-    // استخدام html2canvas لالتقاط لقطة للعنصر
     const canvas = await html2canvas(printableElement, {
       scale: 2,
       useCORS: true,
@@ -1383,14 +1376,11 @@ async function saveAsPDF() {
       backgroundColor: '#ffffff'
     });
     
-    // تحويل Canvas إلى صورة
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
     
-    // إنشاء PDF باستخدام jsPDF
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     
-    // حساب أبعاد الصورة لتناسب PDF
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = canvas.width;
@@ -1399,13 +1389,9 @@ async function saveAsPDF() {
     const imgX = (pdfWidth - imgWidth * ratio) / 2;
     const imgY = 10;
     
-    // إضافة الصورة إلى PDF
     pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-    
-    // حفظ PDF
     pdf.save(`نتيجة_${currentResult.name || 'الطالب'}.pdf`);
     
-    // إزالة العنصر المؤقت
     document.getElementById('pdf-container').removeChild(printableElement);
     
   } catch (error) {
@@ -1414,19 +1400,15 @@ async function saveAsPDF() {
   }
 }
 
-// ========== دوال الدردشة ==========
-// فتح/غلق الدردشة
 function toggleChatbot() {
   const bot = document.getElementById('chatbot');
   bot.style.display = bot.style.display === 'flex' ? 'none' : 'flex';
   
-  // إعادة تعيين الدردشة عند فتحها
   if (bot.style.display === 'flex') {
     resetChatbot();
   }
 }
 
-// إعادة تعيين الدردشة
 function resetChatbot() {
   document.getElementById('chatMessages').innerHTML = '';
   document.getElementById('chatOptions').style.display = 'none';
@@ -1437,7 +1419,6 @@ function resetChatbot() {
   userData = { name: '', phone: '', email: '' };
 }
 
-// إضافة رسالة
 function addMessage(text, from = 'bot') {
   const container = document.getElementById('chatMessages');
   const msg = document.createElement('div');
@@ -1459,7 +1440,6 @@ function addMessage(text, from = 'bot') {
   container.scrollTop = container.scrollHeight;
 }
 
-// معالجة إرسال بيانات المستخدم
 document.getElementById('submitUserData').addEventListener('click', function() {
   const name = document.getElementById('userName').value.trim();
   const phone = document.getElementById('userPhone').value.trim();
@@ -1470,17 +1450,14 @@ document.getElementById('submitUserData').addEventListener('click', function() {
     return;
   }
   
-  // حفظ بيانات المستخدم
   userData = { name, phone, email };
   
-  // إخفاء نموذج البيانات وإظهار خيارات الدردشة
   document.getElementById('userDataForm').style.display = 'none';
   document.getElementById('chatOptions').style.display = 'flex';
   
   addMessage(`شكراً ${name}! كيف يمكنني مساعدتك؟`);
 });
 
-// التعامل مع الضغط على الاختيارات
 document.getElementById('chatOptions').addEventListener('click', async (e) => {
   const target = e.target;
   
@@ -1492,13 +1469,11 @@ document.getElementById('chatOptions').addEventListener('click', async (e) => {
       addMessage('جاري تحويلك إلى واتساب...');
       window.open('https://wa.me/201274445091', '_blank');
       
-      // إعادة تعيين الدردشة بعد ثانيتين
       setTimeout(resetChatbot, 2000);
     } else if (action === 'ask') {
       addMessage(target.textContent, 'user');
       addMessage('ممكن تكتب سؤالك هنا:');
       
-      // استبدال الخيارات بحقل إدخال السؤال
       document.getElementById('chatOptions').innerHTML = `
         <input type="text" id="userQuestion" placeholder="اكتب سؤالك..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:100%;">
         <button id="sendQuestion" style="margin-top:5px; padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">إرسال</button>
@@ -1511,7 +1486,6 @@ document.getElementById('chatOptions').addEventListener('click', async (e) => {
           addMessage('جاري إرسال استفسارك للإدارة...');
           
           try {
-            // إرسال الاستفسار مع بيانات المستخدم إلى السيرفر
             const res = await fetch('/api/send-admin-message', {
               method: 'POST',
               headers: {'Content-Type':'application/json'},
@@ -1532,7 +1506,6 @@ document.getElementById('chatOptions').addEventListener('click', async (e) => {
             addMessage('حدث خطأ أثناء الإرسال.');
           }
           
-          // إعادة تعيين الدردشة بعد 3 ثوانٍ
           setTimeout(resetChatbot, 3000);
         }
       });
