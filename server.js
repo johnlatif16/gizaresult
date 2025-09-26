@@ -531,6 +531,63 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/opay-pay', async (req, res) => {
+  try {
+    const { amount, description, orderId } = req.body;
+
+    const opayRequest = {
+      merchant_id: process.env.OPAY_MERCHANT_ID,
+      order_id: orderId,
+      amount,
+      currency: "ETB", // أو العملة المطلوبة
+      description,
+      callback_url: process.env.OPAY_CALLBACK_URL
+    };
+
+    const opayResponse = await axios.post("https://api.opay.com/payments", opayRequest, {
+      headers: {
+        Authorization: `Bearer ${process.env.OPAY_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    res.json({ success: true, paymentUrl: opayResponse.data.payment_url });
+  } catch (error) {
+    console.error("Error creating OPay payment:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/opay-webhook', async (req, res) => {
+  try {
+    const { order_id, status, transaction_id } = req.body;
+
+    if (status === "SUCCESS") {
+      // تحديث حالة الطلب في Firestore
+      const requestsRef = db.collection('requests');
+      const snap = await requestsRef.where('orderId', '==', order_id).get();
+
+      if (!snap.empty) {
+        const requestDoc = snap.docs[0];
+        await requestDoc.ref.update({
+          paid: true,
+          paymentMethod: "OPay",
+          transactionId: transaction_id,
+          paidAt: new Date().toISOString()
+        });
+
+        await sendEmailNotification("تم الدفع بنجاح", `تم الدفع عبر OPay للطلب: ${order_id}`);
+        await sendTelegramNotification(`✅ تم الدفع عبر OPay للطلب: ${order_id}`);
+      }
+    }
+
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("OPay webhook error:", error.message);
+    res.status(500).send("Error");
+  }
+});
+
 // ==============================================
 
 const PORT = process.env.PORT || 3000;
