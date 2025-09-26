@@ -5,8 +5,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const admin = require('firebase-admin');
-const jwt = require('jsonwebtoken');
-const { google } = require('googleapis'); // ✅ إضافة Gmail API
+const jwt = require('jsonwebtoken'); // ✅ إضافة JWT
 require('dotenv').config();
 
 // ✅ قراءة JSON الخاص بـ Firebase من متغير البيئة FIREBASE_CONFIG
@@ -28,63 +27,18 @@ app.use(fileUpload());
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// ✅ إعداد OAuth2 Client لـ Gmail API
-const oAuth2Client = new google.auth.OAuth2(
-  process.env.GMAIL_CLIENT_ID,
-  process.env.GMAIL_CLIENT_SECRET,
-  process.env.GMAIL_REDIRECT_URI
-);
-
-// ✅ تعيين credentials إذا كان متوفراً
-if (process.env.GMAIL_REFRESH_TOKEN) {
-  oAuth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN
-  });
-}
-
-// ✅ دالة لإنشاء Gmail transporter
-async function createGmailTransporter() {
-  try {
-    const accessToken = await oAuth2Client.getAccessToken();
-    
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: process.env.GMAIL_USER,
-        clientId: process.env.GMAIL_CLIENT_ID,
-        clientSecret: process.env.GMAIL_CLIENT_SECRET,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-        accessToken: accessToken.token,
-      },
-    });
-  } catch (error) {
-    console.error('Error creating Gmail transporter:', error);
-    // Fallback إلى SMTP العادي
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+// إعداد البريد
+let transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
   }
-}
+});
 
-// ✅ تهيئة transporter (سنقوم بإنشائه عند الحاجة)
-let transporter;
-
-// ✅ دالة للحصول على transporter مع fallback
-async function getTransporter() {
-  if (!transporter) {
-    transporter = await createGmailTransporter();
-  }
-  return transporter;
-}
-
-// ✅ Middleware للتحقق من JWT
+// ✅ Middleware للتحقق من JWT - معدل
 function authenticateAdmin(req, res, next) {
   const authHeader = req.headers['authorization'];
   
@@ -93,7 +47,7 @@ function authenticateAdmin(req, res, next) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(' ')[1]; // "Bearer TOKEN"
   
   if (!token) {
     console.log('صيغة Authorization header غير صحيحة');
@@ -118,47 +72,18 @@ function authenticateAdmin(req, res, next) {
   });
 }
 
-// ✅ دوال إشعارات - معدلة لاستخدام Gmail API
-async function sendEmailNotification(subject, text, html = null) {
+// دوال إشعارات
+async function sendEmailNotification(subject, text) {
   try {
-    const mailTransporter = await getTransporter();
-    
-    const mailOptions = {
-      from: process.env.GMAIL_USER || process.env.SMTP_USER,
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
       to: process.env.NOTIFICATION_EMAIL,
       subject: subject,
-      text: text,
-      ...(html && { html: html })
-    };
-
-    await mailTransporter.sendMail(mailOptions);
-    console.log('📧 Email notification sent successfully via Gmail API');
+      text: text
+    });
+    console.log('Email notification sent successfully.');
   } catch (error) {
-    console.error('❌ Error sending email notification:', error);
-    
-    // محاولة إرسال باستخدام SMTP العادي كـ fallback
-    try {
-      const fallbackTransporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      });
-      
-      await fallbackTransporter.sendMail({
-        from: process.env.SMTP_USER,
-        to: process.env.NOTIFICATION_EMAIL,
-        subject: subject,
-        text: text,
-        ...(html && { html: html })
-      });
-      console.log('📧 Email sent successfully via SMTP fallback');
-    } catch (fallbackError) {
-      console.error('❌ Fallback email sending also failed:', fallbackError);
-    }
+    console.error('Error sending email notification:', error);
   }
 }
 
@@ -174,68 +99,15 @@ async function sendTelegramNotification(message) {
       text: message,
       parse_mode: 'HTML'
     });
-    console.log('📱 Telegram notification sent successfully.');
+    console.log('Telegram notification sent successfully.');
   } catch (error) {
-    console.error('❌ Error sending Telegram notification:', error.message);
+    console.error('Error sending Telegram notification:', error.message);
   }
 }
 
-// ✅ Route جديد لتفعيل Gmail API
-app.get('/auth/gmail', (req, res) => {
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/gmail.compose'
-    ],
-    prompt: 'consent'
-  });
-  res.redirect(authUrl);
-});
+// ----------------- Routes -----------------
 
-// ✅ Route لاستقرار الـ callback من Gmail
-app.get('/auth/gmail/callback', async (req, res) => {
-  const { code } = req.query;
-  
-  try {
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
-    
-    console.log('✅ Gmail API authenticated successfully');
-    console.log('🔑 Refresh Token:', tokens.refresh_token);
-    
-    // حفظ الـ refresh token في البيئة (في الواقع يجب حفظه في قاعدة البيانات)
-    process.env.GMAIL_REFRESH_TOKEN = tokens.refresh_token;
-    
-    res.send('✅ تم تفعيل Gmail API بنجاح! يمكنك إغلاق هذه الصفحة.');
-  } catch (error) {
-    console.error('❌ Error authenticating Gmail API:', error);
-    res.status(500).send('❌ فشل في تفعيل Gmail API');
-  }
-});
-
-// ✅ Route للتحقق من حالة Gmail API
-app.get('/api/gmail-status', authenticateAdmin, async (req, res) => {
-  try {
-    const credentials = oAuth2Client.credentials;
-    const isAuthenticated = !!(credentials && credentials.access_token);
-    
-    res.json({
-      authenticated: isAuthenticated,
-      hasRefreshToken: !!process.env.GMAIL_REFRESH_TOKEN,
-      email: process.env.GMAIL_USER
-    });
-  } catch (error) {
-    res.json({
-      authenticated: false,
-      hasRefreshToken: false,
-      error: error.message
-    });
-  }
-});
-
-// ----------------- Routes الحالية (بدون تغيير) -----------------
-
+// ----------------- API الطلبات -----------------
 app.get('/api/requests', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('requests').get();
@@ -255,10 +127,12 @@ app.get('/api/requests', authenticateAdmin, async (req, res) => {
   }
 });
 
+// صفحة الدفع
 app.get('/pay', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pay.html'));
 });
 
+// رفع طلب الدفع
 app.post('/pay', async (req, res) => {
   try {
     const { nationalId, seatNumber, phone, email } = req.body;
@@ -272,12 +146,13 @@ app.post('/pay', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
+    // تنظيف رقم الهاتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
 
     const newRequest = {
       nationalId,
       seatNumber,
-      phone: cleanPhone,
+      phone: cleanPhone, // حفظ رقم الهاتف بعد التنظيف
       email,
       screenshot: filename,
       paid: false,
@@ -286,28 +161,12 @@ app.post('/pay', async (req, res) => {
 
     await db.collection('requests').add(newRequest);
 
-    // ✅ استخدام نظام Gmail API الجديد للإشعارات
     await sendEmailNotification(
-      '💰 طلب دفع جديد',
-      `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`,
-      `
-      <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
-        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-          <h2 style="color: #2c3e50;">💰 طلب دفع جديد</h2>
-          <div style="margin-top: 20px;">
-            <p><strong>الرقم القومي:</strong> ${nationalId}</p>
-            <p><strong>رقم الجلوس:</strong> ${seatNumber}</p>
-            <p><strong>الهاتف:</strong> ${cleanPhone}</p>
-            <p><strong>البريد الإلكتروني:</strong> ${email}</p>
-            <p><strong>وقت الطلب:</strong> ${new Date().toLocaleString('ar-EG')}</p>
-          </div>
-        </div>
-      </div>
-      `
+      'طلب دفع جديد',
+      `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`
     );
-
     await sendTelegramNotification(
-      `<b>💰 طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}`
+      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}`
     );
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
@@ -317,6 +176,7 @@ app.post('/pay', async (req, res) => {
   }
 });
 
+// الحجز
 app.post('/reserve', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone } = req.body;
@@ -334,6 +194,7 @@ app.post('/reserve', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
+    // تنظيف أرقام الهواتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
     const cleanSenderPhone = senderPhone.replace(/\D/g, '');
 
@@ -348,28 +209,12 @@ app.post('/reserve', async (req, res) => {
 
     await db.collection('reservations').add(newReservation);
 
-    // ✅ استخدام نظام Gmail API الجديد للإشعارات
     await sendEmailNotification(
-      '🎫 طلب حجز جديد',
-      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`,
-      `
-      <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
-        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-          <h2 style="color: #2c3e50;">🎫 طلب حجز جديد</h2>
-          <div style="margin-top: 20px;">
-            <p><strong>الرقم القومي:</strong> ${nationalId}</p>
-            <p><strong>الهاتف:</strong> ${cleanPhone}</p>
-            <p><strong>البريد الإلكتروني:</strong> ${email}</p>
-            <p><strong>رقم المحول:</strong> ${cleanSenderPhone}</p>
-            <p><strong>وقت الحجز:</strong> ${new Date().toLocaleString('ar-EG')}</p>
-          </div>
-        </div>
-      </div>
-      `
+      'طلب حجز جديد',
+      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
-
     await sendTelegramNotification(
-      `<b>🎫 طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
     );
 
     res.send('تم تسجيل الحجز بنجاح.');
@@ -379,6 +224,7 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
+// ✅ API جديدة للحجز عن طريق التليفون
 app.post('/api/reserve-by-phone', async (req, res) => {
   try {
     const { nationalId, phone, email, senderPhone } = req.body;
@@ -396,6 +242,7 @@ app.post('/api/reserve-by-phone', async (req, res) => {
 
     await screenshot.mv(uploadPath);
 
+    // تنظيف أرقام الهواتف قبل الحفظ
     const cleanPhone = phone.replace(/\D/g, '');
     const cleanSenderPhone = senderPhone.replace(/\D/g, '');
 
@@ -406,31 +253,16 @@ app.post('/api/reserve-by-phone', async (req, res) => {
       senderPhone: cleanSenderPhone,
       screenshot: filename,
       reserved_at: new Date().toISOString(),
-      method: 'phone'
+      method: 'phone' // ✅ عشان نفرق انه حجز بالتليفون
     };
 
     await db.collection('reservations').add(newReservation);
 
-    // ✅ استخدام نظام Gmail API الجديد للإشعارات
+    // إشعارات
     await sendEmailNotification(
       '📞 طلب حجز جديد عن طريق التليفون',
-      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`,
-      `
-      <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
-        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-          <h2 style="color: #2c3e50;">📞 طلب حجز جديد عن طريق التليفون</h2>
-          <div style="margin-top: 20px;">
-            <p><strong>الرقم القومي:</strong> ${nationalId}</p>
-            <p><strong>الهاتف:</strong> ${cleanPhone}</p>
-            <p><strong>البريد الإلكتروني:</strong> ${email}</p>
-            <p><strong>رقم المحول:</strong> ${cleanSenderPhone}</p>
-            <p><strong>وقت الحجز:</strong> ${new Date().toLocaleString('ar-EG')}</p>
-          </div>
-        </div>
-      </div>
-      `
+      `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
-
     await sendTelegramNotification(
       `<b>📞 طلب حجز جديد عن طريق التليفون:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
     );
@@ -442,11 +274,11 @@ app.post('/api/reserve-by-phone', async (req, res) => {
   }
 });
 
-// ... باقي الـ routes بدون تغيير (login, check-result, open-result, etc.)
-
+// تسجيل الدخول للادمن => توليد JWT
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+    // زيادة مدة الصلاحية إلى 24 ساعة
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '24h' });
     return res.json({ 
       success: true, 
@@ -457,6 +289,7 @@ app.post('/login', (req, res) => {
   res.status(401).json({ success: false, message: 'خطأ في تسجيل الدخول' });
 });
 
+// ✅ التحقق من النتيجة للطالب (إصدار محسّن)
 app.post('/api/check-result', async (req, res) => {
   const { phone, seatNumber } = req.body;
 
@@ -464,6 +297,7 @@ app.post('/api/check-result', async (req, res) => {
     const requestsRef = db.collection('requests');
     let query = requestsRef.where('phone', '==', phone);
     
+    // إضافة البحث برقم الجلوس إذا كان متوفراً
     if (seatNumber) {
       query = requestsRef.where('seatNumber', '==', seatNumber);
     }
@@ -487,6 +321,7 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
+    // إذا كانت النتيجة مخزنة مباشرة في الطلب
     if (requestData.result) {
       return res.json({
         success: true,
@@ -494,6 +329,7 @@ app.post('/api/check-result', async (req, res) => {
       });
     }
 
+    // إذا كانت النتيجة في مجموعة منفصلة (results)
     if (requestData.seatNumber) {
       const resultsRef = db.collection('results');
       const resultSnap = await resultsRef.where('seatNumber', '==', requestData.seatNumber).get();
@@ -502,6 +338,7 @@ app.post('/api/check-result', async (req, res) => {
         const resultDoc = resultSnap.docs[0];
         const resultData = resultDoc.data();
         
+        // تحديث الطلب بتفاصيل النتيجة
         await requestDoc.ref.update({
           result: resultData
         });
@@ -527,6 +364,7 @@ app.post('/api/check-result', async (req, res) => {
   }
 });
 
+// ✅ فتح نتيجة (إدارة فقط) - إصدار محسّن
 app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   const { seatNumber } = req.body;
   
@@ -534,6 +372,7 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     const requestsRef = db.collection('requests');
     const resultsRef = db.collection('results');
 
+    // البحث عن الطلب باستخدام رقم الجلوس
     const requestSnap = await requestsRef.where('seatNumber', '==', seatNumber).get();
     
     if (requestSnap.empty) {
@@ -545,6 +384,7 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
 
     const requestDoc = requestSnap.docs[0];
     
+    // البحث عن النتيجة باستخدام رقم الجلوس
     const resultSnap = await resultsRef.where('seatNumber', '==', seatNumber).get();
     
     if (resultSnap.empty) {
@@ -557,6 +397,7 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
     const resultDoc = resultSnap.docs[0];
     const resultData = resultDoc.data();
 
+    // تحديث الطلب بحالة الدفع والنتيجة
     await requestDoc.ref.update({
       paid: true,
       result: resultData,
@@ -577,8 +418,8 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   }
 });
 
-// ... باقي الـ routes الإدارية (بدون تغيير)
 
+// إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-email-dashboard', async (req, res) => {
   const { message, userData } = req.body;
   if (!message) return res.json({ success: false, message: 'الرسالة فارغة' });
@@ -593,6 +434,7 @@ app.post('/api/send-email-dashboard', async (req, res) => {
 
     const docRef = await db.collection('chat_inquiries').add(newChatInquiry);
 
+    // إرسال إشعار للادمن
     const telegramMessage = `
 <b>استفسار جديد من الدردشة:</b>
 👤 <b>الاسم:</b> ${userData.name || "غير معروف"}
@@ -611,8 +453,7 @@ ${message}
   }
 });
 
-// ... باقي الـ routes الإدارية (بدون تغيير)
-
+// ========== APIs إدارية (محميّة بـ JWT) ==========
 app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
@@ -689,6 +530,8 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// ==============================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
