@@ -362,38 +362,6 @@ app.post('/api/check-result', async (req, res) => {
   }
 });
 
-// ✅ نقطة نهاية جديدة للتحقق من النتائج بدون مصادقة
-app.get('/api/public-results/:seatNumber', async (req, res) => {
-  const { seatNumber } = req.params;
-
-  try {
-    const resultsRef = db.collection('results');
-    const snap = await resultsRef.where('seatNumber', '==', seatNumber).get();
-
-    if (snap.empty) {
-      return res.status(404).json({
-        success: false,
-        message: 'لم يتم العثور على نتيجة لهذا رقم الجلوس'
-      });
-    }
-
-    const resultDoc = snap.docs[0];
-    const resultData = resultDoc.data();
-
-    res.json({
-      success: true,
-      result: resultData
-    });
-
-  } catch (error) {
-    console.error('Error in /api/public-results:', error);
-    res.status(500).json({
-      success: false,
-      message: 'حدث خطأ في الخادم: ' + error.message
-    });
-  }
-});
-
 // ✅ فتح نتيجة (إدارة فقط) - إصدار محسّن
 app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   const { seatNumber } = req.body;
