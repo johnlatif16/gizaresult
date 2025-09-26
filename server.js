@@ -534,30 +534,91 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
 });
 
 // ========== APIs OPay ==========
+// ========== APIs OPay - الإصدار المصحح ==========
 app.post('/api/opay-pay', async (req, res) => {
   try {
     const { amount, description, orderId } = req.body;
 
+    // التحقق من وجود البيانات المطلوبة
+    if (!amount || !description || !orderId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'بيانات الدفع غير مكتملة' 
+      });
+    }
+
+    // التحقق من تكوين OPay
+    if (!process.env.OPAY_MERCHANT_ID || !process.env.OPAY_API_KEY) {
+      console.error('تكوين OPay غير مكتمل');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'تكوين نظام الدفع غير مكتمل' 
+      });
+    }
+
+    // استخدام بيانات اختبار إذا كانت في وضع التطوير
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      // في وضع التطوير، نعيد رابط وهمي للاختبار
+      console.log('وضع التطوير - إنشاء جلسة دفع وهمية');
+      return res.json({ 
+        success: true, 
+        paymentUrl: `https://example.com/payment-test?orderId=${orderId}&amount=${amount}`,
+        isTest: true
+      });
+    }
+
+    // في حالة الإنتاج - الاتصال بـ OPay الحقيقي
     const opayRequest = {
       merchant_id: process.env.OPAY_MERCHANT_ID,
       order_id: orderId,
-      amount,
-      currency: "ETB", // أو العملة المطلوبة
-      description,
-      callback_url: process.env.OPAY_CALLBACK_URL
+      amount: amount,
+      currency: "EGP", // تغيير من ETB إلى EGP (جنيه مصري)
+      description: description,
+      callback_url: process.env.OPAY_CALLBACK_URL,
+      return_url: process.env.OPAY_CALLBACK_URL // إضافة return_url
     };
 
-    const opayResponse = await axios.post("https://api.opay.com/payments", opayRequest, {
+    console.log('إرسال طلب إلى OPay:', opayRequest);
+
+    const opayResponse = await axios.post("https://api.opaycheckout.com/api/v1/international/cashier/create", opayRequest, {
       headers: {
         Authorization: `Bearer ${process.env.OPAY_API_KEY}`,
         "Content-Type": "application/json"
-      }
+      },
+      timeout: 10000 // timeout 10 ثواني
     });
 
-    res.json({ success: true, paymentUrl: opayResponse.data.payment_url });
+    console.log('استجابة OPay:', opayResponse.data);
+
+    if (opayResponse.data && opayResponse.data.data && opayResponse.data.data.cashierUrl) {
+      res.json({ 
+        success: true, 
+        paymentUrl: opayResponse.data.data.cashierUrl 
+      });
+    } else {
+      throw new Error('استجابة غير متوقعة من OPay');
+    }
+
   } catch (error) {
-    console.error("Error creating OPay payment:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error creating OPay payment:", error.response?.data || error.message);
+    
+    // إعادة رسالة خطأ أكثر وضوحاً
+    let errorMessage = 'فشل في إنشاء جلسة الدفع';
+    
+    if (error.response) {
+      // خطأ من API OPay
+      errorMessage = `خطأ من نظام الدفع: ${error.response.data?.message || error.response.statusText}`;
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'انتهت مهلة الاتصال بنظام الدفع';
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
