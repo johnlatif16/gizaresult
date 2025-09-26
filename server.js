@@ -533,5 +533,23 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
 
 // ==============================================
 
+// ✅ Route لتجربة إرسال إيميل
+app.get('/test-email', async (req, res) => {
+  try {
+    let info = await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: process.env.NOTIFICATION_EMAIL || process.env.SMTP_USER,
+      subject: "اختبار SMTP",
+      text: "لو وصل الإيميل ده يبقى الإعدادات تمام ✅"
+    });
+
+    res.send("تم إرسال البريد بنجاح: " + info.response);
+  } catch (err) {
+    console.error("Error sending test email:", err);
+    res.status(500).send("خطأ في الإرسال: " + err.message);
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
