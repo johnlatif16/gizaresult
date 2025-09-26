@@ -29,7 +29,9 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 // إعداد البريد
 let transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
