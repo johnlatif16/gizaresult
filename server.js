@@ -564,7 +564,7 @@ app.post('/api/opay-pay', async (req, res) => {
       console.log('وضع التطوير - إنشاء جلسة دفع وهمية');
       return res.json({ 
         success: true, 
-        paymentUrl: `https://https://gizaresult-production.up.railway.app/payment-test?orderId=${orderId}&amount=${amount}`,
+        paymentUrl: `https://gizaresult-production.up.railway.app/payment-test?orderId=${orderId}&amount=${amount}`,
         isTest: true
       });
     }
