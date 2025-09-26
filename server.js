@@ -420,7 +420,7 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
 
 
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
-app.post('/api/send-email-dashboard', async (req, res) => {
+app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
   if (!message) return res.json({ success: false, message: 'الرسالة فارغة' });
 
