@@ -28,56 +28,15 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 // إعداد البريد
-const { google } = require('googleapis');
-const path = require('path');
-const fs = require('fs');
-
-// إعداد Gmail API
-const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
-const TOKEN_PATH = path.join(__dirname, 'token.json');       // ملف التوكن
-const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json'); // بيانات الاعتماد من Google Cloud
-
-const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
-const { client_secret, client_id, redirect_uris } = credentials.installed || credentials.web;
-
-const oAuth2Client = new google.auth.OAuth2(
-  client_id,
-  client_secret,
-  redirect_uris[0]
-);
-
-oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)));
-
-async function sendGmail(subject, body, toEmail) {
-  try {
-    const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
-
-    const rawMessage = [
-      `From: "My App" <${process.env.SMTP_USER}>`,
-      `To: ${toEmail}`,
-      `Subject: ${subject}`,
-      '',
-      body
-    ].join('\n');
-
-    const encodedMessage = Buffer.from(rawMessage)
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-
-    await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: {
-        raw: encodedMessage
-      }
-    });
-
-    console.log('✅ Gmail API: البريد تم إرساله بنجاح');
-  } catch (error) {
-    console.error('❌ Gmail API Error:', error);
+let transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
   }
-}
+});
 
 // ✅ Middleware للتحقق من JWT - معدل
 function authenticateAdmin(req, res, next) {
@@ -475,7 +434,7 @@ app.post('/api/send-email-dashboard', async (req, res) => {
 
     const docRef = await db.collection('chat_inquiries').add(newChatInquiry);
 
-    // إرسال إشعار للادمن على تليجرام
+    // إرسال إشعار للادمن
     const telegramMessage = `
 <b>استفسار جديد من الدردشة:</b>
 👤 <b>الاسم:</b> ${userData.name || "غير معروف"}
@@ -486,22 +445,6 @@ app.post('/api/send-email-dashboard', async (req, res) => {
 ${message}
     `;
     await sendTelegramNotification(telegramMessage);
-
-    // إرسال بريد عبر Gmail API
-    await sendGmail(
-      "استفسار جديد من الدردشة",
-      `
-لقد وصل استفسار جديد من الدردشة:
-
-الاسم: ${userData.name || "غير معروف"}
-الهاتف: ${userData.phone || "غير معروف"}
-البريد: ${userData.email || "غير معروف"}
-
-الرسالة:
-${message}
-      `,
-      "admin@example.com" // هنا حط إيميل الأدمن اللي تريد الإشعار يروح له
-    );
 
     res.json({ success: true, id: docRef.id });
   } catch (error) {
@@ -589,24 +532,6 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
 });
 
 // ==============================================
-
-// ✅ Route لتجربة إرسال إيميل
-app.get('/test-email', async (req, res) => {
-  try {
-    let info = await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: process.env.NOTIFICATION_EMAIL || process.env.SMTP_USER,
-      subject: "اختبار SMTP",
-      text: "لو وصل الإيميل ده يبقى الإعدادات تمام ✅"
-    });
-
-    res.send("تم إرسال البريد بنجاح: " + info.response);
-  } catch (err) {
-    console.error("Error sending test email:", err);
-    res.status(500).send("خطأ في الإرسال: " + err.message);
-  }
-});
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
