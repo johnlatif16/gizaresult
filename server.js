@@ -135,7 +135,7 @@ app.get('/pay', (req, res) => {
 // رفع طلب الدفع
 app.post('/pay', async (req, res) => {
   try {
-    const { nationalId, seatNumber, phone, email } = req.body;
+    const { nationalId, seatNumber, phone, email, orderId } = req.body;
     if (!req.files || !req.files.screenshot) {
       return res.status(400).send('يجب رفع سكرين التحويل');
     }
@@ -156,7 +156,8 @@ app.post('/pay', async (req, res) => {
       email,
       screenshot: filename,
       paid: false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      orderId: orderId || null // ✅ إضافة orderId
     };
 
     await db.collection('requests').add(newRequest);
@@ -166,7 +167,7 @@ app.post('/pay', async (req, res) => {
       `طلب دفع جديد:\n${JSON.stringify(newRequest, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}`
+      `<b>طلب دفع جديد:</b>\nالرقم القومي: ${nationalId}\nرقم الجلوس: ${seatNumber}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nOrder ID: ${orderId || 'غير محدد'}`
     );
 
     res.send('تم تسجيل طلبك، سيتم التأكد من الدفع قريبًا.');
@@ -176,10 +177,10 @@ app.post('/pay', async (req, res) => {
   }
 });
 
-// الحجز
+// الحجز التقليدي
 app.post('/reserve', async (req, res) => {
   try {
-    const { nationalId, phone, email, senderPhone } = req.body;
+    const { nationalId, phone, email, senderPhone, orderId } = req.body;
     if (!nationalId || !phone || !email || !senderPhone) {
       return res.status(400).send('البيانات غير مكتملة');
     }
@@ -204,7 +205,9 @@ app.post('/reserve', async (req, res) => {
       email,
       senderPhone: cleanSenderPhone,
       screenshot: filename,
-      reserved_at: new Date().toISOString()
+      reserved_at: new Date().toISOString(),
+      method: 'traditional', // ✅ تمييز النوع
+      orderId: orderId || null // ✅ إضافة orderId
     };
 
     await db.collection('reservations').add(newReservation);
@@ -214,7 +217,7 @@ app.post('/reserve', async (req, res) => {
       `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
+      `<b>طلب حجز جديد:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}\nOrder ID: ${orderId || 'غير محدد'}`
     );
 
     res.send('تم تسجيل الحجز بنجاح.');
@@ -224,10 +227,10 @@ app.post('/reserve', async (req, res) => {
   }
 });
 
-// ✅ API جديدة للحجز عن طريق التليفون
+// ✅ API جديدة للحجز عن طريق التليفون مع orderId
 app.post('/api/reserve-by-phone', async (req, res) => {
   try {
-    const { nationalId, phone, email, senderPhone } = req.body;
+    const { nationalId, phone, email, senderPhone, orderId } = req.body;
     if (!nationalId || !phone || !email || !senderPhone) {
       return res.status(400).json({ success: false, message: 'البيانات غير مكتملة' });
     }
@@ -253,7 +256,8 @@ app.post('/api/reserve-by-phone', async (req, res) => {
       senderPhone: cleanSenderPhone,
       screenshot: filename,
       reserved_at: new Date().toISOString(),
-      method: 'phone' // ✅ عشان نفرق انه حجز بالتليفون
+      method: 'phone', // ✅ عشان نفرق انه حجز بالتليفون
+      orderId: orderId || null // ✅ إضافة orderId
     };
 
     await db.collection('reservations').add(newReservation);
@@ -264,7 +268,7 @@ app.post('/api/reserve-by-phone', async (req, res) => {
       `طلب حجز جديد:\n${JSON.stringify(newReservation, null, 2)}`
     );
     await sendTelegramNotification(
-      `<b>📞 طلب حجز جديد عن طريق التليفون:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}`
+      `<b>📞 طلب حجز جديد عن طريق التليفون:</b>\nالرقم القومي: ${nationalId}\nالهاتف: ${cleanPhone}\nالبريد: ${email}\nرقم المحول: ${cleanSenderPhone}\nOrder ID: ${orderId || 'غير محدد'}`
     );
 
     res.json({ success: true, message: 'تم تسجيل الحجز بنجاح.' });
@@ -418,7 +422,6 @@ app.post('/api/open-result', authenticateAdmin, async (req, res) => {
   }
 });
 
-
 // إرسال رسالة للادمن من الدردشة وحفظها في Firestore
 app.post('/api/send-admin-message', async (req, res) => {
   const { message, userData } = req.body;
@@ -454,6 +457,28 @@ ${message}
 });
 
 // ========== APIs إدارية (محميّة بـ JWT) ==========
+
+// ✅ API لطلبات الدفع (محمي)
+app.get('/api/requests', authenticateAdmin, async (req, res) => {
+  try {
+    const snap = await db.collection('requests').get();
+    const requests = snap.docs.map(doc => {
+      const data = doc.data();
+      if (data.screenshot && data.screenshot !== '') {
+        data.screenshot = `/uploads/${data.screenshot}`;
+      } else {
+        data.screenshot = null;
+      }
+      return { id: doc.id, ...data };
+    });
+    res.json({ requests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ✅ API للاستفسارات (محمي)
 app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('chat_inquiries').orderBy('created_at', 'desc').get();
@@ -475,6 +500,7 @@ app.get('/api/chat-inquiries', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API لحذف الاستفسارات (محمي)
 app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).delete();
@@ -484,6 +510,7 @@ app.delete('/api/chat-inquiries/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API لتحديث حالة الاستفسار (محمي)
 app.put('/api/chat-inquiries/:id/read', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('chat_inquiries').doc(req.params.id).update({ status: 'read' });
@@ -493,6 +520,7 @@ app.put('/api/chat-inquiries/:id/read', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API للنتائج (محمي)
 app.get('/api/results', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('results').get();
@@ -503,6 +531,7 @@ app.get('/api/results', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API للحجوزات (محمي)
 app.get('/api/reservations', authenticateAdmin, async (req, res) => {
   try {
     const snap = await db.collection('reservations').get();
@@ -513,6 +542,7 @@ app.get('/api/reservations', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API لحذف الحجوزات (محمي)
 app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('reservations').doc(req.params.id).delete();
@@ -522,6 +552,7 @@ app.delete('/api/reservations/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API لحذف الطلبات (محمي)
 app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   try {
     await db.collection('requests').doc(req.params.id).delete();
@@ -531,6 +562,7 @@ app.delete('/api/requests/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ API للدفع عبر OPay
 app.post('/api/opay-pay', async (req, res) => {
   try {
     const { amount, description, orderId } = req.body;
@@ -558,6 +590,7 @@ app.post('/api/opay-pay', async (req, res) => {
   }
 });
 
+// ✅ Webhook لاستقبال تحديثات الدفع من OPay
 app.post('/api/opay-webhook', async (req, res) => {
   try {
     const { order_id, status, transaction_id } = req.body;
