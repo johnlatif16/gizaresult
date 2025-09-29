@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة تحكم الادمن</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,6 +15,13 @@
     --accent: #8b5cf6;
     --light: #f8fafc;
     --dark: #1e293b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+  }
+  
+  * {
+    box-sizing: border-box;
   }
   
   body {
@@ -21,6 +29,8 @@
     display: flex;
     min-height: 100vh;
     background-color: #f8fafc;
+    margin: 0;
+    overflow-x: hidden;
   }
   
   .sidebar {
@@ -31,10 +41,40 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+  
+  .sidebar-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .sidebar-header i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
   }
   
   .sidebar button {
-    margin-bottom: 12px;
     text-align: right;
     padding: 12px 16px;
     border-radius: 10px;
@@ -45,6 +85,8 @@
     color: white;
     display: flex;
     align-items: center;
+    border: none;
+    width: 100%;
   }
   
   .sidebar button:hover {
@@ -57,15 +99,21 @@
     font-size: 1.2rem;
   }
   
+  .sidebar-footer {
+    margin-top: auto;
+  }
+  
   .content {
     flex-grow: 1;
     padding: 25px;
     overflow-x: auto;
     background-color: #f1f5f9;
+    margin-right: 250px;
+    transition: margin-right 0.3s ease;
   }
   
   .hidden {
-    display: none;
+    display: none !important;
   }
   
   .card {
@@ -74,16 +122,23 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin-bottom: 25px;
+    overflow: hidden;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   }
   
   table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 20px 0;
+    margin: 0;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    min-width: 800px;
   }
   
   th {
@@ -91,12 +146,14 @@
     color: white;
     padding: 14px;
     font-weight: 600;
+    text-align: center;
   }
   
   td {
     padding: 12px;
     border-bottom: 1px solid #e5e7eb;
     text-align: center;
+    vertical-align: middle;
   }
   
   tr:last-child td {
@@ -107,12 +164,22 @@
     background-color: #f9fafb;
   }
   
+  tr:hover {
+    background-color: #f3f4f6;
+  }
+  
   .action-btn {
     padding: 8px 14px;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 0.875rem;
   }
   
   .open-btn {
@@ -146,27 +213,33 @@
   }
   
   img.screenshot {
-    width: 100px;
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
     border: 1px solid #ddd;
     border-radius: 8px;
     transition: all 0.3s;
+    cursor: pointer;
   }
   
   img.screenshot:hover {
     transform: scale(1.8);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    position: relative;
   }
   
-  input, textarea {
+  input, textarea, select {
     width: 100%;
     padding: 12px 16px;
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     transition: all 0.3s;
     background: #f9fafb;
+    font-family: 'Tajawal', sans-serif;
   }
   
-  input:focus, textarea:focus {
+  input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -180,6 +253,9 @@
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 3px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .status-badge {
@@ -187,6 +263,7 @@
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: bold;
+    display: inline-block;
   }
   
   .status-badge.new {
@@ -206,6 +283,8 @@
     border-radius: 6px;
     margin-right: 5px;
     cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
   }
   
   .btn-delete {
@@ -214,44 +293,160 @@
     padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+  }
+  
+  .loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .notification {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    z-index: 10000;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .notification.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .notification.success {
+    background-color: var(--success);
+  }
+  
+  .notification.error {
+    background-color: var(--danger);
+  }
+  
+  .notification.info {
+    background-color: var(--primary);
+  }
+  
+  .mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1001;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(100%);
+      width: 280px;
+    }
+    
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    
+    .content {
+      margin-right: 0;
+      padding: 15px;
+    }
+    
+    .mobile-menu-btn {
+      display: block;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+    }
+    
+    .card {
+      padding: 15px;
+      border-radius: 12px;
+    }
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+  }
+  
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+  }
+  
+  .empty-state p {
+    font-size: 1.1rem;
   }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <div class="text-center mb-8">
-    <i class="fas fa-user-shield fa-2x mb-2"></i>
-    <h2 class="text-xl font-bold">لوحة التحكم</h2>
+<button class="mobile-menu-btn" id="mobileMenuBtn">
+  <i class="fas fa-bars"></i>
+</button>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <i class="fas fa-user-shield"></i>
+    <h2>لوحة التحكم</h2>
   </div>
   
-  <button onclick="showSection('requests')">
-    <i class="fas fa-money-bill-wave"></i>
-    الطلبات
-  </button>
+  <div class="sidebar-menu">
+    <button onclick="showSection('requests')">
+      <i class="fas fa-money-bill-wave"></i>
+      الطلبات
+    </button>
+    
+    <button onclick="showSection('results')">
+      <i class="fas fa-chart-line"></i>
+      النتائج
+    </button>
+    
+    <button onclick="showSection('reservations')">
+      <i class="fas fa-calendar-check"></i>
+      الحجوزات
+    </button>
+    
+    <button onclick="showSection('chatInquiries')">
+      <i class="fas fa-comments"></i>
+      استفسارات الدردشة
+    </button>
+    
+    <button onclick="showSection('send')">
+      <i class="fas fa-envelope"></i>
+      إرسال النتيجة
+    </button>
+  </div>
   
-  <button onclick="showSection('results')">
-    <i class="fas fa-chart-line"></i>
-    النتائج
-  </button>
-  
-  <button onclick="showSection('reservations')">
-    <i class="fas fa-calendar-check"></i>
-    الحجوزات
-  </button>
-  
-  <button onclick="showSection('chatInquiries')">
-    <i class="fas fa-comments"></i>
-    استفسارات الدردشة
-  </button>
-  
-  <button onclick="showSection('send')">
-    <i class="fas fa-envelope"></i>
-    إرسال النتيجة
-  </button>
-  
-  <div class="mt-auto">
-    <button onclick="logout()" class="bg-red-500 hover:bg-red-600">
+  <div class="sidebar-footer">
+    <button onclick="logout()" class="logout-btn">
       <i class="fas fa-sign-out-alt"></i>
       تسجيل الخروج
     </button>
@@ -260,94 +455,145 @@
 
 <div class="content">
   <!-- طلبات الدفع -->
-  <div id="requests" class="hidden">
-    <h2 class="section-title">طلبات الدفع</h2>
+  <div id="requests" class="section hidden">
+    <h2 class="section-title">
+      <i class="fas fa-money-bill-wave"></i>
+      طلبات الدفع
+    </h2>
     <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الرقم القومي</th>
-            <th>رقم الجلوس</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>سكرين التحويل</th>
-            <th>تاريخ الطلب</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="requestsTable"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم القومي</th>
+              <th>رقم الجلوس</th>
+              <th>رقم الهاتف</th>
+              <th>البريد الإلكتروني</th>
+              <th>سكرين التحويل</th>
+              <th>تاريخ الطلب</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="requestsTable">
+            <tr>
+              <td colspan="7" class="empty-state">
+                <i class="fas fa-spinner loading"></i>
+                <p>جاري تحميل البيانات...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- النتائج المفتوحة -->
-  <div id="results" class="hidden">
-    <h2 class="section-title">النتائج المفتوحة</h2>
+  <div id="results" class="section hidden">
+    <h2 class="section-title">
+      <i class="fas fa-chart-line"></i>
+      النتائج المفتوحة
+    </h2>
     <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>رقم الجلوس</th>
-            <th>الاسم</th>
-            <th>الصف</th>
-            <th>الشعبة</th>
-            <th>المدرسة</th>
-            <th>النسبة %</th>
-            <th>الملاحظات</th>
-            <th>فتح النتيجة</th>
-            <th>إرسال البريد</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTable"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الجلوس</th>
+              <th>الاسم</th>
+              <th>الصف</th>
+              <th>الشعبة</th>
+              <th>المدرسة</th>
+              <th>النسبة %</th>
+              <th>الملاحظات</th>
+              <th>فتح النتيجة</th>
+              <th>إرسال البريد</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTable">
+            <tr>
+              <td colspan="9" class="empty-state">
+                <i class="fas fa-spinner loading"></i>
+                <p>جاري تحميل البيانات...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- قسم الحجوزات -->
-  <div id="reservations" class="hidden">
-    <h2 class="section-title">قسم الحجوزات</h2>
+  <div id="reservations" class="section hidden">
+    <h2 class="section-title">
+      <i class="fas fa-calendar-check"></i>
+      قسم الحجوزات
+    </h2>
     <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الرقم القومي</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>رقم المحول</th>
-            <th>صورة التحويل</th>
-            <th>تاريخ الحجز</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="reservationsTable"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم القومي</th>
+              <th>رقم الهاتف</th>
+              <th>البريد الإلكتروني</th>
+              <th>رقم المحول</th>
+              <th>صورة التحويل</th>
+              <th>تاريخ الحجز</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="reservationsTable">
+            <tr>
+              <td colspan="7" class="empty-state">
+                <i class="fas fa-spinner loading"></i>
+                <p>جاري تحميل البيانات...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- استفسارات الدردشة -->
-  <div id="chatInquiries" class="hidden">
-    <h2 class="section-title">استفسارات الدردشة</h2>
+  <div id="chatInquiries" class="section hidden">
+    <h2 class="section-title">
+      <i class="fas fa-comments"></i>
+      استفسارات الدردشة
+    </h2>
     <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الاسم</th>
-            <th>رقم الهاتف</th>
-            <th>البريد الإلكتروني</th>
-            <th>الرسالة</th>
-            <th>تاريخ الإرسال</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="chatInquiriesTable"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>رقم الهاتف</th>
+              <th>البريد الإلكتروني</th>
+              <th>الرسالة</th>
+              <th>تاريخ الإرسال</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="chatInquiriesTable">
+            <tr>
+              <td colspan="7" class="empty-state">
+                <i class="fas fa-spinner loading"></i>
+                <p>جاري تحميل البيانات...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- إرسال البريد -->
-  <div id="send" class="hidden">
-    <h2 class="section-title">إرسال النتيجة عبر البريد</h2>
+  <div id="send" class="section hidden">
+    <h2 class="section-title">
+      <i class="fas fa-envelope"></i>
+      إرسال النتيجة عبر البريد
+    </h2>
     <div class="card max-w-md mx-auto">
       <form id="sendForm" class="space-y-4">
         <div>
@@ -357,7 +603,7 @@
         
         <div>
           <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-          <input id="sendEmail" placeholder="أدخل البريد الإلكتروني" required>
+          <input id="sendEmail" type="email" placeholder="أدخل البريد الإلكتروني" required>
         </div>
         
         <div>
@@ -373,6 +619,8 @@
     </div>
   </div>
 </div>
+
+<div id="notification" class="notification"></div>
 
 <script>
 // دالة للحصول على التوكن من localStorage
@@ -399,9 +647,39 @@ function getAuthHeaders() {
   };
 }
 
+// دالة لعرض الإشعارات
+function showNotification(message, type = 'info') {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = `notification ${type}`;
+  notification.classList.add('show');
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 4000);
+}
+
 // عند تحميل الصفحة، تحقق من المصادقة
 document.addEventListener('DOMContentLoaded', function() {
   if (!checkAuth()) return;
+  
+  // إعداد القائمة الجانبية للجوال
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('sidebar');
+  
+  mobileMenuBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+  
+  // إغلاق القائمة عند النقر خارجها (للجوال)
+  document.addEventListener('click', function(event) {
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !mobileMenuBtn.contains(event.target) && 
+        sidebar.classList.contains('active')) {
+      sidebar.classList.remove('active');
+    }
+  });
   
   // إذا كانت المصادقة صحيحة، قم بتحميل البيانات
   showSection('requests');
@@ -413,11 +691,17 @@ document.addEventListener('DOMContentLoaded', function() {
 function showSection(id){
   if (!checkAuth()) return;
   
-  ['requests','results','reservations','chatInquiries','send'].forEach(sec => {
-    const element = document.getElementById(sec);
-    if (element) element.classList.add('hidden');
+  // إغلاق القائمة الجانبية على الجوال
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('active');
+  }
+  
+  // إخفاء جميع الأقسام
+  document.querySelectorAll('.section').forEach(sec => {
+    sec.classList.add('hidden');
   });
   
+  // إظهار القسم المطلوب
   const targetSection = document.getElementById(id);
   if (targetSection) targetSection.classList.remove('hidden');
   
@@ -428,8 +712,10 @@ function showSection(id){
 }
 
 function logout() {
-  localStorage.removeItem('adminToken');
-  window.location.href = '/login.html';
+  if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+    localStorage.removeItem('adminToken');
+    window.location.href = '/login.html';
+  }
 }
 
 // تحميل الطلبات
@@ -448,27 +734,48 @@ async function loadRequests(){
     
     const data = await res.json();
     const tbody = document.getElementById('requestsTable');
-    tbody.innerHTML = '';
     
-    data.requests.forEach(r => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${r.nationalId || 'N/A'}</td>
-        <td>${r.seatNumber}</td>
-        <td>${r.phone}</td>
-        <td>${r.email}</td>
-        <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" />` : 'لا يوجد'}</td>
-        <td>${new Date(r.created_at).toLocaleString()}</td>
-        <td>
-          <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
-            <i class="fas fa-trash"></i> حذف
-          </button>
-        </td>
+    if (data.requests && data.requests.length > 0) {
+      tbody.innerHTML = '';
+      
+      data.requests.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.nationalId || 'N/A'}</td>
+          <td>${r.seatNumber}</td>
+          <td>${r.phone}</td>
+          <td>${r.email}</td>
+          <td>${r.screenshot ? `<img class="screenshot" src="${r.screenshot}" alt="سكرين شوت التحويل" />` : 'لا يوجد'}</td>
+          <td>${new Date(r.created_at).toLocaleString('ar-EG')}</td>
+          <td>
+            <button class="action-btn delete-btn" onclick="deleteRequest('${r.id}')">
+              <i class="fas fa-trash"></i> حذف
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } else {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>لا توجد طلبات حالياً</p>
+          </td>
+        </tr>
       `;
-      tbody.appendChild(tr);
-    });
+    }
   } catch (error) {
     console.error('Error loading requests:', error);
+    const tbody = document.getElementById('requestsTable');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>حدث خطأ في تحميل البيانات</p>
+        </td>
+      </tr>
+    `;
   }
 }
 
@@ -488,9 +795,10 @@ async function loadResults(){
     
     const data = await res.json();
     const tbody = document.getElementById('resultsTable');
-    tbody.innerHTML = '';
     
     if (data.results && data.results.length > 0) {
+      tbody.innerHTML = '';
+      
       data.results.forEach(student => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -507,10 +815,26 @@ async function loadResults(){
         tbody.appendChild(tr);
       });
     } else {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">لا توجد نتائج متاحة</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>لا توجد نتائج متاحة</p>
+          </td>
+        </tr>
+      `;
     }
   } catch (error) {
     console.error('Error loading results:', error);
+    const tbody = document.getElementById('resultsTable');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>حدث خطأ في تحميل البيانات</p>
+        </td>
+      </tr>
+    `;
   }
 }
 
@@ -530,9 +854,10 @@ async function loadReservations(){
     
     const data = await res.json();
     const tbody = document.getElementById('reservationsTable');
-    tbody.innerHTML = '';
     
     if (data.reservations && data.reservations.length > 0) {
+      tbody.innerHTML = '';
+      
       data.reservations.forEach(reservation => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -540,8 +865,8 @@ async function loadReservations(){
           <td>${reservation.phone}</td>
           <td>${reservation.email}</td>
           <td>${reservation.senderPhone || 'غير متوفر'}</td>
-          <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" />` : 'لا يوجد'}</td>
-          <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString() : ''}</td>
+          <td>${reservation.screenshot ? `<img class="screenshot" src="/uploads/${reservation.screenshot}" alt="صورة التحويل" />` : 'لا يوجد'}</td>
+          <td>${reservation.reserved_at ? new Date(reservation.reserved_at).toLocaleString('ar-EG') : ''}</td>
           <td>
             <button class="action-btn delete-btn" onclick="deleteReservation('${reservation.id}')">
               <i class="fas fa-trash"></i> حذف
@@ -551,10 +876,26 @@ async function loadReservations(){
         tbody.appendChild(tr);
       });
     } else {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">لا توجد حجوزات متاحة</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>لا توجد حجوزات متاحة</p>
+          </td>
+        </tr>
+      `;
     }
   } catch (error) {
     console.error('Error loading reservations:', error);
+    const tbody = document.getElementById('reservationsTable');
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>حدث خطأ في تحميل البيانات</p>
+        </td>
+      </tr>
+    `;
   }
 }
 
@@ -576,13 +917,14 @@ async function deleteReservation(id) {
       
       const data = await res.json();
       if (data.success) {
-        alert('تم حذف الحجز بنجاح');
+        showNotification('تم حذف الحجز بنجاح', 'success');
         loadReservations();
       } else {
-        alert('حدث خطأ أثناء حذف الحجز: ' + data.message);
+        showNotification('حدث خطأ أثناء حذف الحجز: ' + data.message, 'error');
       }
     } catch (error) {
       console.error('Error deleting reservation:', error);
+      showNotification('حدث خطأ أثناء حذف الحجز', 'error');
     }
   }
 }
@@ -604,13 +946,14 @@ async function deleteRequest(id) {
       
       const data = await res.json();
       if (data.success) {
-        alert('تم حذف الطلب بنجاح');
+        showNotification('تم حذف الطلب بنجاح', 'success');
         loadRequests();
       } else {
-        alert('حدث خطأ أثناء حذف الطلب: ' + data.message);
+        showNotification('حدث خطأ أثناء حذف الطلب: ' + data.message, 'error');
       }
     } catch (error) {
       console.error('Error deleting request:', error);
+      showNotification('حدث خطأ أثناء حذف الطلب', 'error');
     }
   }
 }
@@ -632,11 +975,16 @@ async function openResult(seatNumber){
     }
     
     const data = await res.json();
-    alert(data.success ? 'تم فتح النتيجة' : 'خطأ: ' + data.message);
-    loadRequests();
-    loadResults();
+    if (data.success) {
+      showNotification('تم فتح النتيجة بنجاح', 'success');
+      loadRequests();
+      loadResults();
+    } else {
+      showNotification('خطأ: ' + data.message, 'error');
+    }
   } catch (error) {
     console.error('Error opening result:', error);
+    showNotification('حدث خطأ أثناء فتح النتيجة', 'error');
   }
 }
 
@@ -657,9 +1005,10 @@ async function loadChatInquiries() {
     const data = await response.json();
     
     const inquiriesTable = document.getElementById('chatInquiriesTable');
-    inquiriesTable.innerHTML = '';
     
     if (data.inquiries && data.inquiries.length > 0) {
+      inquiriesTable.innerHTML = '';
+      
       data.inquiries.forEach(inquiry => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -679,10 +1028,26 @@ async function loadChatInquiries() {
         inquiriesTable.appendChild(row);
       });
     } else {
-      inquiriesTable.innerHTML = '<tr><td colspan="7" class="text-center py-4">لا توجد استفسارات</td></tr>';
+      inquiriesTable.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>لا توجد استفسارات</p>
+          </td>
+        </tr>
+      `;
     }
   } catch (error) {
     console.error('Error loading inquiries:', error);
+    const inquiriesTable = document.getElementById('chatInquiriesTable');
+    inquiriesTable.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>حدث خطأ في تحميل البيانات</p>
+        </td>
+      </tr>
+    `;
   }
 }
 
@@ -695,9 +1060,11 @@ async function markAsRead(id) {
       method: 'PUT',
       headers: getAuthHeaders()
     });
+    showNotification('تم تمييز الاستفسار كمقروء', 'success');
     loadChatInquiries(); // إعادة تحميل البيانات
   } catch (error) {
     console.error('Error marking as read:', error);
+    showNotification('حدث خطأ أثناء تمييز الاستفسار', 'error');
   }
 }
 
@@ -711,9 +1078,11 @@ async function deleteInquiry(id) {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
+      showNotification('تم حذف الاستفسار بنجاح', 'success');
       loadChatInquiries(); // إعادة تحميل البيانات
     } catch (error) {
       console.error('Error deleting inquiry:', error);
+      showNotification('حدث خطأ أثناء حذف الاستفسار', 'error');
     }
   }
 }
@@ -723,7 +1092,18 @@ async function sendEmailPrompt(seatNumber){
   if (!checkAuth()) return;
   
   const email = prompt('البريد الإلكتروني:');
-  if(!email) return alert('البريد الإلكتروني مطلوب');
+  if(!email) {
+    showNotification('البريد الإلكتروني مطلوب', 'error');
+    return;
+  }
+  
+  // التحقق من صحة البريد الإلكتروني
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showNotification('يرجى إدخال بريد إلكتروني صحيح', 'error');
+    return;
+  }
+  
   const message = prompt('نص الرسالة:');
   
   try {
@@ -739,9 +1119,14 @@ async function sendEmailPrompt(seatNumber){
     }
     
     const data = await res.json();
-    alert(data.success ? 'تم الإرسال' : 'خطأ: ' + data.message);
+    if (data.success) {
+      showNotification('تم إرسال البريد بنجاح', 'success');
+    } else {
+      showNotification('خطأ: ' + data.message, 'error');
+    }
   } catch (error) {
     console.error('Error sending email:', error);
+    showNotification('حدث خطأ أثناء إرسال البريد', 'error');
   }
 }
 
@@ -753,6 +1138,13 @@ document.getElementById('sendForm')?.addEventListener('submit', async function(e
   const seatNumber = document.getElementById('sendSeat').value;
   const email = document.getElementById('sendEmail').value;
   const message = document.getElementById('sendMessage').value;
+  
+  // التحقق من صحة البريد الإلكتروني
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showNotification('يرجى إدخال بريد إلكتروني صحيح', 'error');
+    return;
+  }
   
   try {
     const res = await fetch('/api/send-email-dashboard', {
@@ -767,14 +1159,15 @@ document.getElementById('sendForm')?.addEventListener('submit', async function(e
     }
     
     const data = await res.json();
-    alert(data.success ? 'تم الإرسال بنجاح' : 'خطأ: ' + data.message);
-    
     if (data.success) {
+      showNotification('تم الإرسال بنجاح', 'success');
       document.getElementById('sendForm').reset();
+    } else {
+      showNotification('خطأ: ' + data.message, 'error');
     }
   } catch (error) {
     console.error('Error sending email:', error);
-    alert('حدث خطأ أثناء الإرسال');
+    showNotification('حدث خطأ أثناء الإرسال', 'error');
   }
 });
 
@@ -790,7 +1183,7 @@ setInterval(() => {
   if (!document.getElementById('chatInquiries').classList.contains('hidden')) {
     loadChatInquiries();
   }
-}, 10000);
+}, 30000); // تحديث كل 30 ثانية بدلاً من 10
 
 </script>
 
