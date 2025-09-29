@@ -10,14 +10,26 @@
   @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
   
   :root {
-    --primary: #3b82f6;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
     --secondary: #10b981;
+    --secondary-dark: #059669;
     --accent: #8b5cf6;
+    --accent-dark: #7c3aed;
     --light: #f8fafc;
     --dark: #1e293b;
     --danger: #ef4444;
+    --danger-dark: #dc2626;
     --success: #10b981;
+    --success-dark: #059669;
     --warning: #f59e0b;
+    --warning-dark: #d97706;
+    
+    /* Dark mode colors */
+    --bg-dark: #0f172a;
+    --card-dark: #1e293b;
+    --text-dark: #f1f5f9;
+    --border-dark: #334155;
   }
   
   * {
@@ -28,24 +40,35 @@
     font-family: 'Tajawal', sans-serif;
     display: flex;
     min-height: 100vh;
-    background-color: #f8fafc;
+    background-color: var(--light);
     margin: 0;
     overflow-x: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  body.dark-mode {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
   }
   
   .sidebar {
     width: 250px;
-    background: linear-gradient(to bottom, var(--primary), #2563eb);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
     position: fixed;
     height: 100vh;
     overflow-y: auto;
     z-index: 1000;
+  }
+  
+  .dark-mode .sidebar {
+    background: linear-gradient(135deg, #3730a3, #312e81);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
   
   .sidebar-header {
@@ -59,6 +82,7 @@
     font-size: 2rem;
     margin-bottom: 0.5rem;
     display: block;
+    color: #c7d2fe;
   }
   
   .sidebar-header h2 {
@@ -77,7 +101,7 @@
   .sidebar button {
     text-align: right;
     padding: 12px 16px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
@@ -87,11 +111,13 @@
     align-items: center;
     border: none;
     width: 100%;
+    backdrop-filter: blur(10px);
   }
   
   .sidebar button:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
   .sidebar button i {
@@ -101,6 +127,26 @@
   
   .sidebar-footer {
     margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .theme-toggle {
+    background: rgba(255, 255, 255, 0.15) !important;
+    margin-bottom: 10px;
+  }
+  
+  .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+  }
+  
+  .logout-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  }
+  
+  .logout-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
   }
   
   .content {
@@ -109,7 +155,12 @@
     overflow-x: auto;
     background-color: #f1f5f9;
     margin-right: 250px;
-    transition: margin-right 0.3s ease;
+    transition: all 0.3s ease;
+  }
+  
+  .dark-mode .content {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
   }
   
   .hidden {
@@ -123,12 +174,24 @@
     padding: 20px;
     margin-bottom: 25px;
     overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .dark-mode .card {
+    background: var(--card-dark);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    border-color: var(--border-dark);
   }
   
   .table-container {
     overflow-x: auto;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .dark-mode .table-container {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   }
   
   table {
@@ -142,11 +205,15 @@
   }
   
   th {
-    background: linear-gradient(to right, var(--primary), #2563eb);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
     padding: 14px;
     font-weight: 600;
     text-align: center;
+  }
+  
+  .dark-mode th {
+    background: linear-gradient(135deg, #3730a3, #312e81);
   }
   
   td {
@@ -154,6 +221,12 @@
     border-bottom: 1px solid #e5e7eb;
     text-align: center;
     vertical-align: middle;
+    transition: all 0.3s ease;
+  }
+  
+  .dark-mode td {
+    border-bottom: 1px solid var(--border-dark);
+    color: var(--text-dark);
   }
   
   tr:last-child td {
@@ -164,13 +237,21 @@
     background-color: #f9fafb;
   }
   
+  .dark-mode tr:nth-child(even) {
+    background-color: #1a2537;
+  }
+  
   tr:hover {
     background-color: #f3f4f6;
   }
   
+  .dark-mode tr:hover {
+    background-color: #253148;
+  }
+  
   .action-btn {
     padding: 8px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
@@ -180,36 +261,44 @@
     justify-content: center;
     gap: 5px;
     font-size: 0.875rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark-mode .action-btn {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
   
   .open-btn {
-    background: linear-gradient(to right, #16a34a, #15803d);
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
     color: white;
   }
   
   .open-btn:hover {
-    background: linear-gradient(to right, #15803d, #166534);
+    background: linear-gradient(135deg, var(--success-dark), #047857);
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
   }
   
   .send-btn {
-    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
   }
   
   .send-btn:hover {
-    background: linear-gradient(to right, #1d4ed8, #1e40af);
+    background: linear-gradient(135deg, var(--primary-dark), #3730a3);
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
   }
   
   .delete-btn {
-    background: linear-gradient(to right, #dc2626, #b91c1c);
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
     color: white;
   }
   
   .delete-btn:hover {
-    background: linear-gradient(to right, #b91c1c, #991b1b);
+    background: linear-gradient(135deg, var(--danger-dark), #b91c1c);
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
   }
   
   img.screenshot {
@@ -220,6 +309,10 @@
     border-radius: 8px;
     transition: all 0.3s;
     cursor: pointer;
+  }
+  
+  .dark-mode img.screenshot {
+    border-color: var(--border-dark);
   }
   
   img.screenshot:hover {
@@ -239,11 +332,27 @@
     font-family: 'Tajawal', sans-serif;
   }
   
+  .dark-mode input, 
+  .dark-mode textarea, 
+  .dark-mode select {
+    background: #1e293b;
+    border-color: #374151;
+    color: var(--text-dark);
+  }
+  
   input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     background: white;
+  }
+  
+  .dark-mode input:focus, 
+  .dark-mode textarea:focus, 
+  .dark-mode select:focus {
+    background: #1f2937;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
   }
   
   .section-title {
@@ -257,6 +366,11 @@
     align-items: center;
     gap: 10px;
   }
+  
+  .dark-mode .section-title {
+    color: var(--text-dark);
+    border-bottom-color: var(--primary);
+  }
 
   .status-badge {
     padding: 4px 10px;
@@ -267,34 +381,46 @@
   }
   
   .status-badge.new {
-    background-color: #fef3c7;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
     color: #92400e;
   }
   
   .status-badge.read {
-    background-color: #dcfce7;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
     color: #166534;
   }
 
   .btn-read {
-    background: linear-gradient(to right, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     margin-right: 5px;
     cursor: pointer;
     border: none;
     font-size: 0.875rem;
+    transition: all 0.3s;
+  }
+  
+  .btn-read:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
   }
   
   .btn-delete {
-    background: linear-gradient(to right, #dc2626, #b91c1c);
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
     color: white;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     border: none;
     font-size: 0.875rem;
+    transition: all 0.3s;
+  }
+  
+  .btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
   }
   
   .loading {
@@ -317,7 +443,7 @@
     left: 20px;
     right: 20px;
     padding: 15px;
-    border-radius: 8px;
+    border-radius: 12px;
     color: white;
     font-weight: bold;
     z-index: 10000;
@@ -326,6 +452,7 @@
     transform: translateY(-100px);
     opacity: 0;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
   }
   
   .notification.show {
@@ -334,15 +461,15 @@
   }
   
   .notification.success {
-    background-color: var(--success);
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
   }
   
   .notification.error {
-    background-color: var(--danger);
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
   }
   
   .notification.info {
-    background-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   }
   
   .mobile-menu-btn {
@@ -354,10 +481,56 @@
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px;
     font-size: 1.2rem;
     cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  .mobile-menu-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+  }
+  
+  /* تحسينات للاستجابة */
+  @media (max-width: 1200px) {
+    .sidebar {
+      width: 220px;
+    }
+    
+    .content {
+      margin-right: 220px;
+    }
+    
+    .section-title {
+      font-size: 1.6rem;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .sidebar {
+      width: 200px;
+    }
+    
+    .content {
+      margin-right: 200px;
+      padding: 20px;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+    }
+    
+    .card {
+      padding: 18px;
+    }
+    
+    th, td {
+      padding: 10px 8px;
+      font-size: 0.9rem;
+    }
   }
   
   @media (max-width: 768px) {
@@ -380,12 +553,61 @@
     }
     
     .section-title {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
     }
     
     .card {
       padding: 15px;
       border-radius: 12px;
+    }
+    
+    table {
+      min-width: 700px;
+    }
+    
+    th, td {
+      padding: 8px 6px;
+      font-size: 0.85rem;
+    }
+    
+    .action-btn {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .content {
+      padding: 10px;
+    }
+    
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+    
+    .card {
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    
+    table {
+      min-width: 600px;
+    }
+    
+    th, td {
+      padding: 6px 4px;
+      font-size: 0.8rem;
+    }
+    
+    .action-btn {
+      padding: 5px 8px;
+      font-size: 0.75rem;
+    }
+    
+    img.screenshot {
+      width: 60px;
+      height: 45px;
     }
   }
   
@@ -395,14 +617,26 @@
     color: #6b7280;
   }
   
+  .dark-mode .empty-state {
+    color: #94a3b8;
+  }
+  
   .empty-state i {
     font-size: 3rem;
     margin-bottom: 1rem;
     color: #d1d5db;
   }
   
+  .dark-mode .empty-state i {
+    color: #475569;
+  }
+  
   .empty-state p {
     font-size: 1.1rem;
+  }
+  
+  .theme-icon {
+    transition: all 0.3s ease;
   }
 </style>
 </head>
@@ -446,6 +680,11 @@
   </div>
   
   <div class="sidebar-footer">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon theme-icon" id="themeIcon"></i>
+      <span id="themeText">الوضع الليلي</span>
+    </button>
+    
     <button onclick="logout()" class="logout-btn">
       <i class="fas fa-sign-out-alt"></i>
       تسجيل الخروج
@@ -597,17 +836,17 @@
     <div class="card max-w-md mx-auto">
       <form id="sendForm" class="space-y-4">
         <div>
-          <label class="block text-gray-700 mb-2">رقم الجلوس</label>
+          <label class="block text-gray-700 mb-2 dark:text-gray-300">رقم الجلوس</label>
           <input id="sendSeat" placeholder="أدخل رقم الجلوس" required>
         </div>
         
         <div>
-          <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+          <label class="block text-gray-700 mb-2 dark:text-gray-300">البريد الإلكتروني</label>
           <input id="sendEmail" type="email" placeholder="أدخل البريد الإلكتروني" required>
         </div>
         
         <div>
-          <label class="block text-gray-700 mb-2">نص الرسالة</label>
+          <label class="block text-gray-700 mb-2 dark:text-gray-300">نص الرسالة</label>
           <textarea id="sendMessage" placeholder="أدخل نص الرسالة (اختياري)" rows="4"></textarea>
         </div>
         
@@ -623,6 +862,35 @@
 <div id="notification" class="notification"></div>
 
 <script>
+// التحقق من وضع الثيم المحفوظ
+function initTheme() {
+  const savedTheme = localStorage.getItem('adminTheme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeIcon').className = 'fas fa-sun theme-icon';
+    document.getElementById('themeText').textContent = 'الوضع النهاري';
+  }
+}
+
+// دالة التبديل بين الوضعين
+function toggleTheme() {
+  const body = document.body;
+  const themeIcon = document.getElementById('themeIcon');
+  const themeText = document.getElementById('themeText');
+  
+  body.classList.toggle('dark-mode');
+  
+  if (body.classList.contains('dark-mode')) {
+    themeIcon.className = 'fas fa-sun theme-icon';
+    themeText.textContent = 'الوضع النهاري';
+    localStorage.setItem('adminTheme', 'dark');
+  } else {
+    themeIcon.className = 'fas fa-moon theme-icon';
+    themeText.textContent = 'الوضع الليلي';
+    localStorage.setItem('adminTheme', 'light');
+  }
+}
+
 // دالة للحصول على التوكن من localStorage
 function getToken() {
   return localStorage.getItem('adminToken');
@@ -661,6 +929,9 @@ function showNotification(message, type = 'info') {
 
 // عند تحميل الصفحة، تحقق من المصادقة
 document.addEventListener('DOMContentLoaded', function() {
+  // تهيئة الثيم
+  initTheme();
+  
   if (!checkAuth()) return;
   
   // إعداد القائمة الجانبية للجوال
@@ -714,6 +985,7 @@ function showSection(id){
 function logout() {
   if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTheme');
     window.location.href = '/login.html';
   }
 }
@@ -1183,9 +1455,8 @@ setInterval(() => {
   if (!document.getElementById('chatInquiries').classList.contains('hidden')) {
     loadChatInquiries();
   }
-}, 30000); // تحديث كل 30 ثانية بدلاً من 10
+}, 30000); // تحديث كل 30 ثانية
 
 </script>
-
 </body>
 </html>
