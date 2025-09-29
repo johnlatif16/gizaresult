@@ -9,6 +9,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
         
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-dark: #f1f5f9;
+        }
+        
         body {
             font-family: 'Tajawal', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -17,17 +25,28 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
         
         .login-container {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             padding: 40px;
             width: 100%;
             max-width: 420px;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-mode .login-container {
+            background: var(--card-dark);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         
         .login-container::before {
@@ -37,7 +56,7 @@
             right: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(to right, #3b82f6, #2563eb);
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
         }
         
         .login-header {
@@ -47,7 +66,9 @@
         
         .login-header i {
             font-size: 3rem;
-            color: #3b82f6;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 15px;
         }
         
@@ -58,9 +79,17 @@
             margin: 0;
         }
         
+        .dark-mode .login-header h2 {
+            color: var(--text-dark);
+        }
+        
         .login-header p {
             color: #64748b;
             margin-top: 8px;
+        }
+        
+        .dark-mode .login-header p {
+            color: #94a3b8;
         }
         
         .form-group {
@@ -74,6 +103,10 @@
             color: #374151;
         }
         
+        .dark-mode .form-group label {
+            color: #e2e8f0;
+        }
+        
         .form-control {
             width: 100%;
             padding: 14px 16px;
@@ -85,16 +118,27 @@
             font-size: 1rem;
         }
         
+        .dark-mode .form-control {
+            background: #1e293b;
+            border-color: #374151;
+            color: var(--text-dark);
+        }
+        
         .form-control:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             background: white;
+        }
+        
+        .dark-mode .form-control:focus {
+            background: #1f2937;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
         }
         
         .btn-login {
             width: 100%;
-            background: linear-gradient(to right, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
             padding: 14px;
@@ -107,16 +151,45 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
         }
         
         .btn-login:hover {
-            background: linear-gradient(to right, #2563eb, #1d4ed8);
+            background: linear-gradient(135deg, var(--primary-dark), #3730a3);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.4);
         }
         
         .btn-login:active {
             transform: translateY(0);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(15deg);
+        }
+        
+        .dark-mode .theme-toggle {
+            background: rgba(30, 41, 59, 0.5);
         }
         
         .message {
@@ -129,15 +202,25 @@
         }
         
         .message.error {
-            background-color: #fef2f2;
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
             color: #dc2626;
             border: 1px solid #fecaca;
         }
         
+        .dark-mode .message.error {
+            background: linear-gradient(135deg, #1f1b1b, #291c1c);
+            border-color: #7f1d1d;
+        }
+        
         .message.success {
-            background-color: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             color: #16a34a;
             border: 1px solid #bbf7d0;
+        }
+        
+        .dark-mode .message.success {
+            background: linear-gradient(135deg, #1a2a1f, #1c2e24);
+            border-color: #166534;
         }
         
         .loading {
@@ -166,6 +249,10 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
     <div class="login-container">
         <div class="login-header">
             <i class="fas fa-user-shield"></i>
@@ -194,6 +281,37 @@
     </div>
 
     <script>
+        // التحقق من وضع الثيم المحفوظ
+        function initTheme() {
+            const savedTheme = localStorage.getItem('adminTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            }
+        }
+
+        // دالة التبديل بين الوضعين
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('adminTheme', 'dark');
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('adminTheme', 'light');
+            }
+        }
+
+        // تهيئة الثيم عند تحميل الصفحة
+        initTheme();
+
+        // إضافة مستمع الحدث لزر التبديل
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
