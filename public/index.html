@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نتيجتك</title>
+<link rel="icon" href="https://i.postimg.cc/wjDmfHCB/logo.png" type="image/png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -83,6 +84,23 @@
     background: linear-gradient(to right, #2AABEE, #229ED9);
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(42, 171, 238, 0.3);
+  }
+  
+  /* زر التطبيق الجديد */
+  .btn-app {
+    background: linear-gradient(to right, #FF6B6B, #FF8E53);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(255, 107, 107, 0.2);
+  }
+  
+  .btn-app:hover {
+    background: linear-gradient(to right, #FF8E53, #FF6B6B);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
   }
   
   .alert-grid {
@@ -228,7 +246,7 @@
       padding: 16px;
     }
     
-    .btn-primary, .btn-secondary, .btn-telegram {
+    .btn-primary, .btn-secondary, .btn-telegram, .btn-app {
       width: 100%;
       margin-bottom: 10px;
     }
@@ -353,6 +371,21 @@
     left: -9999px;
     top: -9999px;
   }
+
+  /* تنسيقات الدردشة */
+  #chatbot input {
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+  }
+
+  #chatbot input::placeholder {
+    text-align: right;
+  }
+
+  #chatbot button {
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 500;
+  }
 </style>
 </head>
 <body class="flex flex-col items-center justify-start min-h-screen p-4">
@@ -406,6 +439,13 @@
         <i class="fab fa-telegram-plane"></i>
         حجز عبر التيليجرام
       </a>
+      
+<!-- زر حجز عبر التطبيق الجديد -->
+<button onclick="window.location.href='https://apkpure.com/gizaresult/com.example.giza_result_app'" class="btn-app text-center">
+  <i class="fas fa-mobile-alt"></i>
+  حجز عبر التطبيق
+</button>
+
       
       <button onclick="showReservation()" class="btn-secondary">
         <i class="fas fa-globe"></i>
@@ -653,13 +693,45 @@
     </p>
   </div>
 </div>
+<!-- زر فتح/غلق الدردشة -->
+<div id="chatbotToggle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+  <button onclick="toggleChatbot()" style="background:#3b82f6; color:white; border:none; padding:12px 20px; border-radius:50px; cursor:pointer; font-weight:bold;">
+    💬 الدعم
+  </button>
+</div>
 
+<!-- نافذة الدردشة المعدلة -->
+<div id="chatbot" style="position: fixed; bottom: 80px; right: 20px; width: 320px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display:none; flex-direction: column; overflow:hidden; z-index: 1000; font-family: 'Tajawal', sans-serif;">
+  <div style="background:#3b82f6; color:white; padding:10px; font-weight:bold; text-align:center; cursor:pointer;" onclick="toggleChatbot()">
+    دعم فني - أدخل بياناتك أولاً
+  </div>
+  <div id="chatMessages" style="flex:1; padding:10px; overflow-y:auto;"></div>
+  <div id="chatOptions" style="padding:10px; display:none; flex-direction:column; gap:8px;">
+    <button class="chatOption" data-action="whatsapp" style="padding:8px; border-radius:8px; border:none; background:#10b981; color:white; cursor:pointer;">حول على واتس</button>
+    <button class="chatOption" data-action="ask" style="padding:8px; border-radius:8px; border:none; background:#8b5cf6; color:white; cursor:pointer;">استفسار عن شيء</button>
+  </div>
+  
+  <!-- نموذج إدخال بيانات المستخدم -->
+  <div id="userDataForm" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+    <input type="text" id="userName" placeholder="الاسم بالكامل" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <input type="tel" id="userPhone" placeholder="رقم التليفون" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <input type="email" id="userEmail" placeholder="البريد الإلكتروني" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+    <button id="submitUserData" style="padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">تأكيد البيانات</button>
+  </div>
+</div>
 <!-- حاوية مخفية لإنشاء PDF -->
 <div id="pdf-container" style="position: absolute; left: -9999px; top: -9999px;"></div>
 
 <script>
 // متغير لتخزين النتيجة الحالية
 let currentResult = null;
+
+// متغيرات لتخزين بيانات المستخدم في الدردشة
+let userData = {
+  name: '',
+  phone: '',
+  email: ''
+};
 
 function showPayment() {
   document.getElementById('payment').classList.remove('hidden');
@@ -805,6 +877,7 @@ function displayResult(result) {
     { key: 'seatNumber', label: 'رقم الجلوس' },
     { key: 'stage', label: 'المرحلة' },
     { key: 'gradeLevel', label: 'الصف' },
+    { key: 'division', label: 'الشعبة' },
     { key: 'schoolName', label: 'المدرسة' },
     { key: 'notes', label: 'ملاحظات' }
   ];
@@ -958,6 +1031,7 @@ function printResult() {
           <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
           <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
           <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
+          <div><strong>الشعبة:</strong> ${currentResult.division || 'غير متوفر'}</div>
           <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
           <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
           <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
@@ -1062,6 +1136,7 @@ async function saveAsPDF() {
           <div><strong>اسم الطالب:</strong> ${currentResult.name || 'غير متوفر'}</div>
           <div><strong>رقم الجلوس:</strong> ${currentResult.seatNumber || 'غير متوفر'}</div>
           <div><strong>المرحلة:</strong> ${currentResult.stage || 'غير متوفر'}</div>
+          <div><strong>الشعبة:</strong> ${currentResult.division || 'غير متوفر'}</div>
           <div><strong>الصف:</strong> ${currentResult.gradeLevel || 'غير متوفر'}</div>
           <div><strong>المدرسة:</strong> ${currentResult.schoolName || 'غير متوفر'}</div>
           <div><strong>ملاحظات:</strong> ${currentResult.notes || 'لا توجد'}</div>
@@ -1172,6 +1247,132 @@ async function saveAsPDF() {
     alert('حدث خطأ أثناء إنشاء PDF: ' + error.message);
   }
 }
+
+// ========== دوال الدردشة ==========
+// فتح/غلق الدردشة
+function toggleChatbot() {
+  const bot = document.getElementById('chatbot');
+  bot.style.display = bot.style.display === 'flex' ? 'none' : 'flex';
+  
+  // إعادة تعيين الدردشة عند فتحها
+  if (bot.style.display === 'flex') {
+    resetChatbot();
+  }
+}
+
+// إعادة تعيين الدردشة
+function resetChatbot() {
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatOptions').style.display = 'none';
+  document.getElementById('userDataForm').style.display = 'flex';
+  document.getElementById('userName').value = '';
+  document.getElementById('userPhone').value = '';
+  document.getElementById('userEmail').value = '';
+  userData = { name: '', phone: '', email: '' };
+}
+
+// إضافة رسالة
+function addMessage(text, from = 'bot') {
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.style.marginBottom = '10px';
+  msg.style.padding = '8px 12px';
+  msg.style.borderRadius = '10px';
+  msg.style.maxWidth = '85%';
+  msg.style.wordBreak = 'break-word';
+  if (from === 'bot') {
+    msg.style.background = '#f0f9ff';
+    msg.style.alignSelf = 'flex-start';
+  } else {
+    msg.style.background = '#3b82f6';
+    msg.style.color = 'white';
+    msg.style.alignSelf = 'flex-end';
+  }
+  msg.textContent = text;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+// معالجة إرسال بيانات المستخدم
+document.getElementById('submitUserData').addEventListener('click', function() {
+  const name = document.getElementById('userName').value.trim();
+  const phone = document.getElementById('userPhone').value.trim();
+  const email = document.getElementById('userEmail').value.trim();
+  
+  if (!name || !phone || !email) {
+    addMessage('يرجى ملء جميع البيانات المطلوبة');
+    return;
+  }
+  
+  // حفظ بيانات المستخدم
+  userData = { name, phone, email };
+  
+  // إخفاء نموذج البيانات وإظهار خيارات الدردشة
+  document.getElementById('userDataForm').style.display = 'none';
+  document.getElementById('chatOptions').style.display = 'flex';
+  
+  addMessage(`شكراً ${name}! كيف يمكنني مساعدتك؟`);
+});
+
+// التعامل مع الضغط على الاختيارات
+document.getElementById('chatOptions').addEventListener('click', async (e) => {
+  const target = e.target;
+  
+  if (target.classList.contains('chatOption')) {
+    const action = target.getAttribute('data-action');
+    
+    if (action === 'whatsapp') {
+      addMessage(target.textContent, 'user');
+      addMessage('جاري تحويلك إلى واتساب...');
+      window.open('https://wa.me/201274445091', '_blank');
+      
+      // إعادة تعيين الدردشة بعد ثانيتين
+      setTimeout(resetChatbot, 2000);
+    } else if (action === 'ask') {
+      addMessage(target.textContent, 'user');
+      addMessage('ممكن تكتب سؤالك هنا:');
+      
+      // استبدال الخيارات بحقل إدخال السؤال
+      document.getElementById('chatOptions').innerHTML = `
+        <input type="text" id="userQuestion" placeholder="اكتب سؤالك..." style="padding:8px; border-radius:8px; border:1px solid #ddd; width:100%;">
+        <button id="sendQuestion" style="margin-top:5px; padding:8px; border-radius:8px; border:none; background:#3b82f6; color:white; cursor:pointer;">إرسال</button>
+      `;
+      
+      document.getElementById('sendQuestion').addEventListener('click', async () => {
+        const question = document.getElementById('userQuestion').value.trim();
+        if (question) {
+          addMessage(question, 'user');
+          addMessage('جاري إرسال استفسارك للإدارة...');
+          
+          try {
+            // إرسال الاستفسار مع بيانات المستخدم إلى السيرفر
+            const res = await fetch('/api/send-admin-message', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ 
+                message: question,
+                userData: userData
+              })
+            });
+            
+            const data = await res.json();
+            if(data.success){
+              addMessage('تم إرسال استفسارك للإدارة بنجاح! سنتواصل معك قريباً.');
+            } else {
+              addMessage('حدث خطأ أثناء الإرسال.');
+            }
+          } catch(e){
+            console.error(e);
+            addMessage('حدث خطأ أثناء الإرسال.');
+          }
+          
+          // إعادة تعيين الدردشة بعد 3 ثوانٍ
+          setTimeout(resetChatbot, 3000);
+        }
+      });
+    }
+  }
+});
 </script>
 </body>
 </html>

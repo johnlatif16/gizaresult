@@ -2,28 +2,398 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-dark: #f1f5f9;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-mode .login-container {
+            background: var(--card-dark);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header i {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        
+        .login-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+        
+        .dark-mode .login-header h2 {
+            color: var(--text-dark);
+        }
+        
+        .login-header p {
+            color: #64748b;
+            margin-top: 8px;
+        }
+        
+        .dark-mode .login-header p {
+            color: #94a3b8;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .dark-mode .form-group label {
+            color: #e2e8f0;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.3s;
+            background: #f9fafb;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .dark-mode .form-control {
+            background: #1e293b;
+            border-color: #374151;
+            color: var(--text-dark);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: white;
+        }
+        
+        .dark-mode .form-control:focus {
+            background: #1f2937;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #3730a3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(15deg);
+        }
+        
+        .dark-mode .theme-toggle {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .message.error {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .dark-mode .message.error {
+            background: linear-gradient(135deg, #1f1b1b, #291c1c);
+            border-color: #7f1d1d;
+        }
+        
+        .message.success {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .dark-mode .message.success {
+            background: linear-gradient(135deg, #1a2a1f, #1c2e24);
+            border-color: #166534;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-bold mb-6 text-center">تسجيل الدخول للإدارة</h2>
-        <form action="/login" method="POST">
-            <div class="mb-4">
-                <label class="block text-gray-700 mb-2">اسم المستخدم</label>
-                <input type="text" name="username" required class="w-full p-2 border rounded">
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-user-shield"></i>
+            <h2>تسجيل الدخول للإدارة</h2>
+            <p>أدخل بيانات الدخول للوصول إلى لوحة التحكم</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="أدخل اسم المستخدم" required autocomplete="username">
             </div>
-            <div class="mb-6">
-                <label class="block text-gray-700 mb-2">كلمة المرور</label>
-                <input type="password" name="password" required class="w-full p-2 border rounded">
+            
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="أدخل كلمة المرور" required autocomplete="current-password">
             </div>
-            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                تسجيل الدخول
+            
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span id="btnText">تسجيل الدخول</span>
+                <div id="btnLoading" class="loading hidden"></div>
             </button>
         </form>
+        
+        <div id="message" class="message"></div>
     </div>
+
+    <script>
+        // التحقق من وضع الثيم المحفوظ
+        function initTheme() {
+            const savedTheme = localStorage.getItem('adminTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            }
+        }
+
+        // دالة التبديل بين الوضعين
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('adminTheme', 'dark');
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('adminTheme', 'light');
+            }
+        }
+
+        // تهيئة الثيم عند تحميل الصفحة
+        initTheme();
+
+        // إضافة مستمع الحدث لزر التبديل
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+            const message = document.getElementById('message');
+            
+            // إظهار حالة التحميل
+            btnText.textContent = 'جاري تسجيل الدخول...';
+            btnLoading.classList.remove('hidden');
+            loginBtn.disabled = true;
+            message.classList.add('hidden');
+            
+            const formData = new FormData(this);
+            const data = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // حفظ التوكن في localStorage
+                    localStorage.setItem('adminToken', result.token);
+                    
+                    // عرض رسالة النجاح
+                    message.textContent = 'تم تسجيل الدخول بنجاح! جاري التوجيه...';
+                    message.className = 'message success';
+                    message.style.display = 'block';
+                    
+                    // التوجيه إلى لوحة التحكم بعد تأخير بسيط
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                } else {
+                    // عرض رسالة الخطأ
+                    message.textContent = result.message || 'خطأ في تسجيل الدخول، يرجى التحقق من البيانات';
+                    message.className = 'message error';
+                    message.style.display = 'block';
+                    
+                    // إعادة تعيين حالة الزر
+                    btnText.textContent = 'تسجيل الدخول';
+                    btnLoading.classList.add('hidden');
+                    loginBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // عرض رسالة الخطأ
+                message.textContent = 'حدث خطأ في الاتصال بالخادم، يرجى المحاولة لاحقاً';
+                message.className = 'message error';
+                message.style.display = 'block';
+                
+                // إعادة تعيين حالة الزر
+                btnText.textContent = 'تسجيل الدخول';
+                btnLoading.classList.add('hidden');
+                loginBtn.disabled = false;
+            }
+        });
+        
+        // إضافة تأثير عند التركيز على الحقول
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
